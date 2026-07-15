@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; Service</h1>
+    <span id="live-dot" class="dot" title="Live-Verbindung"></span>
+    <button class="ghost small" id="btn-logout" style="display:none;color:#fff;border-color:#555"
+            onclick="Service.logout()">Abmelden</button>
+</header>
+<main>
+
+    <!-- Login -->
+    <div id="view-login" class="card" style="max-width:380px;margin:40px auto">
+        <h2>Anmelden</h2>
+        <p><input id="login-user" placeholder="Benutzername" autocomplete="username"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort" autocomplete="current-password"></p>
+        <p><button style="width:100%" onclick="Service.login()">Anmelden</button></p>
+        <p class="muted">Mit deinem Service-/Kassen-Login anmelden. Der Inhaber legt diese Zug&auml;nge an.</p>
+    </div>
+
+    <!-- App -->
+    <div id="view-app" style="display:none">
+
+        <div class="card">
+            <h2>Freigabe-Anfragen</h2>
+            <div id="pending-list"><p class="muted">Keine offenen Anfragen.</p></div>
+        </div>
+
+        <div class="card">
+            <h2>Tische</h2>
+            <div id="tables-grid" class="grid" style="margin-top:6px"></div>
+        </div>
+
+        <div class="card">
+            <h2>Aktuelle Bestellungen</h2>
+            <div id="orders-list" style="margin-top:6px"></div>
+        </div>
+
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/service.js"></script>
+</body>
+</html>

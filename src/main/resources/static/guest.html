@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bestellen - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <img id="brand-logo" class="brand-logo" alt="" style="display:none">
+    <h1 id="page-title">Willkommen!</h1>
+    <span id="table-badge" class="badge blue" style="display:none"></span>
+</header>
+<main>
+
+    <!-- Ansicht: laedt / wartet auf Freigabe -->
+    <div id="view-wait" class="center" style="display:none">
+        <p class="big">Einen Moment bitte &hellip;</p>
+        <p id="wait-text" class="muted">Das Personal gibt deinen Tisch gleich frei.</p>
+    </div>
+
+    <!-- Ansicht: Fehler (ungueltiger QR, abgelehnt, ...) -->
+    <div id="view-error" class="center" style="display:none">
+        <p class="big" id="error-title">Das hat nicht geklappt</p>
+        <p id="error-text" class="muted"></p>
+        <p><button onclick="location.reload()">Erneut versuchen</button></p>
+    </div>
+
+    <!-- Ansicht: Speisekarte -->
+    <div id="view-menu" style="display:none">
+        <!-- Kategorie-Leiste mit Hamburger-Menue (nur wenn der Laden das aktiviert hat) -->
+        <div id="cat-bar" class="cat-bar" style="display:none">
+            <button class="burger" onclick="Guest.toggleCatPanel()" aria-label="Kategorien">&#9776;</button>
+            <span class="cat-title">Kategorien</span>
+        </div>
+        <div id="cat-panel" class="cat-panel"></div>
+        <div id="menu-container"></div>
+    </div>
+
+    <!-- Ansicht: Warenkorb -->
+    <div id="view-cart" style="display:none">
+        <div class="card">
+            <h2>Deine Bestellung</h2>
+            <div id="cart-lines"></div>
+            <div class="row" style="margin-top:12px">
+                <span class="big" id="cart-total"></span>
+                <span class="spacer"></span>
+                <button class="ghost" onclick="Guest.showMenu()">Zur&uuml;ck</button>
+                <button class="green" id="btn-send" onclick="Guest.placeOrder()">Jetzt bestellen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ansicht: Bestellung abgeschickt / meine Bestellungen -->
+    <div id="view-done" style="display:none">
+        <div class="center">
+            <p class="big">Bestellung ist in der K&uuml;che! &#127860;</p>
+            <p class="muted">Du kannst jederzeit weiter bestellen.</p>
+            <p><button onclick="Guest.showMenu()">Weiter bestellen</button></p>
+        </div>
+        <div class="card">
+            <h2>Deine bisherigen Bestellungen</h2>
+            <div id="my-orders"></div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Warenkorb-Leiste unten -->
+<div id="cartbar" class="cartbar" style="display:none">
+    <span id="cartbar-info"></span>
+    <span class="spacer"></span>
+    <button onclick="Guest.showCart()">Warenkorb ansehen</button>
+</div>
+
+<!-- Detail-Ansicht eines Gerichts -->
+<div id="overlay">
+    <div class="box detail-box" onclick="event.stopPropagation()">
+        <img id="detail-img" class="detail-img" alt="" style="display:none">
+        <h2 id="detail-name" style="margin:10px 0 4px"></h2>
+        <p id="detail-price" class="big" style="margin:0 0 8px"></p>
+        <p id="detail-desc" class="muted" style="margin:0 0 10px"></p>
+        <div id="detail-details-wrap">
+            <strong>Zutaten &amp; Details</strong>
+            <p id="detail-details" class="muted" style="white-space:pre-line;margin:4px 0 12px"></p>
+        </div>
+        <div class="row" style="margin-bottom:10px">
+            <span>Menge:</span>
+            <span class="qty">
+                <button onclick="Guest.detailQtyChange(-1)">&minus;</button>
+                <strong id="detail-qty">1</strong>
+                <button onclick="Guest.detailQtyChange(1)">+</button>
+            </span>
+        </div>
+        <input id="detail-note" placeholder="Hinweis, z.B. ohne Zwiebeln" maxlength="200">
+        <div class="row" style="margin-top:12px">
+            <button class="ghost" onclick="Guest.closeDetail()">Schlie&szlig;en</button>
+            <span class="spacer"></span>
+            <button class="green" id="detail-add" onclick="Guest.detailAddToCart()"></button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/guest.js"></script>
+</body>
+</html>

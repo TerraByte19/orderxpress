@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>K&uuml;che - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; K&uuml;che</h1>
+    <span id="live-dot" class="dot" title="Live-Verbindung"></span>
+    <button class="ghost small" id="btn-logout" style="display:none;color:#fff;border-color:#555"
+            onclick="Kitchen.logout()">Abmelden</button>
+</header>
+<main style="max-width:1400px">
+
+    <!-- Login -->
+    <div id="view-login" class="card" style="max-width:380px;margin:40px auto">
+        <h2>Anmelden</h2>
+        <p><input id="login-user" placeholder="Benutzername" value="kueche"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort"></p>
+        <p><button style="width:100%" onclick="Kitchen.login()">Anmelden</button></p>
+        <p class="muted">Zugangsdaten stehen in application.yml (orderxpress.security.kitchen).</p>
+    </div>
+
+    <!-- Bestell-Board -->
+    <div id="view-app" class="columns" style="display:none">
+        <div class="card"><h2>&#128204; Neu</h2><div id="col-NEW"></div></div>
+        <div class="card"><h2>&#128293; In Zubereitung</h2><div id="col-IN_PREPARATION"></div></div>
+        <div class="card"><h2>&#9989; Fertig</h2><div id="col-READY"></div></div>
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/kitchen.js"></script>
+</body>
+</html>

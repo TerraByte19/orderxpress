@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: orderxpress
+
+  datasource:
+    # Dateibasierte H2-Datenbank: liegt unter ./data/, kein DB-Server noetig.
+    # Spaeterer Wechsel auf PostgreSQL: nur URL/Treiber/Login hier austauschen.
+    url: jdbc:h2:file:./data/orderxpress
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      # Erzeugt/erweitert die Tabellen automatisch. Fuer Produktion spaeter
+      # auf "validate" umstellen und Migrationen (z.B. Flyway) verwenden.
+      ddl-auto: update
+    open-in-view: false
+
+  servlet:
+    multipart:
+      # Obergrenze fuer Bild-Uploads (Gerichte-Fotos)
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  h2:
+    console:
+      # Web-Oberflaeche der Datenbank: http://localhost:8080/h2-console
+      # NUR fuer die Entwicklung - vor dem Produktivbetrieb auf false setzen!
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+orderxpress:
+  # Basis-URL, die in den QR-Codes steckt. Im echten Betrieb die von den
+  # Gaesten erreichbare Adresse eintragen, z.B. https://bestellen.mein-restaurant.de
+  public-base-url: "http://localhost:8080"
+
+  security:
+    # Plattform-Admin: legt Laeden an (Seite /platform.html).
+    # !!! Passwort vor dem echten Einsatz aendern !!!
+    # Alternativ BCrypt-Hash eintragen, z.B. "{bcrypt}$2a$10$..."
+    # Die Laden-Logins (Inhaber/Kueche) stehen NICHT mehr hier, sondern in der
+    # Datenbank (Tabelle app_users) - der Plattform-Admin bzw. Inhaber legt sie an.
+    platform-admin:
+      username: admin
+      password: "admin123"
+
+  printer:
+    # log     = Bon wird nur ins Log geschrieben (kein Drucker noetig)
+    # network = Bon geht an einen ESC/POS-Bondrucker im Netzwerk (z.B. Epson TM)
+    mode: log
+    host: "192.168.1.100"
+    port: 9100
+
+  session:
+    # Nach so vielen Minuten verfaellt eine unbeantwortete Freigabe-Anfrage
+    pending-timeout-minutes: 10

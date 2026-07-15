@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inhaber - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; Inhaber</h1>
+    <span id="live-dot" class="dot" title="Live-Verbindung"></span>
+    <button class="ghost small" id="btn-logout" style="display:none;color:#fff;border-color:#555"
+            onclick="Admin.logout()">Abmelden</button>
+</header>
+<main>
+
+    <!-- Login -->
+    <div id="view-login" class="card" style="max-width:380px;margin:40px auto">
+        <h2>Anmelden</h2>
+        <p><input id="login-user" placeholder="Benutzername" value="inhaber"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort"></p>
+        <p><button style="width:100%" onclick="Admin.login()">Anmelden</button></p>
+        <p class="muted">Dein Inhaber-Login wird vom Plattform-Admin beim Anlegen des Ladens vergeben
+            (Demo: inhaber / inhaber123).</p>
+    </div>
+
+    <!-- App -->
+    <div id="view-app" style="display:none">
+
+        <div class="card">
+            <h2>Freigabe-Anfragen</h2>
+            <div id="pending-list"><p class="muted">Keine offenen Anfragen.</p></div>
+        </div>
+
+        <div class="card">
+            <div class="row">
+                <h2 style="margin:0">Tische</h2>
+                <span class="spacer"></span>
+                <button class="small green" onclick="Admin.showNewTableForm()">+ Tisch hinzuf&uuml;gen</button>
+            </div>
+            <div id="new-table-form"></div>
+            <div id="tables-grid" class="grid" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+            <div class="row">
+                <h2 style="margin:0">Speisekarte</h2>
+                <span class="spacer"></span>
+                <button class="small ghost" onclick="Admin.showNewCategoryForm()">+ Kategorie</button>
+                <button class="small green" onclick="Admin.showNewItemForm()">+ Gericht</button>
+            </div>
+            <div id="new-menu-form"></div>
+            <div id="menu-admin" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+            <h2>Design deiner G&auml;ste-Seite</h2>
+            <p class="muted">Passe Farben, Logo und Hintergrund an - so sieht deine Seite einzigartig aus.</p>
+            <div class="mini-form">
+                <div>
+                    <label>Akzentfarbe (Buttons)</label>
+                    <input type="color" id="design-accent" value="#2563eb">
+                </div>
+                <div>
+                    <label>Hintergrundfarbe</label>
+                    <input type="color" id="design-bg" value="#f4f5f7">
+                </div>
+                <div class="full check">
+                    <input type="checkbox" id="design-hamburger">
+                    <label for="design-hamburger" style="margin:0">Kategorien als Hamburger-Men&uuml; anzeigen</label>
+                </div>
+                <div class="full">
+                    <button class="green small" onclick="Admin.saveDesign()">Farben &amp; Men&uuml; speichern</button>
+                </div>
+            </div>
+            <div class="row" style="margin-top:6px">
+                <div style="flex:1;min-width:200px">
+                    <label class="muted">Logo (JPG/PNG)</label>
+                    <div class="row">
+                        <img id="logo-preview" class="brand-logo" alt="" style="display:none;background:#eee">
+                        <input type="file" id="logo-file" accept="image/png,image/jpeg" style="max-width:220px">
+                        <button class="small" onclick="Admin.uploadAsset('logo')">Hochladen</button>
+                        <button class="small red" onclick="Admin.deleteAsset('logo')">Entfernen</button>
+                    </div>
+                </div>
+                <div style="flex:1;min-width:200px">
+                    <label class="muted">Hintergrundbild (JPG/PNG)</label>
+                    <div class="row">
+                        <img id="bg-preview" class="thumb" alt="" style="display:none">
+                        <input type="file" id="bg-file" accept="image/png,image/jpeg" style="max-width:220px">
+                        <button class="small" onclick="Admin.uploadAsset('background')">Hochladen</button>
+                        <button class="small red" onclick="Admin.deleteAsset('background')">Entfernen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="row">
+                <h2 style="margin:0">Mitarbeiter-Logins</h2>
+                <span class="spacer"></span>
+                <button class="small green" onclick="Admin.showNewUserForm()">+ Login</button>
+            </div>
+            <p class="muted">Zug&auml;nge f&uuml;r deinen Laden:
+                <strong>Service</strong> (Tische freigeben, Seite <code>/service.html</code>) und
+                <strong>K&uuml;che</strong> (K&uuml;chen-Monitor, Seite <code>/kitchen.html</code>).</p>
+            <div id="new-user-form"></div>
+            <div id="users-list" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+            <h2>Letzte Bestellungen</h2>
+            <div id="orders-list" style="margin-top:10px"></div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Overlay fuer QR-Code -->
+<div id="overlay" onclick="this.classList.remove('show')">
+    <div class="box">
+        <p class="big" id="qr-title"></p>
+        <img id="qr-img" alt="QR-Code">
+        <p class="muted">Rechtsklick &rarr; Bild speichern, dann ausdrucken.<br>Zum Schlie&szlig;en klicken.</p>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

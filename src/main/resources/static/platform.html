@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Plattform - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; Plattform-Verwaltung</h1>
+    <button class="ghost small" id="btn-logout" style="display:none;color:#fff;border-color:#555"
+            onclick="Platform.logout()">Abmelden</button>
+</header>
+<main>
+
+    <!-- Login -->
+    <div id="view-login" class="card" style="max-width:380px;margin:40px auto">
+        <h2>Plattform-Admin anmelden</h2>
+        <p><input id="login-user" placeholder="Benutzername" value="admin"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort"></p>
+        <p><button style="width:100%" onclick="Platform.login()">Anmelden</button></p>
+        <p class="muted">Zugangsdaten stehen in application.yml (orderxpress.security.platform-admin).
+            Demo: admin / admin123.</p>
+    </div>
+
+    <!-- App -->
+    <div id="view-app" style="display:none">
+        <div class="card">
+            <div class="row">
+                <h2 style="margin:0">Neuen Laden anlegen</h2>
+            </div>
+            <p class="muted">Du legst den Laden und gleich den ersten Inhaber-Login an. Der Inhaber
+                pflegt danach Speisekarte, Tische, Design und seine K&uuml;chen-Zug&auml;nge selbst.</p>
+            <div class="mini-form">
+                <div class="full">
+                    <label>Name des Ladens</label>
+                    <input id="r-name" placeholder="z.B. Pizzeria Bella">
+                </div>
+                <div>
+                    <label>Kurzkennung (slug, f&uuml;r URLs)</label>
+                    <input id="r-slug" placeholder="z.B. bella">
+                </div>
+                <div>
+                    <label>Inhaber-Benutzername</label>
+                    <input id="r-owner" placeholder="z.B. bella-chef">
+                </div>
+                <div>
+                    <label>Inhaber-Passwort (mind. 6 Zeichen)</label>
+                    <input id="r-pass" type="password" placeholder="Passwort">
+                </div>
+                <div class="full">
+                    <button class="green" onclick="Platform.create()">Laden anlegen</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Alle L&auml;den</h2>
+            <div id="rest-list"><p class="muted">Wird geladen &hellip;</p></div>
+        </div>
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/platform.js"></script>
+</body>
+</html>

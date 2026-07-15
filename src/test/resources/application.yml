@@ -1,0 +1,36 @@
+# Konfiguration NUR fuer Tests: In-Memory-Datenbank, Drucker im Log-Modus.
+spring:
+  application:
+    name: orderxpress-test
+
+  datasource:
+    url: jdbc:h2:mem:orderxpress-test;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+# SQL-Abfragen samt Parametern im Test-Log anzeigen (Fehlersuche)
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+orderxpress:
+  public-base-url: "http://localhost:8080"
+  security:
+    # Inhaber/Kueche kommen jetzt aus der DB (DataInitializer legt sie an:
+    # inhaber/inhaber123, kueche/kueche123). Hier nur der Plattform-Admin.
+    platform-admin:
+      username: admin
+      password: "test-admin"
+  printer:
+    mode: log
+    host: ""
+    port: 9100
+  session:
+    pending-timeout-minutes: 10

@@ -1,0 +1,279 @@
+/* OrderXpress - gemeinsames Stylesheet fuer alle Ansichten */
+:root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --primary: #2563eb;
+    --green: #16a34a;
+    --red: #dc2626;
+    --amber: #d97706;
+    --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+header.topbar {
+    background: #111827;
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header.topbar h1 { font-size: 18px; margin: 0; flex: 1; }
+header.topbar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+header.topbar .dot.on { background: var(--green); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 16px; padding-bottom: 90px; }
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+}
+.card h2 { margin: 0 0 12px; font-size: 16px; }
+
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.columns { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
+
+button {
+    font: inherit;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+}
+button.green { background: var(--green); }
+button.red { background: var(--red); }
+button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+button.small { padding: 6px 10px; font-size: 13px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+input, select, textarea {
+    font: inherit;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    width: 100%;
+    background: #fff;
+    resize: vertical;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--muted);
+}
+.badge.green { background: var(--green); }
+.badge.red { background: var(--red); }
+.badge.amber { background: var(--amber); }
+.badge.blue { background: var(--primary); }
+
+.muted { color: var(--muted); font-size: 13px; }
+.big { font-size: 26px; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.center { text-align: center; padding: 40px 16px; }
+
+ul.plain { list-style: none; margin: 8px 0; padding: 0; }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: none; }
+
+/* Warenkorb-Leiste (Gast, unten fixiert) */
+.cartbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: #111827;
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 20;
+}
+.cartbar button { background: var(--green); }
+
+.qty { display: inline-flex; align-items: center; gap: 8px; }
+.qty button { padding: 4px 12px; font-size: 16px; }
+
+/* Gerichte-Fotos */
+.thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: var(--line);
+}
+.thumb-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 22px;
+}
+
+/* Kleine Inline-Formulare (Tisch/Kategorie/Gericht bearbeiten) */
+.mini-form {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    padding: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    margin: 10px 0;
+    background: #fafbfc;
+}
+.mini-form .full { grid-column: 1 / -1; }
+.mini-form label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 3px; }
+.check { display: flex; align-items: center; gap: 6px; }
+.check input { width: auto; }
+
+#toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111827;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+    z-index: 50;
+    max-width: 90%;
+}
+#toast.show { opacity: 1; }
+#toast.error { background: var(--red); }
+
+/* Overlay fuer die QR-Anzeige */
+#overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+#overlay.show { display: flex; }
+#overlay .box { background: #fff; padding: 20px; border-radius: var(--radius); text-align: center; }
+#overlay img { width: 280px; height: 280px; }
+
+/* Detail-Ansicht eines Gerichts (Gast) */
+#overlay .detail-box {
+    text-align: left;
+    width: 92%;
+    max-width: 440px;
+    max-height: 88vh;
+    overflow-y: auto;
+}
+#overlay img.detail-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+.clickable { cursor: pointer; }
+
+@media (max-width: 600px) {
+    main { padding: 10px; padding-bottom: 90px; }
+    .big { font-size: 22px; }
+}
+
+/* ===== Laden-Design (Gaeste-Seite) ===== */
+
+/* Logo in der Kopfzeile der Gaeste-Seite */
+.brand-logo {
+    height: 32px;
+    max-width: 160px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #fff;
+    padding: 2px 4px;
+}
+
+/* Optionales Hintergrundbild wird per Inline-Style gesetzt; diese Klasse
+   sorgt fuer eine helle, gut lesbare Ueberlagerung ueber dem Bild. */
+body.has-bg-image { background-size: cover; background-position: center; background-attachment: fixed; }
+body.has-bg-image main > .card,
+body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
+
+/* ===== Hamburger-Menue fuer Kategorien (Gast) ===== */
+.cat-bar {
+    position: sticky;
+    top: 52px;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+.cat-bar .burger {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+.cat-bar .cat-title { font-weight: 700; }
+.cat-panel {
+    display: none;
+    position: sticky;
+    top: 104px;
+    z-index: 15;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px;
+    margin-bottom: 12px;
+}
+.cat-panel.open { display: block; }
+.cat-panel button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-bottom: 1px dashed var(--line);
+    padding: 12px 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+.cat-panel button:last-child { border-bottom: none; }
+
+/* Farbwaehler in der Inhaber-Ansicht */
+input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; }
