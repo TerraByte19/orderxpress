@@ -7,10 +7,13 @@ import com.orderxpress.service.MenuImageService;
 import com.orderxpress.service.OrderService;
 import com.orderxpress.service.RestaurantAdminService;
 import com.orderxpress.service.SseHub;
+import com.orderxpress.service.StaffDeviceService;
 import com.orderxpress.service.TableSessionService;
 import com.orderxpress.web.dto.CategoryDto;
 import com.orderxpress.web.dto.CategoryRequest;
+import com.orderxpress.web.dto.CreateDeviceRequest;
 import com.orderxpress.web.dto.CreateUserRequest;
+import com.orderxpress.web.dto.StaffDeviceDto;
 import com.orderxpress.web.dto.DesignRequest;
 import com.orderxpress.web.dto.StaffUserDto;
 import com.orderxpress.web.dto.MenuItemAdminDto;
@@ -52,6 +55,7 @@ public class AdminController {
     private final AdminCatalogService catalogService;
     private final MenuImageService imageService;
     private final RestaurantAdminService restaurantAdminService;
+    private final StaffDeviceService staffDeviceService;
     private final SseHub sseHub;
 
     public AdminController(TableSessionService sessionService,
@@ -59,12 +63,14 @@ public class AdminController {
                            AdminCatalogService catalogService,
                            MenuImageService imageService,
                            RestaurantAdminService restaurantAdminService,
+                           StaffDeviceService staffDeviceService,
                            SseHub sseHub) {
         this.sessionService = sessionService;
         this.orderService = orderService;
         this.catalogService = catalogService;
         this.imageService = imageService;
         this.restaurantAdminService = restaurantAdminService;
+        this.staffDeviceService = staffDeviceService;
         this.sseHub = sseHub;
     }
 
@@ -266,5 +272,39 @@ public class AdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         restaurantAdminService.deleteStaffUser(id);
+    }
+
+    // ---------- Geraete (QR-Anmeldung statt Passwort) ----------
+
+    @GetMapping("/devices")
+    public List<StaffDeviceDto> devices() {
+        return staffDeviceService.listDevices();
+    }
+
+    @PostMapping("/devices")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StaffDeviceDto createDevice(@Valid @RequestBody CreateDeviceRequest request) {
+        return staffDeviceService.createDevice(request);
+    }
+
+    /** Neuen QR-Code erzeugen (Geraet neu einrichten). */
+    @PostMapping("/devices/{id}/regenerate")
+    public StaffDeviceDto regenerateDevice(@PathVariable Long id) {
+        return staffDeviceService.regenerate(id);
+    }
+
+    /** QR-Code des Geraets als PNG zum Anzeigen/Ausdrucken. */
+    @GetMapping(value = "/devices/{id}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] deviceQrCode(@PathVariable Long id,
+                               @RequestParam(defaultValue = "384") int size) {
+        int clamped = Math.max(128, Math.min(1024, size));
+        return staffDeviceService.activationQrCode(id, clamped);
+    }
+
+    /** Verlorenes Geraet sperren. */
+    @DeleteMapping("/devices/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void revokeDevice(@PathVariable Long id) {
+        staffDeviceService.revoke(id);
     }
 }

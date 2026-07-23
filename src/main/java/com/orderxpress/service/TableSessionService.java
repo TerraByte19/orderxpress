@@ -2,9 +2,12 @@ package com.orderxpress.service;
 
 import com.orderxpress.config.AppProperties;
 import com.orderxpress.config.security.CurrentUser;
+import com.orderxpress.domain.Guest;
+import com.orderxpress.domain.GuestStatus;
 import com.orderxpress.domain.RestaurantTable;
 import com.orderxpress.domain.SessionStatus;
 import com.orderxpress.domain.TableSession;
+import com.orderxpress.repository.GuestRepository;
 import com.orderxpress.repository.RestaurantTableRepository;
 import com.orderxpress.repository.TableSessionRepository;
 import com.orderxpress.service.event.DomainEvents;
@@ -42,15 +45,18 @@ public class TableSessionService {
 
     private final RestaurantTableRepository tableRepository;
     private final TableSessionRepository sessionRepository;
+    private final GuestRepository guestRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final AppProperties properties;
 
     public TableSessionService(RestaurantTableRepository tableRepository,
                                TableSessionRepository sessionRepository,
+                               GuestRepository guestRepository,
                                ApplicationEventPublisher eventPublisher,
                                AppProperties properties) {
         this.tableRepository = tableRepository;
         this.sessionRepository = sessionRepository;
+        this.guestRepository = guestRepository;
         this.eventPublisher = eventPublisher;
         this.properties = properties;
     }
@@ -72,18 +78,23 @@ public class TableSessionService {
         Long restaurantId = table.getRestaurant().getId();
         String restaurantName = table.getRestaurant().getName();
 
+        // Laeuft schon eine freigegebene Sitzung? -> Diese Person tritt als weiterer
+        // Gast bei und muss vom Gastgeber (erste Person) freigegeben werden.
         var approved = sessionRepository
                 .findFirstByRestaurantTableIdAndStatus(table.getId(), SessionStatus.APPROVED);
         if (approved.isPresent()) {
-            return new ScanResponse(approved.get().getSessionToken(), SessionStatus.APPROVED,
-                    table.getNumber(), restaurantId, restaurantName);
+            Guest joiner = createGuest(approved.get(), false);
+            log.info("Beitritts-Anfrage an Tisch {} (Gast {})", table.getNumber(), joiner.getName());
+            return scanResponse(joiner, approved.get(), table, restaurantId, restaurantName);
         }
 
+        // Wartet die Sitzung noch auf die Laden-Freigabe? -> ebenfalls beitreten
+        // (der Gastgeber existiert bereits als erste Person und gibt spaeter frei).
         var pending = sessionRepository
                 .findFirstByRestaurantTableIdAndStatus(table.getId(), SessionStatus.PENDING);
         if (pending.isPresent()) {
-            return new ScanResponse(pending.get().getSessionToken(), SessionStatus.PENDING,
-                    table.getNumber(), restaurantId, restaurantName);
+            Guest joiner = createGuest(pending.get(), false);
+            return scanResponse(joiner, pending.get(), table, restaurantId, restaurantName);
         }
 
         // Spam-Schutz: kurz nach einer Ablehnung keine neue Anfrage zulassen
@@ -94,15 +105,36 @@ public class TableSessionService {
                     "Die Anfrage fuer diesen Tisch wurde gerade abgelehnt. Bitte wende dich an das Personal.");
         }
 
+        // Freier Tisch: neue Sitzung + Gastgeber (erste Person). Der Laden gibt frei.
         TableSession session = sessionRepository.save(new TableSession(table));
+        Guest host = createGuest(session, true);
         eventPublisher.publishEvent(new DomainEvents.SessionRequested(
                 restaurantId,
                 session.getId(),
                 table.getNumber(),
                 "Tisch Nr. %d freigeben?".formatted(table.getNumber())));
-        log.info("Neue Freigabe-Anfrage fuer Tisch {} (Laden {})", table.getNumber(), restaurantId);
-        return new ScanResponse(session.getSessionToken(), SessionStatus.PENDING,
-                table.getNumber(), restaurantId, restaurantName);
+        log.info("Neue Freigabe-Anfrage fuer Tisch {} (Laden {}, Gastgeber {})",
+                table.getNumber(), restaurantId, host.getName());
+        return scanResponse(host, session, table, restaurantId, restaurantName);
+    }
+
+    /** Legt eine neue Person in der Sitzung an; Name automatisch "Gast N". */
+    private Guest createGuest(TableSession session, boolean host) {
+        long number = guestRepository.countBySessionId(session.getId()) + 1;
+        return guestRepository.save(new Guest(session, "Gast " + number, host));
+    }
+
+    private ScanResponse scanResponse(Guest guest, TableSession session, RestaurantTable table,
+                                      Long restaurantId, String restaurantName) {
+        return new ScanResponse(
+                guest.getGuestToken(),
+                guest.isHost(),
+                session.getStatus(),
+                guest.getStatus(),
+                guest.getName(),
+                table.getNumber(),
+                restaurantId,
+                restaurantName);
     }
 
     /** Gast fragt regelmaessig nach, ob der Tisch inzwischen freigegeben wurde. */
@@ -136,6 +168,8 @@ public class TableSessionService {
                     "Tisch %d ist bereits freigegeben.".formatted(session.getRestaurantTable().getNumber()));
         }
         session.approve();
+        // Der Gastgeber (erste Person) wird mit der Sitzung freigegeben und darf bestellen.
+        guestRepository.findFirstBySessionIdAndHostTrue(sessionId).ifPresent(Guest::approve);
         publishChange(session);
         log.info("Tisch {} freigegeben (Sitzung {})", session.getRestaurantTable().getNumber(), sessionId);
         return SessionDto.from(session);
@@ -147,6 +181,8 @@ public class TableSessionService {
         TableSession session = findOwnedSession(sessionId);
         requirePending(session);
         session.reject();
+        // Alle Personen dieser Sitzung mit ablehnen.
+        guestRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).forEach(Guest::reject);
         publishChange(session);
         return SessionDto.from(session);
     }

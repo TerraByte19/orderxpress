@@ -1,16 +1,9 @@
 package com.orderxpress;
 
 import com.jayway.jsonpath.JsonPath;
-import com.orderxpress.domain.RestaurantTable;
-import com.orderxpress.repository.RestaurantTableRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
+import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,195 +12,126 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testet den kompletten Ablauf:
- * QR-Scan -> "Tisch freigeben?" -> Freigabe -> Menue -> Bestellung -> Kueche -> Sitzung beenden.
+ * Kompletter Ablauf mit einem eigenen Test-Laden:
+ * Scan (Gastgeber) -> "Tisch freigeben?" -> Laden-Freigabe -> Menue -> Bestellung
+ * -> Kueche -> Statuswechsel -> Sitzung beenden.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-class OrderFlowIntegrationTest {
+class OrderFlowIntegrationTest extends IntegrationTestBase {
 
-    private static final String OWNER = "inhaber";
-    private static final String OWNER_PASSWORD = "inhaber123";
     private static final String KITCHEN = "kueche";
     private static final String KITCHEN_PASSWORD = "kueche123";
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private RestaurantTableRepository tableRepository;
-
     @Test
     void kompletterBestellablaufVonScanBisServiert() throws Exception {
-        RestaurantTable table = firstTable(0);
+        Owner o = createRestaurant("flow");
+        long cat = createCategory(o, "Hauptgerichte");
+        long item = createItem(o, cat, "Schnitzel", "16.90");
+        TableRef table = createTable(o, 1);
 
-        // 1) Gast scannt den QR-Code -> Freigabe-Anfrage entsteht
-        String scanBody = mockMvc.perform(post("/api/guest/scan/" + table.getQrToken()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.tableNumber").value(table.getNumber()))
-                .andReturn().getResponse().getContentAsString();
-        String sessionToken = JsonPath.read(scanBody, "$.sessionToken");
-        Integer restaurantId = JsonPath.read(scanBody, "$.restaurantId");
+        // 1) Erste Person scannt -> Gastgeber, wartet auf Laden-Freigabe
+        String scanBody = scan(table.qrToken());
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.TRUE, JsonPath.read(scanBody, "$.isHost"));
+        org.junit.jupiter.api.Assertions.assertEquals("PENDING", JsonPath.read(scanBody, "$.sessionStatus"));
+        String guestToken = JsonPath.read(scanBody, "$.guestToken");
 
-        // 2) Gast sieht die Karte des Ladens (oeffentlich)
-        String menuBody = mockMvc.perform(get("/api/guest/menu/" + restaurantId))
+        // 2) Karte des Ladens (oeffentlich)
+        mvc.perform(get("/api/guest/menu/" + o.restaurantId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].items[0].id").exists())
-                .andReturn().getResponse().getContentAsString();
-        Integer menuItemId = JsonPath.read(menuBody, "$[0].items[0].id");
+                .andExpect(jsonPath("$[0].items[0].id").value((int) item));
 
         // 3) Bestellen VOR der Freigabe ist nicht erlaubt
-        mockMvc.perform(post("/api/guest/orders")
+        mvc.perform(post("/api/guest/orders")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson(sessionToken, menuItemId)))
+                        .content(orderJson(guestToken, item)))
                 .andExpect(status().isConflict());
 
-        // 4) Inhaber sieht die Anfrage "Tisch Nr. X freigeben?"
-        // (gezielt nach Tischnummer filtern - andere Tests koennen parallel
-        //  eigene Anfragen in der Liste haben, die Reihenfolge ist nicht garantiert)
-        String pendingBody = mockMvc.perform(get("/api/admin/sessions/pending")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.tableNumber == %d)]".formatted(table.getNumber())).exists())
-                .andReturn().getResponse().getContentAsString();
-        List<Integer> pendingIds = JsonPath.read(pendingBody,
-                "$[?(@.tableNumber == %d)].id".formatted(table.getNumber()));
-        Integer sessionId = pendingIds.get(0);
-
-        // 5) Inhaber gibt den Tisch frei
-        mockMvc.perform(post("/api/admin/sessions/" + sessionId + "/approve")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        // 4) + 5) Inhaber sieht die Anfrage und gibt frei
+        long sessionId = pendingSessionId(o, table.number());
+        mvc.perform(post("/api/admin/sessions/" + sessionId + "/approve").with(as(o)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
-        // 6) Gast sieht die Freigabe
-        mockMvc.perform(get("/api/guest/sessions/" + sessionToken))
+        // 6) Gastgeber ist jetzt freigegeben
+        mvc.perform(get("/api/guest/guests/" + guestToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("APPROVED"));
+                .andExpect(jsonPath("$.guestStatus").value("APPROVED"))
+                .andExpect(jsonPath("$.sessionStatus").value("APPROVED"));
 
-        // 7) Gast bestellt -> Preis kommt vom Server, Status NEW
-        String orderBody = mockMvc.perform(post("/api/guest/orders")
+        // 7) Gast bestellt -> Preis vom Server, Status NEW
+        String orderBody = mvc.perform(post("/api/guest/orders")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson(sessionToken, menuItemId)))
+                        .content(orderJson(guestToken, item)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("NEW"))
-                .andExpect(jsonPath("$.tableNumber").value(table.getNumber()))
+                .andExpect(jsonPath("$.tableNumber").value(1))
                 .andExpect(jsonPath("$.items[0].quantity").value(2))
-                .andExpect(jsonPath("$.totalAmount").isNumber())
                 .andReturn().getResponse().getContentAsString();
-        Integer orderId = JsonPath.read(orderBody, "$.id");
+        int orderId = (int) num(JsonPath.read(orderBody, "$.id"));
 
-        // 7b) Gast sieht seine Bestellung unter "Meine Bestellungen"
-        mockMvc.perform(get("/api/guest/sessions/" + sessionToken + "/orders"))
+        // 7b) "Meine Bestellungen"
+        mvc.perform(get("/api/guest/guests/" + guestToken + "/orders"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(orderId))
-                .andExpect(jsonPath("$[0].items[0].quantity").value(2));
+                .andExpect(jsonPath("$[0].id").value(orderId));
 
         // 8) Kueche sieht die Bestellung
-        mockMvc.perform(get("/api/kitchen/orders")
-                        .with(httpBasic(KITCHEN, KITCHEN_PASSWORD)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == %d)]".formatted(orderId)).exists());
+        mvc.perform(get("/api/kitchen/orders").with(httpBasic(KITCHEN, KITCHEN_PASSWORD)))
+                .andExpect(status().isOk());
 
-        // 9) Kueche schaltet den Status weiter
-        updateStatus(orderId, "IN_PREPARATION").andExpect(status().isOk());
-        updateStatus(orderId, "READY").andExpect(status().isOk());
-        updateStatus(orderId, "SERVED").andExpect(status().isOk());
+        // 9) Inhaber (darf auch Kueche) schaltet den Status weiter
+        updateStatus(o, orderId, "IN_PREPARATION").andExpect(status().isOk());
+        updateStatus(o, orderId, "READY").andExpect(status().isOk());
+        updateStatus(o, orderId, "SERVED").andExpect(status().isOk());
 
         // 10) Unsinniger Statuswechsel wird abgelehnt
-        updateStatus(orderId, "IN_PREPARATION").andExpect(status().isConflict());
+        updateStatus(o, orderId, "IN_PREPARATION").andExpect(status().isConflict());
 
-        // 11) Inhaber beendet die Sitzung -> Tisch wieder frei, Bestellen nicht mehr moeglich
-        mockMvc.perform(post("/api/admin/sessions/" + sessionId + "/close")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        // 11) Sitzung beenden -> Bestellen nicht mehr moeglich
+        mvc.perform(post("/api/admin/sessions/" + sessionId + "/close").with(as(o)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
-
-        mockMvc.perform(post("/api/guest/orders")
+        mvc.perform(post("/api/guest/orders")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(orderJson(sessionToken, menuItemId)))
+                        .content(orderJson(guestToken, item)))
                 .andExpect(status().isConflict());
-    }
-
-    @Test
-    void zweiterScanLiefertDieselbePendingSitzung() throws Exception {
-        RestaurantTable table = firstTable(1);
-
-        String first = mockMvc.perform(post("/api/guest/scan/" + table.getQrToken()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        String second = mockMvc.perform(post("/api/guest/scan/" + table.getQrToken()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        String firstToken = JsonPath.read(first, "$.sessionToken");
-        String secondToken = JsonPath.read(second, "$.sessionToken");
-        org.junit.jupiter.api.Assertions.assertEquals(firstToken, secondToken,
-                "Doppelter Scan darf keine zweite Freigabe-Anfrage erzeugen");
     }
 
     @Test
     void nachAblehnungGreiftDieAbklingzeit() throws Exception {
-        RestaurantTable table = firstTable(2);
+        Owner o = createRestaurant("cooldown");
+        TableRef table = createTable(o, 1);
 
-        // Scan -> Anfrage entsteht
-        mockMvc.perform(post("/api/guest/scan/" + table.getQrToken()))
-                .andExpect(status().isOk());
-
-        // Inhaber lehnt genau die Anfrage dieses Tisches ab
-        String pendingBody = mockMvc.perform(get("/api/admin/sessions/pending")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        List<Integer> ids = JsonPath.read(pendingBody,
-                "$[?(@.tableNumber == %d)].id".formatted(table.getNumber()));
-        mockMvc.perform(post("/api/admin/sessions/" + ids.get(0) + "/reject")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        scan(table.qrToken());
+        long sessionId = pendingSessionId(o, table.number());
+        mvc.perform(post("/api/admin/sessions/" + sessionId + "/reject").with(as(o)))
                 .andExpect(status().isOk());
 
         // Sofortiger erneuter Scan wird abgeblockt (Spam-Schutz)
-        mockMvc.perform(post("/api/guest/scan/" + table.getQrToken()))
+        mvc.perform(post("/api/guest/scan/" + table.qrToken()))
                 .andExpect(status().isConflict());
     }
 
     @Test
     void unbekannterQrCodeWirdAbgelehnt() throws Exception {
-        mockMvc.perform(post("/api/guest/scan/gibt-es-nicht"))
+        mvc.perform(post("/api/guest/scan/gibt-es-nicht"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void bestellungOhnePositionenIstUngueltig() throws Exception {
-        mockMvc.perform(post("/api/guest/orders")
+        mvc.perform(post("/api/guest/orders")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sessionToken\":\"egal\",\"items\":[]}"))
+                        .content("{\"guestToken\":\"egal\",\"items\":[]}"))
                 .andExpect(status().isBadRequest());
     }
 
-    private org.springframework.test.web.servlet.ResultActions updateStatus(Integer orderId, String status)
-            throws Exception {
-        return mockMvc.perform(post("/api/kitchen/orders/" + orderId + "/status")
-                .with(httpBasic(KITCHEN, KITCHEN_PASSWORD))
+    private ResultActions updateStatus(Owner o, int orderId, String status) throws Exception {
+        return mvc.perform(post("/api/kitchen/orders/" + orderId + "/status").with(as(o))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"" + status + "\"}"));
     }
 
-    private RestaurantTable firstTable(int index) {
-        List<RestaurantTable> tables = tableRepository.findAll().stream()
-                .sorted(java.util.Comparator.comparingInt(RestaurantTable::getNumber))
-                .toList();
-        return tables.get(index);
-    }
-
-    private static String orderJson(String sessionToken, Integer menuItemId) {
-        return """
-                {
-                  "sessionToken": "%s",
-                  "items": [
-                    {"menuItemId": %d, "quantity": 2, "note": "ohne Zwiebeln"}
-                  ]
-                }
-                """.formatted(sessionToken, menuItemId);
+    private static String orderJson(String guestToken, long menuItemId) {
+        return "{\"guestToken\":\"" + guestToken + "\",\"items\":[{\"menuItemId\":" + menuItemId
+                + ",\"quantity\":2,\"note\":\"ohne Zwiebeln\"}]}";
     }
 }

@@ -24,6 +24,14 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Lo
     @EntityGraph(attributePaths = {"items", "session.restaurantTable"})
     List<CustomerOrder> findBySessionIdOrderByCreatedAtDesc(Long sessionId);
 
+    /** Bestellungen einer Sitzung inkl. Positionen + Person (fuer die geteilte Rechnung). */
+    @EntityGraph(attributePaths = {"items", "guest", "session.restaurantTable"})
+    List<CustomerOrder> findBySessionIdOrderByCreatedAtAsc(Long sessionId);
+
+    /** Bestellungen einer einzelnen Person (Gast-Ansicht "Meine Bestellungen"). */
+    @EntityGraph(attributePaths = {"items", "session.restaurantTable"})
+    List<CustomerOrder> findByGuestIdOrderByCreatedAtDesc(Long guestId);
+
     /** Letzte Bestellungen fuer die Inhaber-Uebersicht EINES Ladens. */
     @EntityGraph(attributePaths = {"items", "session.restaurantTable"})
     List<CustomerOrder> findTop100BySession_RestaurantTable_Restaurant_IdOrderByCreatedAtDesc(Long restaurantId);

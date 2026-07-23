@@ -14,4 +14,14 @@ public class PageController {
     public String guestPage() {
         return "forward:/guest.html";
     }
+
+    /**
+     * QR-Code eines Personal-Geraets: /d/{activationToken} -> Aktivierungsseite.
+     * Das JavaScript liest den Token aus der Adresszeile und tauscht ihn einmalig
+     * gegen den dauerhaften Geraetetoken.
+     */
+    @GetMapping("/d/{activationToken}")
+    public String devicePage() {
+        return "forward:/device.html";
+    }
 }

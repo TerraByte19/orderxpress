@@ -98,6 +98,19 @@
 
         <div class="card">
             <div class="row">
+                <h2 style="margin:0">Ger&auml;te (Anmelden per QR-Code)</h2>
+                <span class="spacer"></span>
+                <button class="small green" onclick="Admin.showNewDeviceForm()">+ Ger&auml;t</button>
+            </div>
+            <p class="muted">F&uuml;r K&uuml;chen-Tablet oder Kassen-Handy: Ger&auml;t anlegen,
+                QR-Code zeigen, Ger&auml;t scannt einmal &ndash; danach dauerhaft angemeldet,
+                <strong>ohne Passwort</strong>. Ein QR-Code funktioniert genau einmal.</p>
+            <div id="new-device-form"></div>
+            <div id="devices-list" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+            <div class="row">
                 <h2 style="margin:0">Mitarbeiter-Logins</h2>
                 <span class="spacer"></span>
                 <button class="small green" onclick="Admin.showNewUserForm()">+ Login</button>

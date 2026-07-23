@@ -10,9 +10,9 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-/** Bestellung, die ein Gast abschickt. */
+/** Bestellung, die ein Gast abschickt (mit seinem persoenlichen guestToken). */
 public record PlaceOrderRequest(
-        @NotBlank String sessionToken,
+        @NotBlank String guestToken,
         @NotEmpty @Valid List<OrderItemRequest> items) {
 
     /** Eine Position der Bestellung. */

@@ -277,3 +277,28 @@ body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
 
 /* Farbwaehler in der Inhaber-Ansicht */
 input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; }
+
+/* Umschalt-Leiste zwischen Inhaber / Service / Kueche (rollenabhaengig) */
+.ox-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    margin-bottom: 14px;
+}
+.ox-nav a {
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 14px;
+}
+.ox-nav a.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* QR-Code eines Personal-Geraets */
+.device-qr { width: 240px; height: 240px; background: #fff; border-radius: 8px; }

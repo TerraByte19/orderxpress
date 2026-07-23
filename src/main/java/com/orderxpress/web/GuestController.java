@@ -3,17 +3,22 @@ package com.orderxpress.web;
 import com.orderxpress.domain.AssetKind;
 import com.orderxpress.domain.MenuItemImage;
 import com.orderxpress.domain.RestaurantAsset;
+import com.orderxpress.service.BillingService;
+import com.orderxpress.service.GuestService;
 import com.orderxpress.service.MenuImageService;
 import com.orderxpress.service.MenuService;
 import com.orderxpress.service.OrderService;
 import com.orderxpress.service.RestaurantAdminService;
 import com.orderxpress.service.TableSessionService;
+import com.orderxpress.web.dto.BillDto;
+import com.orderxpress.web.dto.GuestStatusResponse;
+import com.orderxpress.web.dto.JoinRequestDto;
 import com.orderxpress.web.dto.MenuCategoryDto;
 import com.orderxpress.web.dto.OrderResponse;
 import com.orderxpress.web.dto.PlaceOrderRequest;
+import com.orderxpress.web.dto.RenameRequest;
 import com.orderxpress.web.dto.RestaurantThemeDto;
 import com.orderxpress.web.dto.ScanResponse;
-import com.orderxpress.web.dto.SessionStatusResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -22,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -31,42 +37,75 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Endpunkte fuer Gaeste (ohne Login). Der Zugriff wird ueber die geheimen
- * QR-/Sitzungs-Tokens und die Freigabe durch den Inhaber abgesichert.
- * Speisekarte und Design werden je Laden (restaurantId) geliefert.
+ * Endpunkte fuer Gaeste (ohne Login). Jede Person hat ihren eigenen guestToken.
+ * Der Zugriff wird ueber die geheimen QR-/Gast-Tokens, die Laden-Freigabe (erste
+ * Person) und die Gastgeber-Freigabe (weitere Personen) abgesichert.
  */
 @RestController
 @RequestMapping("/api/guest")
 public class GuestController {
 
     private final TableSessionService sessionService;
+    private final GuestService guestService;
     private final MenuService menuService;
     private final OrderService orderService;
+    private final BillingService billingService;
     private final MenuImageService imageService;
     private final RestaurantAdminService restaurantAdminService;
 
     public GuestController(TableSessionService sessionService,
+                           GuestService guestService,
                            MenuService menuService,
                            OrderService orderService,
+                           BillingService billingService,
                            MenuImageService imageService,
                            RestaurantAdminService restaurantAdminService) {
         this.sessionService = sessionService;
+        this.guestService = guestService;
         this.menuService = menuService;
         this.orderService = orderService;
+        this.billingService = billingService;
         this.imageService = imageService;
         this.restaurantAdminService = restaurantAdminService;
     }
 
-    /** Gast hat den QR-Code am Tisch gescannt. */
+    /** Gast hat den QR-Code am Tisch gescannt (erzeugt eine neue Person am Tisch). */
     @PostMapping("/scan/{qrToken}")
     public ScanResponse scan(@PathVariable String qrToken) {
         return sessionService.scan(qrToken);
     }
 
-    /** Gast fragt ab, ob der Tisch inzwischen freigegeben wurde. */
-    @GetMapping("/sessions/{sessionToken}")
-    public SessionStatusResponse sessionStatus(@PathVariable String sessionToken) {
-        return sessionService.getStatus(sessionToken);
+    /** Gast fragt seinen eigenen Status ab (wartet auf Freigabe? darf bestellen?). */
+    @GetMapping("/guests/{guestToken}")
+    public GuestStatusResponse guestStatus(@PathVariable String guestToken) {
+        return guestService.getStatus(guestToken);
+    }
+
+    /** Gast aendert seinen Anzeigenamen. */
+    @PutMapping("/guests/{guestToken}/name")
+    public GuestStatusResponse rename(@PathVariable String guestToken,
+                                      @Valid @RequestBody RenameRequest request) {
+        return guestService.rename(guestToken, request.name());
+    }
+
+    /** Offene Beitritts-Anfragen (nur fuer den Gastgeber sichtbar). */
+    @GetMapping("/guests/{guestToken}/join-requests")
+    public List<JoinRequestDto> joinRequests(@PathVariable String guestToken) {
+        return guestService.listJoinRequests(guestToken);
+    }
+
+    /** Gastgeber gibt eine weitere Person frei. */
+    @PostMapping("/guests/{guestToken}/join-requests/{joinerId}/approve")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void approveJoin(@PathVariable String guestToken, @PathVariable Long joinerId) {
+        guestService.approveJoin(guestToken, joinerId);
+    }
+
+    /** Gastgeber lehnt eine weitere Person ab. */
+    @PostMapping("/guests/{guestToken}/join-requests/{joinerId}/reject")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void rejectJoin(@PathVariable String guestToken, @PathVariable Long joinerId) {
+        guestService.rejectJoin(guestToken, joinerId);
     }
 
     /** Design des Ladens (Farben, Logo, Hintergrund, Hamburger-Menue). */
@@ -88,10 +127,16 @@ public class GuestController {
         return orderService.placeOrder(request);
     }
 
-    /** Bisherige Bestellungen der eigenen Tisch-Sitzung. */
-    @GetMapping("/sessions/{sessionToken}/orders")
-    public List<OrderResponse> myOrders(@PathVariable String sessionToken) {
-        return orderService.getOrdersForSession(sessionToken);
+    /** Eigene Bestellungen dieser Person. */
+    @GetMapping("/guests/{guestToken}/orders")
+    public List<OrderResponse> myOrders(@PathVariable String guestToken) {
+        return orderService.getOrdersForGuest(guestToken);
+    }
+
+    /** Geteilte Rechnung des ganzen Tisches (nach Person gruppiert). */
+    @GetMapping("/guests/{guestToken}/bill")
+    public BillDto bill(@PathVariable String guestToken) {
+        return billingService.getBillForGuest(guestToken);
     }
 
     /** Foto eines Gerichts (fuer die Speisekarte). */

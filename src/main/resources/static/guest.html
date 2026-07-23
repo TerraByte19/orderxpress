@@ -14,6 +14,18 @@
 </header>
 <main>
 
+    <!-- Namensleiste + Beitritts-Anfragen (nur nach Freigabe sichtbar) -->
+    <div id="name-bar" class="row" style="display:none;margin-bottom:10px">
+        <span class="muted">Du bist:</span>
+        <strong id="my-name"></strong>
+        <button class="small ghost" onclick="Guest.changeName()">Namen &auml;ndern</button>
+        <span class="spacer"></span>
+        <button class="small ghost" id="btn-bill" onclick="Guest.showBill()" style="display:none">Rechnung teilen</button>
+    </div>
+
+    <!-- Beitritts-Anfragen an den Gastgeber ("X m&ouml;chte beitreten") -->
+    <div id="join-banner" style="display:none"></div>
+
     <!-- Ansicht: laedt / wartet auf Freigabe -->
     <div id="view-wait" class="center" style="display:none">
         <p class="big">Einen Moment bitte &hellip;</p>
@@ -62,6 +74,26 @@
         <div class="card">
             <h2>Deine bisherigen Bestellungen</h2>
             <div id="my-orders"></div>
+        </div>
+    </div>
+
+    <!-- Ansicht: geteilte Rechnung (alle Personen am Tisch) -->
+    <div id="view-bill" style="display:none">
+        <div class="card">
+            <div class="row">
+                <h2 style="margin:0">Rechnung teilen</h2>
+                <span class="spacer"></span>
+                <button class="ghost small" onclick="Guest.showMenu()">Zur&uuml;ck</button>
+            </div>
+            <p class="muted">Tippe Positionen an, um ihre Summe zu sehen (z.B. was du zahlst).
+                Das Personal an der Kasse markiert sie dann als bezahlt.</p>
+            <div id="bill-container"></div>
+            <div class="row" style="position:sticky;bottom:0;background:var(--card);padding-top:10px;
+                        border-top:1px solid var(--line);margin-top:10px">
+                <strong id="bill-selected">Ausgew&auml;hlt: 0,00 &euro;</strong>
+                <span class="spacer"></span>
+                <button class="ghost small" onclick="Guest.clearBillSelection()">Auswahl leeren</button>
+            </div>
         </div>
     </div>
 

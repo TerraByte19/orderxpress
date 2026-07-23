@@ -34,7 +34,28 @@
 
         <div class="card">
             <h2>Tische</h2>
+            <p class="muted">Bei belegten Tischen &bdquo;Kasse&ldquo; antippen, um abzurechnen.</p>
             <div id="tables-grid" class="grid" style="margin-top:6px"></div>
+        </div>
+
+        <!-- Kasse: Rechnung eines Tisches, Positionen w&auml;hlen und kassieren -->
+        <div id="kasse-card" class="card" style="display:none;border-color:var(--primary)">
+            <div class="row">
+                <h2 style="margin:0" id="kasse-title">Kasse</h2>
+                <span class="spacer"></span>
+                <button class="ghost small" onclick="Service.closeKasse()">Schlie&szlig;en</button>
+            </div>
+            <div id="kasse-body"></div>
+            <div class="row" style="position:sticky;bottom:0;background:var(--card);
+                        border-top:1px solid var(--line);padding-top:10px;margin-top:10px">
+                <div>
+                    <div><strong id="kasse-selected">Ausgew&auml;hlt: 0,00 &euro;</strong></div>
+                    <div class="muted" id="kasse-open">offen gesamt: 0,00 &euro;</div>
+                </div>
+                <span class="spacer"></span>
+                <button class="ghost small" onclick="Service.kasseSelectAll()">Alles offene</button>
+                <button class="green" id="kasse-pay" onclick="Service.kassePay()">Als bezahlt markieren</button>
+            </div>
         </div>
 
         <div class="card">

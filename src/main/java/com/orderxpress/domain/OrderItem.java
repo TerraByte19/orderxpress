@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Eine Position innerhalb einer Bestellung. Name und Preis werden als
@@ -48,6 +49,13 @@ public class OrderItem {
     @Column(length = 200)
     private String note;
 
+    /** true = diese Position wurde an der Kasse bereits bezahlt. */
+    @Column(nullable = false)
+    private boolean paid = false;
+
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
     protected OrderItem() {
         // fuer JPA
     }
@@ -62,6 +70,19 @@ public class OrderItem {
 
     public BigDecimal getLineTotal() {
         return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    public boolean isPaid() {
+        return paid;
+    }
+
+    public void markPaid() {
+        this.paid = true;
+        this.paidAt = Instant.now();
+    }
+
+    public Instant getPaidAt() {
+        return paidAt;
     }
 
     public Long getId() {

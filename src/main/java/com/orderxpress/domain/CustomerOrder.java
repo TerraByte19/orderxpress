@@ -36,6 +36,11 @@ public class CustomerOrder {
     @JoinColumn(name = "session_id", nullable = false)
     private TableSession session;
 
+    /** Die Person, die diese Bestellung aufgegeben hat (fuer die geteilte Rechnung). */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "guest_id", nullable = false)
+    private Guest guest;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private OrderStatus status = OrderStatus.NEW;
@@ -61,8 +66,9 @@ public class CustomerOrder {
         // fuer JPA
     }
 
-    public CustomerOrder(TableSession session) {
+    public CustomerOrder(TableSession session, Guest guest) {
         this.session = session;
+        this.guest = guest;
     }
 
     @PrePersist
@@ -90,6 +96,10 @@ public class CustomerOrder {
 
     public TableSession getSession() {
         return session;
+    }
+
+    public Guest getGuest() {
+        return guest;
     }
 
     public OrderStatus getStatus() {

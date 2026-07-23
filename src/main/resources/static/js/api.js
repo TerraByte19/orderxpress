@@ -9,14 +9,86 @@ const OX = {
         return new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
     },
 
-    /* ---------- Login (Basic Auth im sessionStorage) ---------- */
+    /* ---------- Anmeldung ----------
+       Zwei Wege:
+       1. Personen (Inhaber/Service/Kueche): Benutzername + Passwort (Basic Auth).
+          Liegt im localStorage, gilt also tab-uebergreifend -> EINMAL anmelden
+          reicht fuer Inhaber-, Service- und Kuechen-Ansicht.
+       2. Geraete (Kuechen-Tablet, Kasse): Geraetetoken aus dem QR-Code,
+          wird als Header "X-Device-Token" geschickt - kein Passwort noetig. */
 
-    setAuth(user, pass) { sessionStorage.setItem("ox-auth", "Basic " + btoa(user + ":" + pass)); },
-    clearAuth() { sessionStorage.removeItem("ox-auth"); },
-    hasAuth() { return !!sessionStorage.getItem("ox-auth"); },
+    setAuth(user, pass) {
+        try { localStorage.setItem("ox-auth", "Basic " + btoa(user + ":" + pass)); } catch (e) { /* ignore */ }
+        this._me = null;
+    },
+    setDeviceToken(token) {
+        try { localStorage.setItem("ox-device", token); } catch (e) { /* ignore */ }
+        this._me = null;
+    },
+    deviceToken() {
+        try { return localStorage.getItem("ox-device"); } catch (e) { return null; }
+    },
+    basicAuth() {
+        try { return localStorage.getItem("ox-auth"); } catch (e) { return null; }
+    },
+    clearAuth() {
+        try { localStorage.removeItem("ox-auth"); localStorage.removeItem("ox-device"); } catch (e) { /* ignore */ }
+        this._me = null;
+    },
+    hasAuth() { return !!(this.basicAuth() || this.deviceToken()); },
     authHeader() {
-        const a = sessionStorage.getItem("ox-auth");
-        return a ? { Authorization: a } : {};
+        const device = this.deviceToken();
+        if (device) return { "X-Device-Token": device };
+        const basic = this.basicAuth();
+        return basic ? { Authorization: basic } : {};
+    },
+
+    /* ---------- Wer bin ich? (Rolle + Laden) ---------- */
+
+    async me() {
+        if (!this._me) { this._me = await this.api("/api/me"); }
+        return this._me;
+    },
+
+    roleText(role) {
+        return { OWNER: "Inhaber", SERVICE: "Service/Kasse", KITCHEN: "Küche" }[role] || role;
+    },
+
+    /* Baut oben eine Leiste zum Umschalten zwischen den Ansichten.
+       Der Inhaber sieht alle drei, Service und Kueche nur ihre eigene. */
+    async buildNav(active) {
+        let me;
+        try { me = await this.me(); } catch (e) { return; }
+
+        const all = [
+            { key: "admin", href: "/admin.html", label: "Inhaber", roles: ["OWNER"] },
+            { key: "service", href: "/service.html", label: "Service/Kasse", roles: ["OWNER", "SERVICE"] },
+            { key: "kitchen", href: "/kitchen.html", label: "Küche", roles: ["OWNER", "KITCHEN"] }
+        ].filter(l => l.roles.includes(me.role));
+
+        let bar = document.getElementById("ox-nav");
+        if (!bar) {
+            bar = document.createElement("div");
+            bar.id = "ox-nav";
+            const main = document.querySelector("main");
+            if (!main) return;
+            main.insertBefore(bar, main.firstChild);
+        }
+        bar.className = "ox-nav";
+        bar.innerHTML = "";
+
+        for (const link of all) {
+            const a = document.createElement("a");
+            a.href = link.href;
+            a.textContent = link.label;
+            if (link.key === active) a.className = "current";
+            bar.appendChild(a);
+        }
+        const info = document.createElement("span");
+        info.className = "muted";
+        info.style.marginLeft = "auto";
+        info.textContent = me.restaurantName + " · " + this.roleText(me.role);
+        bar.appendChild(info);
     },
 
     /* ---------- API-Aufrufe ---------- */

@@ -2,12 +2,15 @@ package com.orderxpress.service;
 
 import com.orderxpress.config.security.CurrentUser;
 import com.orderxpress.domain.CustomerOrder;
+import com.orderxpress.domain.Guest;
+import com.orderxpress.domain.GuestStatus;
 import com.orderxpress.domain.MenuItem;
 import com.orderxpress.domain.OrderItem;
 import com.orderxpress.domain.OrderStatus;
 import com.orderxpress.domain.SessionStatus;
 import com.orderxpress.domain.TableSession;
 import com.orderxpress.repository.CustomerOrderRepository;
+import com.orderxpress.repository.GuestRepository;
 import com.orderxpress.repository.MenuItemRepository;
 import com.orderxpress.repository.TableSessionRepository;
 import com.orderxpress.service.event.DomainEvents;
@@ -48,17 +51,20 @@ public class OrderService {
 
     private final CustomerOrderRepository orderRepository;
     private final TableSessionRepository sessionRepository;
+    private final GuestRepository guestRepository;
     private final MenuItemRepository menuItemRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PrintService printService;
 
     public OrderService(CustomerOrderRepository orderRepository,
                         TableSessionRepository sessionRepository,
+                        GuestRepository guestRepository,
                         MenuItemRepository menuItemRepository,
                         ApplicationEventPublisher eventPublisher,
                         PrintService printService) {
         this.orderRepository = orderRepository;
         this.sessionRepository = sessionRepository;
+        this.guestRepository = guestRepository;
         this.menuItemRepository = menuItemRepository;
         this.eventPublisher = eventPublisher;
         this.printService = printService;
@@ -70,9 +76,14 @@ public class OrderService {
      */
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request) {
-        TableSession session = sessionRepository.findBySessionToken(request.sessionToken())
+        Guest guest = guestRepository.findByGuestToken(request.guestToken())
                 .orElseThrow(() -> new NotFoundException("Sitzung nicht gefunden. Bitte QR-Code erneut scannen."));
+        TableSession session = guest.getSession();
 
+        if (guest.getStatus() != GuestStatus.APPROVED) {
+            throw new ConflictException(
+                    "Du bist noch nicht freigegeben. Bitte warte auf die Freigabe (Laden bzw. Gastgeber am Tisch).");
+        }
         if (session.getStatus() != SessionStatus.APPROVED) {
             throw new ConflictException(
                     "Der Tisch ist nicht freigegeben (Status: %s). Bitte auf die Freigabe warten oder das Personal ansprechen."
@@ -80,7 +91,7 @@ public class OrderService {
         }
 
         Long restaurantId = session.getRestaurantTable().getRestaurant().getId();
-        CustomerOrder order = new CustomerOrder(session);
+        CustomerOrder order = new CustomerOrder(session, guest);
         for (PlaceOrderRequest.OrderItemRequest itemRequest : request.items()) {
             // Nur Gerichte des EIGENEN Ladens sind bestellbar (Mandanten-Schutz).
             MenuItem menuItem = menuItemRepository.findByIdAndRestaurantId(itemRequest.menuItemId(), restaurantId)
@@ -102,12 +113,12 @@ public class OrderService {
         return OrderResponse.from(saved);
     }
 
-    /** Alle Bestellungen der eigenen Tisch-Sitzung (Gast-Ansicht). */
+    /** Bestellungen der eigenen Person (Gast-Ansicht "Meine Bestellungen"). */
     @Transactional(readOnly = true)
-    public List<OrderResponse> getOrdersForSession(String sessionToken) {
-        TableSession session = sessionRepository.findBySessionToken(sessionToken)
+    public List<OrderResponse> getOrdersForGuest(String guestToken) {
+        Guest guest = guestRepository.findByGuestToken(guestToken)
                 .orElseThrow(() -> new NotFoundException("Sitzung nicht gefunden."));
-        return orderRepository.findBySessionIdOrderByCreatedAtDesc(session.getId())
+        return orderRepository.findByGuestIdOrderByCreatedAtDesc(guest.getId())
                 .stream()
                 .map(OrderResponse::from)
                 .toList();

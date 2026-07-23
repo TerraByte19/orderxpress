@@ -37,6 +37,7 @@ const Kitchen = {
     /* ---------- Start ---------- */
 
     start() {
+        OX.buildNav("kitchen");
         document.getElementById("view-login").style.display = "none";
         document.getElementById("view-app").style.display = "";
         document.getElementById("btn-logout").style.display = "";

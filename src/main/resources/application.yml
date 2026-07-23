@@ -31,11 +31,21 @@ spring:
       path: /h2-console
 
 server:
-  port: 8080
+  # Lokal 8080; auf Render/Cloud kommt der Port aus der Umgebung ($PORT).
+  port: ${PORT:8080}
+  # Hinter einem Proxy (Render terminiert HTTPS) die X-Forwarded-*-Header
+  # auswerten -> generierte QR-Links werden korrekt "https://..." und der
+  # Request-Host (die echte Domain) steht fuer die QR-Codes zur Verfuegung.
+  forward-headers-strategy: native
 
 orderxpress:
-  # Basis-URL, die in den QR-Codes steckt. Im echten Betrieb die von den
-  # Gaesten erreichbare Adresse eintragen, z.B. https://bestellen.mein-restaurant.de
+  # true = H2-Konsole + Swagger sind offen (nur lokal!). Auf einem oeffentlichen
+  # Server per ENV ORDERXPRESS_DEV_TOOLS=false abschalten.
+  dev-tools: true
+
+  # Basis-URL, die in den QR-Codes steckt. Steht hier "localhost", nimmt die App
+  # automatisch die Adresse, ueber die sie gerade aufgerufen wird (also auch die
+  # Render-Domain). Man MUSS hier also nichts eintragen.
   public-base-url: "http://localhost:8080"
 
   security:

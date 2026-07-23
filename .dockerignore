@@ -1,0 +1,8 @@
+# Nicht ins Docker-Image kopieren (kleiner, schneller, sauberer Build)
+target/
+data/
+.git/
+.idea/
+*.iml
+.vscode/
+*.log

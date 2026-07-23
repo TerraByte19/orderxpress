@@ -39,6 +39,7 @@ const Admin = {
     },
 
     start() {
+        OX.buildNav("admin");
         document.getElementById("view-login").style.display = "none";
         document.getElementById("view-app").style.display = "";
         document.getElementById("btn-logout").style.display = "";
@@ -64,6 +65,7 @@ const Admin = {
         this.loadMenuAdmin();
         this.loadDesign();
         this.loadUsers();
+        this.loadDevices();
     },
 
     /* Nur die "lebendigen" Bereiche (bei SSE-Ereignissen und im 15s-Takt) */
@@ -549,6 +551,93 @@ const Admin = {
             OX.toast("Bild entfernt");
         } catch (e) { OX.toast(e.message, true); }
         this.loadDesign();
+    },
+
+    /* ================= Geraete (QR-Anmeldung) ================= */
+
+    async loadDevices() {
+        const devices = await OX.api("/api/admin/devices");
+        const box = document.getElementById("devices-list");
+        if (!devices.length) {
+            box.innerHTML = "<p class='muted'>Noch keine Geräte. Lege eins an, um ein Tablet anzumelden.</p>";
+            return;
+        }
+        box.innerHTML = "";
+        for (const d of devices) {
+            const row = document.createElement("div");
+            row.className = "row";
+            row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line)";
+            row.innerHTML =
+                "<strong>" + this.esc(d.label) + "</strong>" +
+                "<span class='badge blue'>" + this.roleText(d.role) + "</span>" +
+                (d.revoked ? "<span class='badge red'>gesperrt</span>"
+                    : d.activated ? "<span class='badge green'>angemeldet</span>"
+                        : "<span class='badge amber'>wartet auf Scan</span>") +
+                "<span class='spacer'></span>" +
+                "<span class='muted'>" + (d.lastUsedAt ? "zuletzt aktiv " + OX.zeit(d.lastUsedAt) : "noch nie benutzt") + "</span>";
+
+            if (!d.revoked) {
+                if (d.activationUrl) {
+                    row.appendChild(this.btn("QR anzeigen", "green", () => this.showDeviceQr(d)));
+                } else {
+                    row.appendChild(this.btn("Neu einrichten", "ghost", () => this.regenerateDevice(d)));
+                }
+                row.appendChild(this.btn("Sperren", "red", () => this.revokeDevice(d)));
+            }
+            box.appendChild(row);
+        }
+    },
+
+    showNewDeviceForm() {
+        this.buildForm(document.getElementById("new-device-form"), [
+            { key: "label", label: "Name des Geräts (z.B. Küchen-Tablet)", value: "" },
+            { key: "role", label: "Wofür ist das Gerät?", type: "select", value: "KITCHEN",
+              options: [{ value: "KITCHEN", label: "Küche (Küchen-Monitor)" },
+                        { value: "SERVICE", label: "Service / Kasse" }] }
+        ], async (inputs) => {
+            const created = await OX.api("/api/admin/devices", {
+                method: "POST",
+                body: JSON.stringify({
+                    label: inputs.label.value.trim(),
+                    role: inputs.role.value
+                })
+            });
+            document.getElementById("new-device-form").innerHTML = "";
+            await this.loadDevices();
+            this.showDeviceQr(created);   // QR direkt zum Scannen anzeigen
+        });
+    },
+
+    /* QR-Code laden (mit Login) und im Overlay anzeigen */
+    async showDeviceQr(device) {
+        try {
+            const res = await fetch("/api/admin/devices/" + device.id + "/qrcode?size=512",
+                { headers: OX.authHeader() });
+            if (!res.ok) throw new Error("QR-Code konnte nicht geladen werden");
+            const blob = await res.blob();
+            document.getElementById("qr-img").src = URL.createObjectURL(blob);
+            document.getElementById("qr-title").textContent =
+                device.label + " – mit dem Gerät scannen";
+            document.getElementById("overlay").classList.add("show");
+        } catch (e) { OX.toast(e.message, true); }
+    },
+
+    async regenerateDevice(device) {
+        if (!confirm("Neuen QR-Code für '" + device.label + "' erzeugen? Das alte Gerät bleibt angemeldet.")) return;
+        try {
+            const updated = await OX.api("/api/admin/devices/" + device.id + "/regenerate", { method: "POST" });
+            await this.loadDevices();
+            this.showDeviceQr(updated);
+        } catch (e) { OX.toast(e.message, true); }
+    },
+
+    async revokeDevice(device) {
+        if (!confirm("'" + device.label + "' sperren? Das Gerät fliegt sofort raus.")) return;
+        try {
+            await OX.api("/api/admin/devices/" + device.id, { method: "DELETE" });
+            OX.toast("Gerät gesperrt");
+        } catch (e) { OX.toast(e.message, true); }
+        this.loadDevices();
     },
 
     /* ================= Kuechen-Logins ================= */

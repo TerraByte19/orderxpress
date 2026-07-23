@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ger&auml;t anmelden - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar"><h1>OrderXpress &ndash; Ger&auml;t anmelden</h1></header>
+<main>
+
+    <div id="view-wait" class="center">
+        <p class="big">Einen Moment &hellip;</p>
+        <p class="muted">Das Ger&auml;t wird angemeldet.</p>
+    </div>
+
+    <div id="view-ok" class="center" style="display:none">
+        <p class="big">&#10003; Ger&auml;t angemeldet</p>
+        <p id="ok-text" class="muted"></p>
+        <p class="muted">Du wirst gleich weitergeleitet &hellip;</p>
+        <p><button id="btn-go">Jetzt loslegen</button></p>
+    </div>
+
+    <div id="view-error" class="center" style="display:none">
+        <p class="big">Das hat nicht geklappt</p>
+        <p id="error-text" class="muted"></p>
+        <p class="muted">Ein QR-Code funktioniert nur EINMAL. Bitte lass dir vom
+            Inhaber einen neuen Code anzeigen.</p>
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/device.js"></script>
+</body>
+</html>

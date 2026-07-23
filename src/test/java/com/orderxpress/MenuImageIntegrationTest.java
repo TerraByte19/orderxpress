@@ -1,13 +1,8 @@
 package com.orderxpress;
 
-import com.orderxpress.repository.MenuItemRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -15,7 +10,6 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -23,53 +17,41 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testet Fotos fuer Gerichte: Upload durch den Inhaber, Abruf durch Gaeste,
- * Ablehnung von Nicht-Bildern, Loeschen.
+ * Fotos fuer Gerichte: Upload durch den Inhaber (mit Verkleinern), Abruf durch
+ * Gaeste, Ablehnung von Nicht-Bildern, Loeschen. Nutzt einen eigenen Test-Laden.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-class MenuImageIntegrationTest {
-
-    private static final String OWNER = "inhaber";
-    private static final String OWNER_PASSWORD = "inhaber123";
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private MenuItemRepository menuItemRepository;
+class MenuImageIntegrationTest extends IntegrationTestBase {
 
     @Test
     void bildHochladenAbrufenUndLoeschen() throws Exception {
-        Long itemId = menuItemRepository.findAll().get(0).getId();
+        Owner o = createRestaurant("img");
+        long cat = createCategory(o, "Speisen");
+        long itemId = createItem(o, cat, "Burger", "12.00");
 
-        // 1) Inhaber laedt ein (grosses) JPG hoch -> wird angenommen und verkleinert
-        mockMvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image")
-                        .file(new MockMultipartFile("file", "essen.jpg", "image/jpeg", testJpeg()))
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        // 1) Inhaber laedt ein (grosses) JPG hoch -> angenommen und verkleinert
+        mvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image").with(as(o))
+                        .file(new MockMultipartFile("file", "essen.jpg", "image/jpeg", testJpeg())))
                 .andExpect(status().isNoContent());
 
         // 2) Gast kann das Bild ohne Login abrufen
-        mockMvc.perform(get("/api/guest/menu-items/" + itemId + "/image"))
+        mvc.perform(get("/api/guest/menu-items/" + itemId + "/image"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.IMAGE_JPEG));
 
         // 3) Nicht-Bilder werden abgelehnt
-        mockMvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image")
-                        .file(new MockMultipartFile("file", "boese.txt", "text/plain", "kein Bild".getBytes()))
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        mvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image").with(as(o))
+                        .file(new MockMultipartFile("file", "boese.txt", "text/plain", "kein Bild".getBytes())))
                 .andExpect(status().isBadRequest());
 
         // 4) Upload ohne Login ist gesperrt
-        mockMvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image")
+        mvc.perform(multipart("/api/admin/menu-items/" + itemId + "/image")
                         .file(new MockMultipartFile("file", "essen.jpg", "image/jpeg", testJpeg())))
                 .andExpect(status().isUnauthorized());
 
         // 5) Inhaber loescht das Bild -> Abruf liefert 404
-        mockMvc.perform(delete("/api/admin/menu-items/" + itemId + "/image")
-                        .with(httpBasic(OWNER, OWNER_PASSWORD)))
+        mvc.perform(delete("/api/admin/menu-items/" + itemId + "/image").with(as(o)))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(get("/api/guest/menu-items/" + itemId + "/image"))
+        mvc.perform(get("/api/guest/menu-items/" + itemId + "/image"))
                 .andExpect(status().isNotFound());
     }
 

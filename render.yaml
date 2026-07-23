@@ -1,0 +1,28 @@
+# Render-Bauplan (Blueprint) fuer OrderXpress.
+# Render -> "New +" -> "Blueprint" -> dein GitHub-Repo waehlen -> Apply.
+#
+# Startet einen Docker-Webdienst. Datenbank standardmaessig H2 im Container
+# (schnell, kostenlos) - Daten gehen bei jedem Neustart/Deploy verloren.
+# Fuer bleibende Daten die PostgreSQL-Schritte in RENDER-DEPLOY.md befolgen.
+
+services:
+  - type: web
+    name: orderxpress
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Entwicklungswerkzeuge auf dem oeffentlichen Server zu lassen (wichtig!):
+      - key: ORDERXPRESS_DEV_TOOLS
+        value: "false"
+      - key: SPRING_H2_CONSOLE_ENABLED
+        value: "false"
+      # Plattform-Admin-Passwort NICHT im Code - beim Apply selbst eintragen:
+      - key: ORDERXPRESS_SECURITY_PLATFORMADMIN_PASSWORD
+        sync: false
+
+# --- Fuer bleibende Daten spaeter einkommentieren (siehe RENDER-DEPLOY.md) ---
+# databases:
+#   - name: orderxpress-db
+#     plan: free

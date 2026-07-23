@@ -56,6 +56,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL fuer den Server-Betrieb (z.B. Render). Lokal bleibt H2;
+             auf Render setzt man SPRING_DATASOURCE_URL/-USERNAME/-PASSWORD +
+             SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver. -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Swagger UI zum Testen der API: http://localhost:8080/swagger-ui.html -->
         <dependency>
             <groupId>org.springdoc</groupId>

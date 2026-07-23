@@ -1,24 +1,31 @@
-/* Gaeste-Seite: Scan -> Warten auf Freigabe -> Menue -> Warenkorb -> Bestellen */
+/* Gaeste-Seite:
+   Scan -> (Gastgeber: warten auf Laden | Beitretender: warten auf Gastgeber)
+   -> Menue -> Warenkorb -> Bestellen. Zusaetzlich: Gastgeber gibt weitere
+   Personen frei, geteilte Rechnung mit Auswahl-Summe. */
 const Guest = {
 
     qrToken: null,
-    sessionToken: null,
+    guestToken: null,
+    isHost: false,
+    myName: "",
     tableNumber: null,
     restaurantId: null,
+    restaurantName: "",
     hamburger: false,
+    approved: false,
+    menuLoaded: false,
     menu: [],
     cart: {},          // menuItemId -> { item, quantity, note }
     pollTimer: null,
-    detailItem: null,  // aktuell geoeffnetes Gericht in der Detail-Ansicht
+    billSelected: {},  // orderItemId -> lineTotal (nur unbezahlte)
+    detailItem: null,
     detailQty: 1,
 
     /* ---------- Start ---------- */
 
     init() {
-        // Klick neben die Detail-Box schliesst sie
         document.getElementById("overlay").onclick = () => this.closeDetail();
 
-        // Token aus der Adresse lesen: /t/<qrToken> (aus dem QR-Code) oder ?token=...
         const path = location.pathname;
         if (path.startsWith("/t/")) {
             this.qrToken = decodeURIComponent(path.split("/")[2] || "");
@@ -29,63 +36,209 @@ const Guest = {
             this.showError("Kein Tisch-Code gefunden", "Bitte den QR-Code am Tisch scannen.");
             return;
         }
-        this.scan();
+
+        // Bei Neuladen dieselbe Person behalten (Token pro QR-Code gespeichert).
+        const saved = this.loadSavedToken();
+        if (saved) {
+            this.guestToken = saved;
+            this.resume();
+        } else {
+            this.scan();
+        }
     },
+
+    storageKey() { return "ox-guest-" + this.qrToken; },
+    loadSavedToken() { try { return localStorage.getItem(this.storageKey()); } catch (e) { return null; } },
+    saveToken(t) { try { localStorage.setItem(this.storageKey(), t); } catch (e) { /* ignore */ } },
+    clearToken() { try { localStorage.removeItem(this.storageKey()); } catch (e) { /* ignore */ } },
 
     async scan() {
         this.show("view-wait");
         try {
             const res = await OX.api("/api/guest/scan/" + encodeURIComponent(this.qrToken), { method: "POST" });
-            this.sessionToken = res.sessionToken;
-            this.tableNumber = res.tableNumber;
-            this.restaurantId = res.restaurantId;
-            this.showTableBadge();
-            this.loadTheme(); // Design des Ladens (Farben/Logo/Hintergrund) anwenden
-            if (res.status === "APPROVED") {
-                this.loadMenu();
-            } else {
-                document.getElementById("wait-text").textContent =
-                    "Tisch " + this.tableNumber + " wurde gemeldet - das Personal gibt ihn gleich frei.";
-                this.pollStatus();
-            }
+            this.applyScan(res);
+            this.saveToken(this.guestToken);
+            this.afterStatus(res);
         } catch (e) {
             if (e.status === 404) this.showError("QR-Code ungültig", "Bitte das Personal ansprechen.");
             else this.showError("Das hat nicht geklappt", e.message);
         }
     },
 
-    /* Alle 3 Sekunden nachsehen, ob der Inhaber freigegeben hat */
-    pollStatus() {
+    /* Nach Neuladen: gespeicherte Person fortsetzen */
+    async resume() {
+        this.show("view-wait");
+        try {
+            const res = await OX.api("/api/guest/guests/" + this.guestToken);
+            this.applyStatus(res);
+            this.afterStatus(res);
+        } catch (e) {
+            // Token ungueltig/abgelaufen -> neu scannen
+            this.clearToken();
+            this.guestToken = null;
+            this.scan();
+        }
+    },
+
+    applyScan(res) {
+        this.guestToken = res.guestToken;
+        this.isHost = res.isHost;
+        this.myName = res.guestName;
+        this.tableNumber = res.tableNumber;
+        this.restaurantId = res.restaurantId;
+        this.restaurantName = res.restaurantName || "";
+    },
+
+    applyStatus(res) {
+        // gemeinsame Felder aus scan- bzw. status-Antwort
+        this.isHost = res.isHost;
+        this.myName = res.name != null ? res.name : this.myName;
+        this.tableNumber = res.tableNumber;
+        this.restaurantId = res.restaurantId;
+        if (res.restaurantName) this.restaurantName = res.restaurantName;
+    },
+
+    /* Entscheidet anhand des Status, welche Ansicht gezeigt wird */
+    afterStatus(res) {
+        this.showTableBadge();
+        this.loadTheme();
+
+        const gs = res.guestStatus;
+        const ss = res.sessionStatus;
+
+        if (gs === "REJECTED") {
+            this.clearToken();
+            this.showError("Nicht freigegeben", this.isHost
+                ? "Das Personal hat die Anfrage abgelehnt."
+                : "Der Tisch hat dich nicht reingelassen. Bitte sprich das Personal an.");
+            return;
+        }
+        if (ss === "REJECTED" || ss === "EXPIRED") {
+            this.clearToken();
+            this.showError("Anfrage nicht freigegeben", "Bitte sprich kurz das Personal an.");
+            return;
+        }
+        if (ss === "CLOSED") {
+            this.clearToken();
+            this.showError("Sitzung beendet", "Bitte den QR-Code neu scannen.");
+            return;
+        }
+
+        if (gs === "APPROVED") {
+            this.onApproved();
+        } else {
+            // wartet auf Freigabe
+            document.getElementById("wait-text").textContent = this.isHost
+                ? "Tisch " + this.tableNumber + " wurde gemeldet - das Personal gibt ihn gleich frei."
+                : "Bitte warte kurz - jemand am Tisch (der Gastgeber) lässt dich gleich rein.";
+            this.show("view-wait");
+        }
+        this.startPolling();
+    },
+
+    onApproved() {
+        this.approved = true;
+        document.getElementById("my-name").textContent = this.myName;
+        document.getElementById("name-bar").style.display = "flex";
+        document.getElementById("btn-bill").style.display = "";
+        if (!this.menuLoaded) {
+            this.loadMenu();
+        } else {
+            this.showMenu();
+        }
+    },
+
+    /* Alle 3 Sekunden Status abfragen (und als Gastgeber Beitritts-Anfragen holen) */
+    startPolling() {
         clearTimeout(this.pollTimer);
-        this.pollTimer = setTimeout(async () => {
+        const tick = async () => {
             try {
-                const res = await OX.api("/api/guest/sessions/" + this.sessionToken);
-                if (res.status === "APPROVED") { this.loadMenu(); return; }
-                if (res.status === "REJECTED" || res.status === "EXPIRED") {
-                    this.showError("Anfrage nicht freigegeben",
-                        "Bitte sprich kurz das Personal an.");
+                const res = await OX.api("/api/guest/guests/" + this.guestToken);
+                this.applyStatus(res);
+
+                if (res.guestStatus === "REJECTED"
+                    || res.sessionStatus === "REJECTED"
+                    || res.sessionStatus === "EXPIRED"
+                    || res.sessionStatus === "CLOSED") {
+                    this.afterStatus(res); // fuehrt zur passenden Fehlermeldung
                     return;
                 }
-                if (res.status === "CLOSED") {
-                    this.showError("Sitzung beendet", "Bitte den QR-Code neu scannen.");
-                    return;
+                if (res.guestStatus === "APPROVED" && !this.approved) {
+                    this.onApproved();
                 }
-                this.pollStatus();
-            } catch (e) {
-                this.pollStatus(); // kurzer Netzwerkfehler -> weiter versuchen
-            }
-        }, 3000);
+                if (this.approved && this.isHost) {
+                    this.loadJoinRequests();
+                }
+            } catch (e) { /* Netzwerk-Aussetzer -> weiter versuchen */ }
+            this.pollTimer = setTimeout(tick, 3000);
+        };
+        this.pollTimer = setTimeout(tick, 3000);
+    },
+
+    /* ---------- Gastgeber: Beitritts-Anfragen ---------- */
+
+    async loadJoinRequests() {
+        let list = [];
+        try { list = await OX.api("/api/guest/guests/" + this.guestToken + "/join-requests"); }
+        catch (e) { return; }
+        const box = document.getElementById("join-banner");
+        if (!list.length) { box.style.display = "none"; box.innerHTML = ""; return; }
+        box.style.display = "";
+        box.innerHTML = "";
+        for (const j of list) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.style.cssText = "margin:0 0 10px;border-color:var(--amber)";
+            card.innerHTML = "<strong>" + this.esc(j.name) + "</strong> möchte an deinen Tisch. Reinlassen?";
+            const row = document.createElement("div");
+            row.className = "row";
+            row.style.marginTop = "8px";
+            const ok = document.createElement("button");
+            ok.className = "small green"; ok.textContent = "Ja, reinlassen"; ok.style.flex = "1";
+            ok.onclick = () => this.decideJoin(j.id, "approve");
+            const no = document.createElement("button");
+            no.className = "small red"; no.textContent = "Ablehnen"; no.style.flex = "1";
+            no.onclick = () => this.decideJoin(j.id, "reject");
+            row.append(ok, no);
+            card.appendChild(row);
+            box.appendChild(card);
+        }
+    },
+
+    async decideJoin(id, action) {
+        try {
+            await OX.api("/api/guest/guests/" + this.guestToken + "/join-requests/" + id + "/" + action,
+                { method: "POST" });
+            OX.toast(action === "approve" ? "Person reingelassen" : "Abgelehnt");
+        } catch (e) { OX.toast(e.message, true); }
+        this.loadJoinRequests();
+    },
+
+    /* ---------- Name ---------- */
+
+    async changeName() {
+        const name = prompt("Dein Name (wird in der geteilten Rechnung angezeigt):", this.myName);
+        if (name == null) return;
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        try {
+            const res = await OX.api("/api/guest/guests/" + this.guestToken + "/name",
+                { method: "PUT", body: JSON.stringify({ name: trimmed }) });
+            this.myName = res.name;
+            document.getElementById("my-name").textContent = this.myName;
+            OX.toast("Name geändert");
+        } catch (e) { OX.toast(e.message, true); }
     },
 
     /* ---------- Menue ---------- */
 
     async loadMenu() {
         this.menu = await OX.api("/api/guest/menu/" + this.restaurantId);
+        this.menuLoaded = true;
         this.renderMenu();
         this.showMenu();
     },
 
-    /* Design des Ladens laden und anwenden (Farben, Logo, Hintergrund, Hamburger) */
     async loadTheme() {
         if (!this.restaurantId) return;
         try {
@@ -95,16 +248,9 @@ const Guest = {
             const root = document.documentElement;
             if (t.accentColor) root.style.setProperty("--primary", t.accentColor);
             if (t.backgroundColor) root.style.setProperty("--bg", t.backgroundColor);
+            if (t.name) { document.title = t.name + " - Bestellen"; }
 
-            if (t.name) {
-                document.getElementById("page-title").textContent = t.name;
-                document.title = t.name + " - Bestellen";
-            }
-
-            // Cache-Bust, damit ein ersetztes/entferntes Bild nicht aus dem
-            // Browser-Cache haengen bleibt.
             const v = "?v=" + Date.now();
-
             const logo = document.getElementById("brand-logo");
             if (t.logoUrl) { logo.src = t.logoUrl + v; logo.style.display = ""; }
             else { logo.removeAttribute("src"); logo.style.display = "none"; }
@@ -116,15 +262,10 @@ const Guest = {
                 document.body.classList.remove("has-bg-image");
                 document.body.style.backgroundImage = "";
             }
-        } catch (e) {
-            /* Design ist optional - bei Fehler bleibt das Standard-Aussehen */
-        }
+        } catch (e) { /* Design ist optional */ }
     },
 
-    /* Hamburger-Menue auf-/zuklappen */
-    toggleCatPanel() {
-        document.getElementById("cat-panel").classList.toggle("open");
-    },
+    toggleCatPanel() { document.getElementById("cat-panel").classList.toggle("open"); },
 
     scrollToCategory(id) {
         document.getElementById("cat-panel").classList.remove("open");
@@ -136,7 +277,6 @@ const Guest = {
         const container = document.getElementById("menu-container");
         container.innerHTML = "";
 
-        // Kategorie-Leiste (Hamburger) nur zeigen, wenn der Laden das aktiviert hat
         const bar = document.getElementById("cat-bar");
         const panel = document.getElementById("cat-panel");
         panel.innerHTML = "";
@@ -171,7 +311,6 @@ const Guest = {
                     (item.description ? "<br><span class='muted'>" + this.esc(item.description) + "</span>" : "") +
                     "</div>" +
                     "<span>" + OX.preis(item.price) + "</span>";
-                // Klick auf die Zeile -> Detail-Ansicht mit grossem Bild und Zutaten
                 row.onclick = () => this.openDetail(item);
                 const btn = document.createElement("button");
                 btn.className = "small";
@@ -193,12 +332,8 @@ const Guest = {
         document.getElementById("detail-qty").textContent = "1";
 
         const img = document.getElementById("detail-img");
-        if (item.imageUrl) {
-            img.src = item.imageUrl;
-            img.style.display = "";
-        } else {
-            img.style.display = "none";
-        }
+        if (item.imageUrl) { img.src = item.imageUrl; img.style.display = ""; }
+        else { img.style.display = "none"; }
 
         document.getElementById("detail-name").textContent = item.name;
         document.getElementById("detail-price").textContent = OX.preis(item.price);
@@ -221,9 +356,7 @@ const Guest = {
         document.getElementById("overlay").classList.add("show");
     },
 
-    closeDetail() {
-        document.getElementById("overlay").classList.remove("show");
-    },
+    closeDetail() { document.getElementById("overlay").classList.remove("show"); },
 
     detailQtyChange(delta) {
         this.detailQty = Math.min(50, Math.max(1, this.detailQty + delta));
@@ -331,7 +464,7 @@ const Guest = {
             }));
             await OX.api("/api/guest/orders", {
                 method: "POST",
-                body: JSON.stringify({ sessionToken: this.sessionToken, items: items })
+                body: JSON.stringify({ guestToken: this.guestToken, items: items })
             });
             this.cart = {};
             this.updateCartbar();
@@ -339,14 +472,13 @@ const Guest = {
             this.show("view-done");
         } catch (e) {
             OX.toast(e.message, true);
-            if (e.status === 409) setTimeout(() => location.reload(), 2500);
         } finally {
             btn.disabled = false;
         }
     },
 
     async loadMyOrders() {
-        const orders = await OX.api("/api/guest/sessions/" + this.sessionToken + "/orders");
+        const orders = await OX.api("/api/guest/guests/" + this.guestToken + "/orders");
         const box = document.getElementById("my-orders");
         box.innerHTML = orders.length ? "" : "<p class='muted'>Noch keine Bestellungen.</p>";
         for (const o of orders) {
@@ -364,6 +496,66 @@ const Guest = {
         }
     },
 
+    /* ---------- Geteilte Rechnung ---------- */
+
+    async showBill() {
+        this.billSelected = {};
+        let bill;
+        try { bill = await OX.api("/api/guest/guests/" + this.guestToken + "/bill"); }
+        catch (e) { OX.toast(e.message, true); return; }
+
+        const box = document.getElementById("bill-container");
+        box.innerHTML = "";
+        if (!bill.participants.length) {
+            box.innerHTML = "<p class='muted'>Noch nichts bestellt.</p>";
+        }
+        for (const p of bill.participants) {
+            const card = document.createElement("div");
+            card.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px";
+            card.innerHTML = "<div class='row'><strong>" + this.esc(p.name) + "</strong>" +
+                (p.isHost ? "<span class='badge blue'>Gastgeber</span>" : "") +
+                "<span class='spacer'></span><span>offen: " + OX.preis(p.openTotal) + "</span></div>";
+            for (const line of p.items) {
+                const row = document.createElement("label");
+                row.className = "row";
+                row.style.cssText = "padding:6px 0;border-bottom:1px dashed var(--line);cursor:pointer";
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.style.width = "auto";
+                cb.disabled = line.paid;
+                cb.onchange = () => this.toggleBillLine(line.orderItemId, line.lineTotal, cb.checked);
+                const text = document.createElement("span");
+                text.style.flex = "1";
+                text.innerHTML = line.quantity + "x " + this.esc(line.name) +
+                    (line.paid ? " <span class='badge green'>bezahlt</span>" : "");
+                const price = document.createElement("span");
+                price.textContent = OX.preis(line.lineTotal);
+                row.append(cb, text, price);
+                card.appendChild(row);
+            }
+            box.appendChild(card);
+        }
+        this.updateBillSum();
+        this.show("view-bill");
+    },
+
+    toggleBillLine(id, lineTotal, checked) {
+        if (checked) this.billSelected[id] = lineTotal;
+        else delete this.billSelected[id];
+        this.updateBillSum();
+    },
+
+    updateBillSum() {
+        const sum = Object.values(this.billSelected).reduce((s, v) => s + Number(v), 0);
+        document.getElementById("bill-selected").textContent = "Ausgewählt: " + OX.preis(sum);
+    },
+
+    clearBillSelection() {
+        this.billSelected = {};
+        document.querySelectorAll("#bill-container input[type=checkbox]").forEach(cb => { cb.checked = false; });
+        this.updateBillSum();
+    },
+
     /* ---------- Anzeige-Helfer ---------- */
 
     statusText(s) {
@@ -378,13 +570,18 @@ const Guest = {
     showMenu() { this.show("view-menu"); this.updateCartbar(); },
 
     show(id) {
-        for (const v of ["view-wait", "view-error", "view-menu", "view-cart", "view-done"]) {
+        for (const v of ["view-wait", "view-error", "view-menu", "view-cart", "view-done", "view-bill"]) {
             document.getElementById(v).style.display = (v === id) ? "" : "none";
         }
         if (id !== "view-menu") document.getElementById("cartbar").style.display = "none";
+        // Namensleiste nur nach Freigabe und nicht im Warte-/Fehlerbildschirm
+        const showBar = this.approved && (id === "view-menu" || id === "view-cart"
+            || id === "view-done" || id === "view-bill");
+        document.getElementById("name-bar").style.display = showBar ? "flex" : "none";
         document.getElementById("page-title").textContent =
             (id === "view-menu") ? "Speisekarte" :
-            (id === "view-cart") ? "Warenkorb" : "Willkommen!";
+            (id === "view-cart") ? "Warenkorb" :
+            (id === "view-bill") ? "Rechnung" : (this.restaurantName || "Willkommen!");
     },
 
     showTableBadge() {
@@ -394,6 +591,9 @@ const Guest = {
     },
 
     showError(title, text) {
+        this.approved = false;
+        document.getElementById("name-bar").style.display = "none";
+        document.getElementById("join-banner").style.display = "none";
         document.getElementById("error-title").textContent = title;
         document.getElementById("error-text").textContent = text;
         this.show("view-error");

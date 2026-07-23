@@ -59,4 +59,65 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/api/irgendwas"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // ---------- Rolle SERVICE / Kasse ----------
+
+    @Test
+    void serviceOhneLoginWirdAbgewiesen() throws Exception {
+        mockMvc.perform(get("/api/service/sessions/pending"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void serviceLoginDarfInDieServiceAnsicht() throws Exception {
+        mockMvc.perform(get("/api/service/sessions/pending")
+                        .with(httpBasic("service", "service123")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void serviceLoginDarfNichtInDieVerwaltung() throws Exception {
+        mockMvc.perform(get("/api/admin/tables")
+                        .with(httpBasic("service", "service123")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void serviceLoginDarfNichtInDieKueche() throws Exception {
+        mockMvc.perform(get("/api/kitchen/orders")
+                        .with(httpBasic("service", "service123")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void kuecheDarfNichtInDieServiceAnsicht() throws Exception {
+        mockMvc.perform(get("/api/service/sessions/pending")
+                        .with(httpBasic("kueche", "kueche123")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void inhaberDarfInServiceUndKueche() throws Exception {
+        mockMvc.perform(get("/api/service/sessions/pending")
+                        .with(httpBasic("inhaber", "inhaber123")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/kitchen/orders")
+                        .with(httpBasic("inhaber", "inhaber123")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void platformAdminDarfNichtInDenLadenBereich() throws Exception {
+        // Der Plattform-Admin gehoert keinem Laden an -> kein Zugriff auf /api/admin
+        mockMvc.perform(get("/api/admin/tables")
+                        .with(httpBasic("admin", "test-admin")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void falschesPasswortWirdAbgewiesen() throws Exception {
+        mockMvc.perform(get("/api/admin/tables")
+                        .with(httpBasic("inhaber", "falsch")))
+                .andExpect(status().isUnauthorized());
+    }
 }
