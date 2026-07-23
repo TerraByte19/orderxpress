@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Statistik - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; Statistik</h1>
+    <span class="spacer"></span>
+    <button class="ghost small" id="btn-logout" style="display:none;color:#fff;border-color:#555"
+            onclick="Stats.logout()">Abmelden</button>
+</header>
+<main>
+
+    <!-- Login (nur Inhaber) -->
+    <div id="view-login" class="card" style="max-width:380px;margin:40px auto">
+        <h2>Anmelden</h2>
+        <p><input id="login-user" placeholder="Benutzername" value="inhaber"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort"></p>
+        <p><button style="width:100%" onclick="Stats.login()">Anmelden</button></p>
+        <p class="muted">Die Statistik sieht nur der Inhaber.</p>
+    </div>
+
+    <!-- App -->
+    <div id="view-app" style="display:none">
+
+        <!-- Zeitraum-Auswahl -->
+        <div class="card">
+            <div class="tabs" id="range-tabs">
+                <button data-range="today" class="active" onclick="Stats.setRange('today')">Heute</button>
+                <button data-range="week" onclick="Stats.setRange('week')">Woche</button>
+                <button data-range="month" onclick="Stats.setRange('month')">Monat</button>
+                <button data-range="total" onclick="Stats.setRange('total')">Gesamt</button>
+                <button data-range="custom" onclick="Stats.setRange('custom')">Zeitraum &hellip;</button>
+            </div>
+            <div id="custom-range" class="row" style="display:none;margin-top:10px;gap:8px;flex-wrap:wrap">
+                <label class="muted">von <input type="date" id="date-from"></label>
+                <label class="muted">bis <input type="date" id="date-to"></label>
+                <button class="small green" onclick="Stats.applyCustom()">Anzeigen</button>
+            </div>
+            <p class="muted" id="range-label" style="margin:10px 0 0"></p>
+        </div>
+
+        <!-- Kennzahlen -->
+        <div class="card">
+            <div class="stat-row">
+                <div class="stat-box">
+                    <div class="stat-value" id="kpi-revenue">&ndash;</div>
+                    <div class="stat-label">Umsatz</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="kpi-orders">&ndash;</div>
+                    <div class="stat-label">Bestellungen</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="kpi-items">&ndash;</div>
+                    <div class="stat-label">verkaufte Artikel</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="kpi-avg">&ndash;</div>
+                    <div class="stat-label">&Oslash; pro Bestellung</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meistverkaufte Produkte -->
+        <div class="card">
+            <h2>Meistverkaufte Produkte</h2>
+            <div id="top-products"><p class="muted">Noch keine Verk&auml;ufe.</p></div>
+        </div>
+
+        <!-- Umsatz pro Tag -->
+        <div class="card">
+            <h2>Umsatz pro Tag</h2>
+            <div id="chart-days" class="vchart"></div>
+        </div>
+
+        <!-- Stosszeiten -->
+        <div class="card">
+            <h2>Sto&szlig;zeiten (Umsatz nach Uhrzeit)</h2>
+            <div id="chart-hours" class="vchart"></div>
+        </div>
+
+        <!-- Gefahrenzone -->
+        <div class="card danger">
+            <h2>Statistik zur&uuml;cksetzen / l&ouml;schen</h2>
+            <p class="muted">Zwei M&ouml;glichkeiten &ndash; die erste ist sicher, die zweite endg&uuml;ltig:</p>
+            <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:6px">
+                <div style="flex:1;min-width:240px">
+                    <button class="ghost" style="width:100%" onclick="Stats.reset()">Zur&uuml;cksetzen (ab jetzt neu z&auml;hlen)</button>
+                    <p class="muted" style="margin:6px 0 0">Setzt einen Startpunkt: die Statistik beginnt bei Null.
+                        <strong>Bestellungen und Rechnungen bleiben erhalten.</strong></p>
+                </div>
+                <div style="flex:1;min-width:240px">
+                    <button class="red" style="width:100%" onclick="Stats.deleteHistory()">Bestellverlauf endg&uuml;ltig l&ouml;schen</button>
+                    <p class="muted" style="margin:6px 0 0">L&ouml;scht abgeschlossene Bestellungen unwiderruflich.
+                        Laufende Tische bleiben unangetastet.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/stats.js"></script>
+</body>
+</html>

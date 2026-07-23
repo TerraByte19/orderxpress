@@ -27,6 +27,7 @@ import com.orderxpress.web.dto.TableDto;
 import com.orderxpress.web.dto.TableRequest;
 import com.orderxpress.web.dto.UpdateUserRequest;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,7 +43,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Inhaber-Ansicht: Tisch-Freigaben, Bestell-Uebersicht sowie Verwaltung
@@ -110,10 +113,30 @@ public class AdminController {
 
     // ---------- Statistik (nur Inhaber) ----------
 
-    /** Tages-Statistik: Umsatz heute, Bestellungen, meistverkaufte Produkte. */
+    /**
+     * Statistik fuer einen Zeitraum: range = today|week|month|total|custom.
+     * Bei custom zusaetzlich from/to (ISO-Datum yyyy-MM-dd).
+     */
     @GetMapping("/stats")
-    public StatsDto stats() {
-        return statsService.today();
+    public StatsDto stats(@RequestParam(defaultValue = "today") String range,
+                          @RequestParam(required = false)
+                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                          @RequestParam(required = false)
+                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return statsService.compute(range, from, to);
+    }
+
+    /** Statistik zuruecksetzen: ab jetzt neu zaehlen (Bestellungen bleiben erhalten). */
+    @PostMapping("/stats/reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetStats() {
+        statsService.reset();
+    }
+
+    /** Bestellverlauf endgueltig loeschen (nur abgeschlossene Sitzungen). */
+    @DeleteMapping("/stats/history")
+    public Map<String, Integer> deleteStatsHistory() {
+        return Map.of("deleted", statsService.deleteHistory());
     }
 
     // ---------- Live-Ereignisse (SSE) ----------

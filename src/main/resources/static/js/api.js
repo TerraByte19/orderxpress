@@ -62,6 +62,7 @@ const OX = {
 
         const all = [
             { key: "admin", href: "/admin.html", label: "Inhaber", roles: ["OWNER"] },
+            { key: "stats", href: "/stats.html", label: "Statistik", roles: ["OWNER"] },
             { key: "service", href: "/service.html", label: "Service/Kasse", roles: ["OWNER", "SERVICE"] },
             { key: "kitchen", href: "/kitchen.html", label: "Küche", roles: ["OWNER", "KITCHEN"] }
         ].filter(l => l.roles.includes(me.role));

@@ -55,6 +55,14 @@ public class Restaurant {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * Ab diesem Zeitpunkt zaehlt die Statistik (der Inhaber hat sie zurueckgesetzt).
+     * null = seit Anbeginn. Die Bestellungen selbst bleiben erhalten, werden aber
+     * vor diesem Zeitpunkt nicht mehr mitgezaehlt.
+     */
+    @Column(name = "stats_reset_at")
+    private Instant statsResetAt;
+
     protected Restaurant() {
         // fuer JPA
     }
@@ -125,5 +133,13 @@ public class Restaurant {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getStatsResetAt() {
+        return statsResetAt;
+    }
+
+    public void setStatsResetAt(Instant statsResetAt) {
+        this.statsResetAt = statsResetAt;
     }
 }

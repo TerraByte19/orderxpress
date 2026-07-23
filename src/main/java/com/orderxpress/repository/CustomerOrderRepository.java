@@ -2,6 +2,7 @@ package com.orderxpress.repository;
 
 import com.orderxpress.domain.CustomerOrder;
 import com.orderxpress.domain.OrderStatus;
+import com.orderxpress.domain.SessionStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -37,8 +38,16 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Lo
     @EntityGraph(attributePaths = {"items", "session.restaurantTable"})
     List<CustomerOrder> findTop100BySession_RestaurantTable_Restaurant_IdOrderByCreatedAtDesc(Long restaurantId);
 
-    /** Bestellungen eines Ladens ab einem Zeitpunkt (fuer die Tages-Statistik). */
+    /** Bestellungen eines Ladens in einem Zeitfenster (fuer die Statistik-Zeitraeume). */
     @EntityGraph(attributePaths = "items")
-    List<CustomerOrder> findBySession_RestaurantTable_Restaurant_IdAndCreatedAtGreaterThanEqual(
-            Long restaurantId, Instant since);
+    List<CustomerOrder> findBySession_RestaurantTable_Restaurant_IdAndCreatedAtBetween(
+            Long restaurantId, Instant from, Instant to);
+
+    /**
+     * Bestellungen eines Ladens aus ABGESCHLOSSENEN Sitzungen (CLOSED/REJECTED/EXPIRED) -
+     * Grundlage fuer "Bestellverlauf loeschen", ohne laufende Tische anzutasten.
+     */
+    @EntityGraph(attributePaths = "items")
+    List<CustomerOrder> findBySession_RestaurantTable_Restaurant_IdAndSession_StatusIn(
+            Long restaurantId, Collection<SessionStatus> statuses);
 }

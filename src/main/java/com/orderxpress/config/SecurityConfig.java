@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/device/activate/**").permitAll()
                         // Frontend-Seiten und statische Dateien (Schutz erfolgt in der API, nicht im HTML)
                         .requestMatchers("/", "/index.html", "/guest.html", "/admin.html", "/kitchen.html",
-                                "/platform.html", "/service.html", "/device.html", "/waiter.html",
+                                "/platform.html", "/service.html", "/device.html", "/waiter.html", "/stats.html",
                                 "/t/**", "/d/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         // "Wer bin ich?" - fuer jeden angemeldeten Laden-Benutzer bzw. jedes Geraet
                         .requestMatchers("/api/me").hasAnyRole("OWNER", "SERVICE", "KITCHEN", "WAITER")

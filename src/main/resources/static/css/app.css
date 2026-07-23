@@ -318,3 +318,28 @@ input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; 
 .stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .bar { height: 6px; background: var(--line); border-radius: 999px; margin-top: 4px; overflow: hidden; }
 .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+
+/* Zeitraum-Reiter (Statistik-Seite) */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* Senkrechtes Balkendiagramm (Umsatz pro Tag / Stosszeiten) */
+.vchart { display: flex; align-items: flex-end; gap: 4px; height: 140px; overflow-x: auto; padding-top: 6px; }
+.vbar { flex: 1 0 22px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.vbar .fill { width: 70%; min-height: 2px; background: var(--primary); border-radius: 4px 4px 0 0; }
+.vbar .fill.empty { background: var(--line); }
+.vbar .cap { font-size: 11px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; }
+.vbar .lab { font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+
+/* Gefahrenzone: Zuruecksetzen / Verlauf loeschen */
+.danger { border-color: var(--red); }
+.danger h2 { color: var(--red); }
