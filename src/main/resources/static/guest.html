@@ -39,6 +39,18 @@
         <p><button onclick="location.reload()">Erneut versuchen</button></p>
     </div>
 
+    <!-- Ansicht: Name eingeben (Pflicht - die Speisekarte erscheint erst danach) -->
+    <div id="view-name" style="display:none">
+        <div class="card" style="max-width:420px;margin:30px auto">
+            <h2 style="margin-top:0">Wie hei&szlig;t du?</h2>
+            <p class="muted">Bitte gib deinen Namen ein. Er erscheint in der geteilten
+                Rechnung, damit alle am Tisch sehen, wer was bestellt hat.</p>
+            <input id="name-input" placeholder="Dein Name" maxlength="60"
+                   autocomplete="name" style="margin-bottom:12px">
+            <button class="green" style="width:100%" onclick="Guest.confirmName()">Weiter zur Speisekarte</button>
+        </div>
+    </div>
+
     <!-- Ansicht: Speisekarte -->
     <div id="view-menu" style="display:none">
         <!-- Kategorie-Leiste mit Hamburger-Menue (nur wenn der Laden das aktiviert hat) -->

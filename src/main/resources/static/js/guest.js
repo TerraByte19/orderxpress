@@ -52,6 +52,36 @@ const Guest = {
     saveToken(t) { try { localStorage.setItem(this.storageKey(), t); } catch (e) { /* ignore */ } },
     clearToken() { try { localStorage.removeItem(this.storageKey()); } catch (e) { /* ignore */ } },
 
+    /* Name-Bestaetigung + Warenkorb pro Person (guestToken) merken.
+       So bleibt beides ueber ein Neuladen erhalten; eine neue Person (neuer
+       Scan nach Sitzungsende) bekommt einen neuen Token -> muss den Namen neu eingeben. */
+    namedKey() { return "ox-named-" + this.guestToken; },
+    isNamed() { try { return localStorage.getItem(this.namedKey()) === "1"; } catch (e) { return false; } },
+    markNamed() { try { localStorage.setItem(this.namedKey(), "1"); } catch (e) { /* ignore */ } },
+
+    cartKey() { return "ox-cart-" + this.guestToken; },
+    saveCart() {
+        try {
+            const data = Object.values(this.cart).map(l => ({ id: l.item.id, quantity: l.quantity, note: l.note || "" }));
+            localStorage.setItem(this.cartKey(), JSON.stringify(data));
+        } catch (e) { /* ignore */ }
+    },
+    clearSavedCart() { try { localStorage.removeItem(this.cartKey()); } catch (e) { /* ignore */ } },
+    /* Nach dem Laden des Menues den gemerkten Warenkorb wiederherstellen. */
+    restoreCart() {
+        let data;
+        try { data = JSON.parse(localStorage.getItem(this.cartKey()) || "[]"); } catch (e) { return; }
+        if (!Array.isArray(data) || !data.length) return;
+        const byId = {};
+        for (const cat of this.menu) for (const it of cat.items) byId[it.id] = it;
+        for (const entry of data) {
+            const item = byId[entry.id];
+            if (!item) continue; // Gericht gibt es nicht mehr oder ist nicht verfuegbar
+            this.cart[item.id] = { item, quantity: Math.min(50, Math.max(1, entry.quantity)), note: entry.note || "" };
+        }
+        this.updateCartbar();
+    },
+
     async scan() {
         this.show("view-wait");
         try {
@@ -139,13 +169,39 @@ const Guest = {
     onApproved() {
         this.approved = true;
         document.getElementById("my-name").textContent = this.myName;
-        document.getElementById("name-bar").style.display = "flex";
         document.getElementById("btn-bill").style.display = "";
-        if (!this.menuLoaded) {
-            this.loadMenu();
-        } else {
-            this.showMenu();
-        }
+        // Erst Name eingeben, dann Speisekarte (Pflicht, einmal pro Person).
+        if (!this.isNamed()) { this.showNameGate(); return; }
+        this.enterMenu();
+    },
+
+    enterMenu() {
+        if (!this.menuLoaded) this.loadMenu();
+        else this.showMenu();
+    },
+
+    /* Pflicht-Eingabe des Namens, bevor die Speisekarte erscheint */
+    showNameGate() {
+        const input = document.getElementById("name-input");
+        // Standardnamen ("Gast 3") NICHT vorbefuellen - der Gast soll aktiv tippen.
+        input.value = (this.myName && !/^Gast\s*\d+$/i.test(this.myName)) ? this.myName : "";
+        this.show("view-name");
+        setTimeout(() => input.focus(), 50);
+        input.onkeydown = (e) => { if (e.key === "Enter") this.confirmName(); };
+    },
+
+    async confirmName() {
+        const input = document.getElementById("name-input");
+        const name = input.value.trim();
+        if (!name) { OX.toast("Bitte gib deinen Namen ein", true); input.focus(); return; }
+        try {
+            const res = await OX.api("/api/guest/guests/" + this.guestToken + "/name",
+                { method: "PUT", body: JSON.stringify({ name }) });
+            this.myName = res.name;
+            document.getElementById("my-name").textContent = this.myName;
+            this.markNamed();
+            this.enterMenu();
+        } catch (e) { OX.toast(e.message, true); }
     },
 
     /* Alle 3 Sekunden Status abfragen (und als Gastgeber Beitritts-Anfragen holen) */
@@ -236,6 +292,7 @@ const Guest = {
         this.menu = await OX.api("/api/guest/menu/" + this.restaurantId);
         this.menuLoaded = true;
         this.renderMenu();
+        this.restoreCart();   // gemerkten Warenkorb nach Neuladen wiederherstellen
         this.showMenu();
     },
 
@@ -373,6 +430,7 @@ const Guest = {
         this.cart[item.id] = line;
         this.closeDetail();
         OX.toast(this.detailQty + "x " + item.name + " hinzugefügt");
+        this.saveCart();
         this.updateCartbar();
     },
 
@@ -383,6 +441,7 @@ const Guest = {
         line.quantity++;
         this.cart[item.id] = line;
         OX.toast(item.name + " hinzugefügt");
+        this.saveCart();
         this.updateCartbar();
     },
 
@@ -430,7 +489,7 @@ const Guest = {
             note.value = line.note;
             note.maxLength = 200;
             note.style.marginTop = "6px";
-            note.oninput = () => { line.note = note.value; };
+            note.oninput = () => { line.note = note.value; this.saveCart(); };
 
             const wrap = document.createElement("div");
             wrap.style.padding = "6px 0";
@@ -447,6 +506,7 @@ const Guest = {
         if (!line) return;
         line.quantity += delta;
         if (line.quantity <= 0) delete this.cart[itemId];
+        this.saveCart();
         if (this.cartCount() === 0) { this.showMenu(); return; }
         this.showCart();
     },
@@ -467,6 +527,7 @@ const Guest = {
                 body: JSON.stringify({ guestToken: this.guestToken, items: items })
             });
             this.cart = {};
+            this.clearSavedCart();
             this.updateCartbar();
             await this.loadMyOrders();
             this.show("view-done");
@@ -570,7 +631,7 @@ const Guest = {
     showMenu() { this.show("view-menu"); this.updateCartbar(); },
 
     show(id) {
-        for (const v of ["view-wait", "view-error", "view-menu", "view-cart", "view-done", "view-bill"]) {
+        for (const v of ["view-wait", "view-error", "view-name", "view-menu", "view-cart", "view-done", "view-bill"]) {
             document.getElementById(v).style.display = (v === id) ? "" : "none";
         }
         if (id !== "view-menu") document.getElementById("cartbar").style.display = "none";
@@ -592,6 +653,8 @@ const Guest = {
 
     showError(title, text) {
         this.approved = false;
+        this.cart = {};
+        this.clearSavedCart();   // beim Sitzungsende/Abbruch keinen alten Warenkorb behalten
         document.getElementById("name-bar").style.display = "none";
         document.getElementById("join-banner").style.display = "none";
         document.getElementById("error-title").textContent = title;

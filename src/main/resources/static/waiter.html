@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kellner - OrderXpress</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>OrderXpress &ndash; Kellner</h1>
+    <span id="live-dot" class="dot" title="Live-Verbindung"></span>
+</header>
+<main>
+
+    <!-- Kein Passwort-Login: Kellner kommen NUR ueber den QR-Code hierher. -->
+    <div id="view-nologin" class="card center" style="display:none">
+        <p class="big">Bitte QR-Code scannen</p>
+        <p class="muted">Diese Ansicht ist nur f&uuml;r Kellner. Lass dir von der
+            Kasse deinen pers&ouml;nlichen QR-Code zeigen und scanne ihn &mdash;
+            danach bist du automatisch angemeldet.</p>
+    </div>
+
+    <div id="view-app" style="display:none">
+        <p class="muted" style="margin:0 0 10px">Alle belegten Tische &ndash; live. Tippe einen Tisch an, um die Positionen je Person zu sehen.</p>
+        <div id="tables"></div>
+    </div>
+
+</main>
+<script src="/js/api.js"></script>
+<script src="/js/waiter.js"></script>
+</body>
+</html>

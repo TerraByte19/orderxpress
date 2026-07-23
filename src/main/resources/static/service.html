@@ -63,9 +63,32 @@
             <div id="orders-list" style="margin-top:6px"></div>
         </div>
 
+        <!-- Geraete & QR-Codes: die Kasse verwaltet ALLE QR-Codes (Kueche, Kasse,
+             Kellner), weil der Inhaber nicht immer im Laden ist -->
+        <div class="card">
+            <h2>Ger&auml;te &amp; QR-Codes</h2>
+            <p class="muted">Hier siehst und verwaltest du alle QR-Codes des Ladens
+                (K&uuml;che, Kasse, Kellner): QR anzeigen, neu einrichten oder sperren.
+                Neues Ger&auml;t: Rolle w&auml;hlen und Namen vergeben (z.B. &bdquo;QR von Ahmad&ldquo;) &ndash;
+                das Ger&auml;t scannt einmal und ist danach ohne Passwort angemeldet.</p>
+            <p><button class="small" onclick="Service.showNewDeviceForm()">+ Neuen QR-Code anlegen</button></p>
+            <div id="new-device-form"></div>
+            <div id="devices-list" style="margin-top:10px"></div>
+        </div>
+
     </div>
 
 </main>
+
+<!-- Overlay fuer QR-Code -->
+<div id="overlay" onclick="this.classList.remove('show')">
+    <div class="box">
+        <p class="big" id="qr-title"></p>
+        <img id="qr-img" alt="QR-Code">
+        <p class="muted">Der Kellner scannt diesen Code mit dem Handy.<br>Zum Schlie&szlig;en klicken.</p>
+    </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/service.js"></script>
 </body>

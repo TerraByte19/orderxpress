@@ -302,3 +302,19 @@ input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; 
 
 /* QR-Code eines Personal-Geraets */
 .device-qr { width: 240px; height: 240px; background: #fff; border-radius: 8px; }
+
+/* Statistik-Karte (Inhaber) */
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.stat-box {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+}
+.stat-value { font-size: 26px; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.bar { height: 6px; background: var(--line); border-radius: 999px; margin-top: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }

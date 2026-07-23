@@ -61,6 +61,7 @@ const Service = {
         this.loadPending();
         this.loadTables();
         this.loadOrders();
+        this.loadDevices();
     },
 
     /* ---------- Freigabe-Anfragen ---------- */
@@ -246,6 +247,113 @@ const Service = {
         this.kasseTableId = null;
         this.kasseSelected = {};
         document.getElementById("kasse-card").style.display = "none";
+    },
+
+    /* ---------- Geraete & QR-Codes (Kueche, Kasse, Kellner) ----------
+       Bewusst hier bei der Kasse: der Inhaber ist nicht immer im Laden, die
+       Kasse schon. Sie kann daher ALLE Geraete-QRs anzeigen, neu einrichten,
+       anlegen und sperren. (Der Inhaber-Zugang selbst ist kein Geraet und taucht
+       hier nicht auf.) */
+
+    async loadDevices() {
+        let devices;
+        try { devices = await OX.api("/api/service/devices"); }
+        catch (e) { return; }
+        const box = document.getElementById("devices-list");
+        if (!devices.length) {
+            box.innerHTML = "<p class='muted'>Noch keine Geräte/QR-Codes.</p>";
+            return;
+        }
+        box.innerHTML = "";
+        for (const d of devices) {
+            const row = document.createElement("div");
+            row.className = "row";
+            row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line)";
+            row.innerHTML =
+                "<strong>" + this.esc(d.label) + "</strong>" +
+                "<span class='badge blue'>" + OX.roleText(d.role) + "</span>" +
+                (d.revoked ? "<span class='badge red'>gesperrt</span>"
+                    : d.activated ? "<span class='badge green'>angemeldet</span>"
+                        : "<span class='badge amber'>wartet auf Scan</span>") +
+                "<span class='spacer'></span>" +
+                "<span class='muted'>" + (d.lastUsedAt ? "zuletzt aktiv " + OX.zeit(d.lastUsedAt) : "noch nie benutzt") + "</span>";
+            if (!d.revoked) {
+                if (d.activationUrl) {
+                    row.appendChild(this.btn("QR anzeigen", "green", () => this.showDeviceQr(d)));
+                } else {
+                    row.appendChild(this.btn("Neu einrichten", "ghost", () => this.regenerateDevice(d)));
+                }
+                row.appendChild(this.btn("Sperren", "red", () => this.revokeDevice(d)));
+            }
+            box.appendChild(row);
+        }
+    },
+
+    showNewDeviceForm() {
+        const box = document.getElementById("new-device-form");
+        box.innerHTML =
+            "<div class='row' style='margin:8px 0;gap:8px;flex-wrap:wrap'>" +
+            "<select id='device-role' style='max-width:230px'>" +
+            "<option value='WAITER'>Kellner (nur ansehen)</option>" +
+            "<option value='KITCHEN'>Küche (Küchen-Monitor)</option>" +
+            "<option value='SERVICE'>Service / Kasse</option>" +
+            "</select>" +
+            "<input id='device-label' placeholder='Name, z.B. QR von Ahmad' style='flex:1;min-width:180px'>" +
+            "</div>" +
+            "<div class='row'>" +
+            "<button class='green small' id='device-save'>Anlegen &amp; QR zeigen</button>" +
+            "<button class='ghost small' id='device-cancel'>Abbrechen</button>" +
+            "</div>";
+        const input = document.getElementById("device-label");
+        input.focus();
+        document.getElementById("device-cancel").onclick = () => { box.innerHTML = ""; };
+        document.getElementById("device-save").onclick = () => this.createDevice();
+        input.onkeydown = (e) => { if (e.key === "Enter") this.createDevice(); };
+    },
+
+    async createDevice() {
+        const label = document.getElementById("device-label").value.trim();
+        const role = document.getElementById("device-role").value;
+        if (!label) { OX.toast("Bitte einen Namen eingeben", true); return; }
+        try {
+            const created = await OX.api("/api/service/devices", {
+                method: "POST",
+                body: JSON.stringify({ label, role })
+            });
+            document.getElementById("new-device-form").innerHTML = "";
+            await this.loadDevices();
+            this.showDeviceQr(created);   // QR direkt zum Scannen anzeigen
+        } catch (e) { OX.toast(e.message, true); }
+    },
+
+    async showDeviceQr(device) {
+        try {
+            const res = await fetch("/api/service/devices/" + device.id + "/qrcode?size=512",
+                { headers: OX.authHeader() });
+            if (!res.ok) throw new Error("QR-Code konnte nicht geladen werden");
+            const blob = await res.blob();
+            document.getElementById("qr-img").src = URL.createObjectURL(blob);
+            document.getElementById("qr-title").textContent = device.label + " – scannen";
+            document.getElementById("overlay").classList.add("show");
+        } catch (e) { OX.toast(e.message, true); }
+    },
+
+    async regenerateDevice(device) {
+        if (!confirm("Neuen QR-Code für '" + device.label + "' erzeugen?")) return;
+        try {
+            const updated = await OX.api("/api/service/devices/" + device.id + "/regenerate", { method: "POST" });
+            await this.loadDevices();
+            this.showDeviceQr(updated);
+        } catch (e) { OX.toast(e.message, true); }
+    },
+
+    async revokeDevice(device) {
+        if (!confirm("'" + device.label + "' sperren? Das Gerät fliegt sofort raus.")) return;
+        try {
+            await OX.api("/api/service/devices/" + device.id, { method: "DELETE" });
+            OX.toast("Gerät gesperrt");
+        } catch (e) { OX.toast(e.message, true); }
+        this.loadDevices();
     },
 
     /* ---------- Helfer ---------- */

@@ -55,13 +55,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/device/activate/**").permitAll()
                         // Frontend-Seiten und statische Dateien (Schutz erfolgt in der API, nicht im HTML)
                         .requestMatchers("/", "/index.html", "/guest.html", "/admin.html", "/kitchen.html",
-                                "/platform.html", "/service.html", "/device.html",
+                                "/platform.html", "/service.html", "/device.html", "/waiter.html",
                                 "/t/**", "/d/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         // "Wer bin ich?" - fuer jeden angemeldeten Laden-Benutzer bzw. jedes Geraet
-                        .requestMatchers("/api/me").hasAnyRole("OWNER", "SERVICE", "KITCHEN")
+                        .requestMatchers("/api/me").hasAnyRole("OWNER", "SERVICE", "KITCHEN", "WAITER")
                         .requestMatchers("/api/platform/**").hasRole("PLATFORM_ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("OWNER")
                         .requestMatchers("/api/service/**").hasAnyRole("OWNER", "SERVICE")
+                        .requestMatchers("/api/waiter/**").hasAnyRole("OWNER", "SERVICE", "WAITER")
                         .requestMatchers("/api/kitchen/**").hasAnyRole("OWNER", "KITCHEN");
                     // Entwicklungswerkzeuge (H2-Konsole, Swagger) NUR lokal offen.
                     // Auf Render: ORDERXPRESS_DEV_TOOLS=false -> bleiben gesperrt.

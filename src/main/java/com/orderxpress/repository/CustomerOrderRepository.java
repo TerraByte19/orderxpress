@@ -5,6 +5,7 @@ import com.orderxpress.domain.OrderStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -35,4 +36,9 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Lo
     /** Letzte Bestellungen fuer die Inhaber-Uebersicht EINES Ladens. */
     @EntityGraph(attributePaths = {"items", "session.restaurantTable"})
     List<CustomerOrder> findTop100BySession_RestaurantTable_Restaurant_IdOrderByCreatedAtDesc(Long restaurantId);
+
+    /** Bestellungen eines Ladens ab einem Zeitpunkt (fuer die Tages-Statistik). */
+    @EntityGraph(attributePaths = "items")
+    List<CustomerOrder> findBySession_RestaurantTable_Restaurant_IdAndCreatedAtGreaterThanEqual(
+            Long restaurantId, Instant since);
 }

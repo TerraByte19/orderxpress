@@ -51,7 +51,7 @@ const OX = {
     },
 
     roleText(role) {
-        return { OWNER: "Inhaber", SERVICE: "Service/Kasse", KITCHEN: "Küche" }[role] || role;
+        return { OWNER: "Inhaber", SERVICE: "Service/Kasse", KITCHEN: "Küche", WAITER: "Kellner" }[role] || role;
     },
 
     /* Baut oben eine Leiste zum Umschalten zwischen den Ansichten.

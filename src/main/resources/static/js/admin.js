@@ -73,6 +73,37 @@ const Admin = {
         this.loadPending();
         this.loadTables();
         this.loadOrders();
+        this.loadStats();
+    },
+
+    /* ================= Statistik (Umsatz heute + Bestseller) ================= */
+
+    async loadStats() {
+        let s;
+        try { s = await OX.api("/api/admin/stats"); }
+        catch (e) { return; }
+        document.getElementById("stat-revenue").textContent = OX.preis(s.revenueToday);
+        document.getElementById("stat-orders").textContent = s.orderCount;
+        document.getElementById("stat-items").textContent = s.itemCount;
+
+        const box = document.getElementById("stat-top");
+        if (!s.topProducts || !s.topProducts.length) {
+            box.innerHTML = "<p class='muted'>Noch keine Verkäufe heute.</p>";
+            return;
+        }
+        const max = s.topProducts[0].quantity || 1;
+        box.innerHTML = "";
+        for (const p of s.topProducts) {
+            const row = document.createElement("div");
+            row.style.cssText = "padding:6px 0;border-bottom:1px dashed var(--line)";
+            const pct = Math.round((p.quantity / max) * 100);
+            row.innerHTML =
+                "<div class='row'><strong>" + this.esc(p.name) + "</strong>" +
+                "<span class='spacer'></span>" +
+                "<span class='muted'>" + p.quantity + "x · " + OX.preis(p.revenue) + "</span></div>" +
+                "<div class='bar'><div class='bar-fill' style='width:" + pct + "%'></div></div>";
+            box.appendChild(row);
+        }
     },
 
     /* ================= Freigabe-Anfragen ================= */

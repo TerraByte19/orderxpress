@@ -61,6 +61,20 @@ public class BillingService {
         return buildBill(guest.getSession());
     }
 
+    /**
+     * Alle aktuell belegten Tische mit ihren Positionen (pro Person zugeordnet).
+     * Grundlage fuer die Kellner-Ansicht: "welcher Tisch hat was bestellt, von wem".
+     */
+    @Transactional(readOnly = true)
+    public List<BillDto> getActiveTables() {
+        return sessionRepository
+                .findByStatusAndRestaurantTable_Restaurant_IdOrderByCreatedAtAsc(
+                        SessionStatus.APPROVED, CurrentUser.restaurantId())
+                .stream()
+                .map(this::buildBill)
+                .toList();
+    }
+
     /** Rechnung eines Tisches fuer die Kasse (Personal, nur eigener Laden). */
     @Transactional(readOnly = true)
     public BillDto getBillForTable(Long tableId) {

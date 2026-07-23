@@ -8,6 +8,7 @@ import com.orderxpress.service.OrderService;
 import com.orderxpress.service.RestaurantAdminService;
 import com.orderxpress.service.SseHub;
 import com.orderxpress.service.StaffDeviceService;
+import com.orderxpress.service.StatsService;
 import com.orderxpress.service.TableSessionService;
 import com.orderxpress.web.dto.CategoryDto;
 import com.orderxpress.web.dto.CategoryRequest;
@@ -21,6 +22,7 @@ import com.orderxpress.web.dto.MenuItemRequest;
 import com.orderxpress.web.dto.OrderResponse;
 import com.orderxpress.web.dto.RestaurantThemeDto;
 import com.orderxpress.web.dto.SessionDto;
+import com.orderxpress.web.dto.StatsDto;
 import com.orderxpress.web.dto.TableDto;
 import com.orderxpress.web.dto.TableRequest;
 import com.orderxpress.web.dto.UpdateUserRequest;
@@ -56,6 +58,7 @@ public class AdminController {
     private final MenuImageService imageService;
     private final RestaurantAdminService restaurantAdminService;
     private final StaffDeviceService staffDeviceService;
+    private final StatsService statsService;
     private final SseHub sseHub;
 
     public AdminController(TableSessionService sessionService,
@@ -64,6 +67,7 @@ public class AdminController {
                            MenuImageService imageService,
                            RestaurantAdminService restaurantAdminService,
                            StaffDeviceService staffDeviceService,
+                           StatsService statsService,
                            SseHub sseHub) {
         this.sessionService = sessionService;
         this.orderService = orderService;
@@ -71,6 +75,7 @@ public class AdminController {
         this.imageService = imageService;
         this.restaurantAdminService = restaurantAdminService;
         this.staffDeviceService = staffDeviceService;
+        this.statsService = statsService;
         this.sseHub = sseHub;
     }
 
@@ -101,6 +106,14 @@ public class AdminController {
     @GetMapping("/orders")
     public List<OrderResponse> recentOrders() {
         return orderService.getRecentOrders();
+    }
+
+    // ---------- Statistik (nur Inhaber) ----------
+
+    /** Tages-Statistik: Umsatz heute, Bestellungen, meistverkaufte Produkte. */
+    @GetMapping("/stats")
+    public StatsDto stats() {
+        return statsService.today();
     }
 
     // ---------- Live-Ereignisse (SSE) ----------

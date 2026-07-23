@@ -23,7 +23,9 @@ const Device = {
             OX.clearAuth();
             OX.setDeviceToken(res.deviceToken);
 
-            const target = res.role === "KITCHEN" ? "/kitchen.html" : "/service.html";
+            const target = res.role === "KITCHEN" ? "/kitchen.html"
+                : res.role === "WAITER" ? "/waiter.html"
+                : "/service.html";
             document.getElementById("ok-text").textContent =
                 res.label + " · " + OX.roleText(res.role) + " · " + res.restaurantName;
             document.getElementById("btn-go").onclick = () => { location.href = target; };
