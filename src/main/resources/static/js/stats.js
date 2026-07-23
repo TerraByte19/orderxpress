@@ -8,12 +8,11 @@ const Stats = {
 
     /* ---------- Login ---------- */
 
-    async init() {
-        if (OX.hasAuth()) {
-            try { await OX.api("/api/admin/stats?range=today"); this.start(); return; }
-            catch (e) { if (e.status === 403) { this.nurInhaber(); return; } OX.clearAuth(); }
-        }
-        document.getElementById("view-login").style.display = "";
+    init() {
+        // Bei vorhandener Anmeldung sofort die App zeigen (kein Login-Flash),
+        // Pruefung laeuft im Hintergrund.
+        OX.ensureAuth(() => this.start(),
+            () => { document.getElementById("view-login").style.display = ""; });
     },
 
     async login() {
@@ -30,6 +29,7 @@ const Stats = {
     },
 
     nurInhaber() {
+        document.getElementById("view-app").style.display = "none";
         document.getElementById("view-login").innerHTML =
             "<h2>Nur f&uuml;r den Inhaber</h2><p class='muted'>Diese Seite zeigt die Statistik " +
             "und ist nur mit dem Inhaber-Login erreichbar.</p>";
@@ -72,7 +72,11 @@ const Stats = {
         }
         let s;
         try { s = await OX.api(path); }
-        catch (e) { OX.toast(e.message, true); return; }
+        catch (e) {
+            if (e.status === 403) { this.nurInhaber(); return; } // z.B. Service-Login auf dieser Seite
+            OX.toast(e.message, true);
+            return;
+        }
         this.render(s);
     },
 

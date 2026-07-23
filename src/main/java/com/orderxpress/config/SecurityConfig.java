@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/guest.html", "/admin.html", "/kitchen.html",
                                 "/platform.html", "/service.html", "/device.html", "/waiter.html", "/stats.html",
                                 "/t/**", "/d/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        // PWA: Manifest, Service Worker und App-Icons muessen oeffentlich erreichbar sein
+                        .requestMatchers("/manifest.webmanifest", "/service-worker.js", "/icons/**").permitAll()
                         // "Wer bin ich?" - fuer jeden angemeldeten Laden-Benutzer bzw. jedes Geraet
                         .requestMatchers("/api/me").hasAnyRole("OWNER", "SERVICE", "KITCHEN", "WAITER")
                         .requestMatchers("/api/platform/**").hasRole("PLATFORM_ADMIN")

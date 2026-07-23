@@ -6,12 +6,11 @@ const Kitchen = {
 
     /* ---------- Login ---------- */
 
-    async init() {
-        if (OX.hasAuth()) {
-            try { await OX.api("/api/kitchen/orders"); this.start(); return; }
-            catch (e) { OX.clearAuth(); }
-        }
-        document.getElementById("view-login").style.display = "";
+    init() {
+        // Bei vorhandener Anmeldung sofort die App zeigen (kein Login-Flash),
+        // Pruefung laeuft im Hintergrund.
+        OX.ensureAuth(() => this.start(),
+            () => { document.getElementById("view-login").style.display = ""; });
     },
 
     async login() {

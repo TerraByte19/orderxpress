@@ -92,6 +92,24 @@ const OX = {
         bar.appendChild(info);
     },
 
+    /* Personal-Ansicht OHNE Login-Flash aufbauen: ist eine Anmeldung (Passwort
+       oder Geraetetoken) vorhanden, wird sofort losgelegt (onReady) und im
+       Hintergrund geprueft. Gilt die Anmeldung nicht mehr (401/403), wird sie
+       verworfen und die Seite neu geladen - erst dann erscheint die Login-Maske
+       (onLogin). So sieht der Inhaber beim Umschalten nie kurz die Anmeldung. */
+    async ensureAuth(onReady, onLogin) {
+        if (!this.hasAuth()) { onLogin(); return; }
+        onReady();
+        try {
+            await this.me();
+        } catch (e) {
+            if (e.status === 401 || e.status === 403) {
+                this.clearAuth();
+                location.reload();
+            }
+        }
+    },
+
     /* ---------- API-Aufrufe ---------- */
 
     async api(path, options = {}) {
