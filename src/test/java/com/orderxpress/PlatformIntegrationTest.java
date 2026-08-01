@@ -123,6 +123,21 @@ class PlatformIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void deaktivierterLadenSperrtAuchInhaberLogin() throws Exception {
+        Owner o = createRestaurant("inactivelogin");
+        // Login funktioniert vor der Deaktivierung.
+        mvc.perform(get("/api/admin/tables").with(httpBasic(o.username(), o.password())))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/api/platform/restaurants/" + o.restaurantId() + "/active?value=false").with(PLATFORM))
+                .andExpect(status().isOk());
+
+        // Nach der Deaktivierung darf der Inhaber-Login nicht mehr funktionieren.
+        mvc.perform(get("/api/admin/tables").with(httpBasic(o.username(), o.password())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void inhaberDarfNichtInDiePlattformVerwaltung() throws Exception {
         mvc.perform(get("/api/platform/restaurants").with(httpBasic("inhaber", "inhaber123")))
                 .andExpect(status().isForbidden());

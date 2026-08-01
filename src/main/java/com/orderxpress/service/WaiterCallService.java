@@ -9,6 +9,7 @@ import com.orderxpress.domain.SessionStatus;
 import com.orderxpress.domain.TableSession;
 import com.orderxpress.domain.WaiterCall;
 import com.orderxpress.repository.GuestRepository;
+import com.orderxpress.repository.TableSessionRepository;
 import com.orderxpress.repository.WaiterCallRepository;
 import com.orderxpress.service.event.DomainEvents;
 import com.orderxpress.web.dto.WaiterCallDto;
@@ -30,13 +31,16 @@ public class WaiterCallService {
 
     private final GuestRepository guestRepository;
     private final WaiterCallRepository callRepository;
+    private final TableSessionRepository sessionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public WaiterCallService(GuestRepository guestRepository,
                              WaiterCallRepository callRepository,
+                             TableSessionRepository sessionRepository,
                              ApplicationEventPublisher eventPublisher) {
         this.guestRepository = guestRepository;
         this.callRepository = callRepository;
+        this.sessionRepository = sessionRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -53,6 +57,11 @@ public class WaiterCallService {
             throw new BadRequestException("Der Tisch ist gerade nicht aktiv.");
         }
         RestaurantTable table = session.getRestaurantTable();
+
+        // Sitzungszeile sperren, damit zwei gleichzeitige Rufe (zwei Requests
+        // desselben Tisches) sich nicht beide "keinen offenen Ruf" ansehen und
+        // beide einen anlegen - siehe findByIdForUpdate.
+        sessionRepository.findByIdForUpdate(session.getId());
 
         // Nur einen offenen Ruf pro Tisch (Dubletten vermeiden); sonst neuen anlegen.
         callRepository.findFirstBySession_IdAndStatus(session.getId(), CallStatus.OPEN)
