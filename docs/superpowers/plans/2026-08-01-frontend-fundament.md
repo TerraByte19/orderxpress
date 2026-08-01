@@ -6,7 +6,9 @@
 
 **Architecture:** Neuer Ordner `frontend/` mit Vite im Multi-Page-Betrieb. Alle neun HTML-Seiten ziehen sofort dorthin um — zunächst unverändert, damit nichts kaputtgeht. Die alten `css/app.css` und `js/*.js` wandern nach `frontend/public/` und werden von Vite unverändert durchgereicht; spätere Pläne lösen sie Seite für Seite ab. Vite schreibt nach `src/main/resources/static`, ausgelöst vom `frontend-maven-plugin` in der Phase `generate-resources`.
 
-**Tech Stack:** Vite 6, TypeScript 5 (strict), Vitest, `@fontsource-variable/inter`, `@fontsource-variable/lora`, `jsqr`, `frontend-maven-plugin` 1.15.1, Spring Boot 4.1.0, Java 17.
+**Tech Stack:** Vite 6, TypeScript 5 (strict), Vitest, `@fontsource-variable/fraunces`, `@fontsource-variable/instrument-sans`, `@fontsource/ibm-plex-mono`, `jsqr`, `frontend-maven-plugin` 1.15.1, Spring Boot 4.1.0, Java 17.
+
+**Gestalterische Leitentscheidung:** Akzentfarbe und Hell/Dunkel stellt jeder Laden selbst ein — über Farbe kann die Plattform also keine eigene Handschrift haben. Die Eigenständigkeit liegt deshalb in **Schrift und Struktur**: drei Schriften mit klar getrennten Aufgaben, alle Zahlen in Mono (Rechnungsspalten fluchten, greift den gedruckten Bon auf), und die **Tischmarke** als einziges Erkennungszeichen quer über alle fünf Rollen-Ansichten.
 
 ## Global Constraints
 
@@ -125,8 +127,9 @@ Erwartet: keine Ausgabe.
     "test": "vitest run"
   },
   "dependencies": {
-    "@fontsource-variable/inter": "^5.1.1",
-    "@fontsource-variable/lora": "^5.1.1",
+    "@fontsource-variable/fraunces": "^5.1.1",
+    "@fontsource-variable/instrument-sans": "^5.1.1",
+    "@fontsource/ibm-plex-mono": "^5.1.1",
     "jsqr": "^1.4.0"
   },
   "devDependencies": {
@@ -338,7 +341,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: das Vite-Gerüst aus Task 1
-- Produces: CSS-Variablen `--ox-*` (unten vollständig gelistet) und die Schriftfamilien `--ox-font-sans` / `--ox-font-serif`. Spätere Aufgaben schreiben **keine** festen Farb-, Abstands- oder Größenwerte mehr, sondern nur noch `var(--ox-…)`. Seiten-Einstiege binden das System mit `import "../styles/app.css";` und `import "../styles/fonts";` ein.
+- Produces: CSS-Variablen `--ox-*` (unten vollständig gelistet), die drei Schriftfamilien `--ox-font-display` / `--ox-font-sans` / `--ox-font-mono`, sowie die Hilfsklassen `.ox-num` / `.ox-preis` / `.ox-zeit` für tabellarische Zahlen. Spätere Aufgaben schreiben **keine** festen Farb-, Abstands- oder Größenwerte mehr, sondern nur noch `var(--ox-…)`. Seiten-Einstiege binden das System mit `import "../styles/app.css";` und `import "../styles/fonts";` ein.
 
 - [ ] **Step 1: `frontend/src/styles/tokens.css` anlegen**
 
@@ -351,13 +354,15 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
    2. [data-theme="dark"] auf <html>  -> dunkle Haut
    3. theme.ts setzt --ox-accent / --ox-bg als Inline-Variable -> Laden-Design */
 :root {
-    /* --- Flaechen und Text --- */
-    --ox-bg: #fdfcfa;
+    /* --- Flaechen und Text ---
+       Bewusst kuehles Papier, kein warmes Creme: ein warmer Grund legt einen
+       Gelbstich ueber jedes Gericht-Foto, und die Karte verkauft ueber Fotos. */
+    --ox-bg: #f6f6f4;
     --ox-surface: #ffffff;
-    --ox-surface-2: #f7f6f3;
-    --ox-border: #eceae5;
-    --ox-text: #1a1917;
-    --ox-text-muted: #83807a;
+    --ox-surface-2: #efefec;
+    --ox-border: #e2e2dd;
+    --ox-text: #16171a;
+    --ox-text-muted: #6e7076;
 
     /* --- Akzent (vom Laden ueberschreibbar) --- */
     --ox-accent: #1f3d34;
@@ -385,9 +390,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
     --ox-radius-lg: 18px;
     --ox-radius-pill: 999px;
 
-    /* --- Schrift --- */
-    --ox-font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --ox-font-serif: "Lora Variable", Georgia, "Times New Roman", serif;
+    /* --- Schrift: drei Aufgaben, drei Schnitte ---
+       display  Gerichtnamen und Ueberschriften. Traegt den Charakter.
+       sans     Fliesstext und Bedienelemente.
+       mono     ALLE Zahlen: Preise, Zeiten, Tisch- und Bestellnummern.
+                Grund: in der geteilten Rechnung fluchten die Spalten
+                tatsaechlich untereinander, und es greift den gedruckten
+                Bon auf, den das System ohnehin per ESC/POS ausgibt. */
+    --ox-font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+    --ox-font-sans: "Instrument Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ox-font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
     --ox-text-xs: 12px;
     --ox-text-sm: 13px;
     --ox-text-base: 15px;
@@ -406,22 +418,26 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 }
 
 /* Dunkle Haut. Wird pro Laden gesetzt (Plan 4), nicht ueber die
-   Systemeinstellung - der Inhaber entscheidet, wie seine Seite aussieht. */
+   Systemeinstellung - der Inhaber entscheidet, wie seine Seite aussieht.
+
+   Drei klar unterscheidbare Flaechenstufen statt Fast-Schwarz mit einem
+   einzelnen Akzent. Das ist der Unterschied zwischen "gedimmter Gastraum"
+   und "Entwickler-Terminal". */
 :root[data-theme="dark"] {
-    --ox-bg: #131211;
-    --ox-surface: #1a1815;
-    --ox-surface-2: #221f1c;
-    --ox-border: #26231f;
-    --ox-text: #f3efe8;
-    --ox-text-muted: #8d867a;
+    --ox-bg: #15181a;
+    --ox-surface: #1d2124;
+    --ox-surface-2: #262b2f;
+    --ox-border: #333a3f;
+    --ox-text: #edeeec;
+    --ox-text-muted: #949a9e;
 
     --ox-accent: #c9a227;
-    --ox-accent-text: #131211;
+    --ox-accent-text: #15181a;
 
     --ox-success: #4caf82;
     --ox-warn: #e0a145;
     --ox-danger: #e5776d;
-    --ox-on-signal: #131211;
+    --ox-on-signal: #15181a;
 
     --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
     --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .55);
@@ -449,14 +465,24 @@ body {
 }
 
 h1, h2, h3 {
-    font-family: var(--ox-font-serif);
+    font-family: var(--ox-font-display);
     font-weight: 600;
     line-height: 1.25;
     margin: 0;
+    /* Fraunces: leicht optisch gross setzen, WONK an - das ist der Charakter */
+    font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 1;
 }
 h1 { font-size: var(--ox-text-xl); }
 h2 { font-size: var(--ox-text-lg); }
 h3 { font-size: var(--ox-text-base); }
+
+/* Alle Zahlen in Mono und tabellarisch - dadurch fluchten Preisspalten */
+.ox-num, .ox-preis, .ox-zeit {
+    font-family: var(--ox-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em;
+}
+.ox-preis { font-weight: 600; }
 
 p { margin: 0 0 var(--ox-space-3); }
 p:last-child { margin-bottom: 0; }
@@ -494,9 +520,14 @@ main {
 
 ```ts
 /* Schriften werden mitgeliefert - kein Aufruf an Google Fonts.
-   Die Pakete bringen variable woff2-Dateien mit; Vite buendelt sie. */
-import "@fontsource-variable/inter";
-import "@fontsource-variable/lora";
+ *
+ * Fraunces        Gerichtnamen und Ueberschriften (variabel)
+ * Instrument Sans Fliesstext und Bedienelemente (variabel)
+ * IBM Plex Mono   alle Zahlen - nur die zwei benoetigten Schnitte laden */
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/instrument-sans";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/600.css";
 ```
 
 - [ ] **Step 4: `frontend/src/styles/app.css` anlegen**
@@ -531,8 +562,8 @@ git add frontend/src/styles
 git commit -m "feat: Design-Tokens, Basis-Stile und mitgelieferte Schriften
 
 Alle Farb-, Abstands-, Radius- und Schriftwerte als --ox-*-Variablen,
-inklusive dunkler Haut ueber [data-theme=dark]. Inter und Lora kommen
-als variable Schriften aus npm statt von Google.
+inklusive dunkler Haut ueber [data-theme=dark]. Fraunces, Instrument Sans
+und IBM Plex Mono kommen als npm-Pakete statt von Google.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
@@ -1408,8 +1439,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: die Variablen aus Task 2
 - Produces:
-  - CSS-Klassen: `.ox-topbar`, `.ox-card`, `.ox-btn` (+ `.ox-btn--geist`, `--gefahr`, `--gut`, `--klein`, `--gross`), `.ox-field`, `.ox-chip` (+ `--gut`, `--warn`, `--gefahr`), `.ox-row`, `.ox-spacer`, `.ox-muted`, `.ox-center`, `.ox-grid`, `.ox-overlay`, `.ox-toast`
-  - `ui.ts`: `toast(nachricht: string, istFehler?: boolean): void`, `el<K extends keyof HTMLElementTagNameMap>(tag: K, klasse?: string, text?: string): HTMLElementTagNameMap[K]`, `zeige(id: string, sichtbar: boolean): void`, `zeigeNur(sichtbareId: string, alleIds: readonly string[]): void`, `frage(text: string): boolean`
+  - CSS-Klassen: `.ox-topbar`, `.ox-card`, `.ox-btn` (+ `.ox-btn--geist`, `--gefahr`, `--gut`, `--klein`, `--gross`, `--voll`), `.ox-field`, `.ox-label`, `.ox-chip` (+ `--gut`, `--warn`, `--gefahr`, `--akzent`), `.ox-row`, `.ox-spacer`, `.ox-grid`, `.ox-muted`, `.ox-center`, `.ox-big`, `.ox-list`, `.ox-overlay`, `.ox-toast`, `.ox-nav`, **`.ox-tischmarke`** (+ `--gross`)
+  - `ui.ts`: `toast(nachricht: string, istFehler?: boolean): void`, `el<K extends keyof HTMLElementTagNameMap>(tag: K, klasse?: string, text?: string): HTMLElementTagNameMap[K]`, `zeige(id: string, sichtbar: boolean): void`, `zeigeNur(sichtbareId: string, alleIds: readonly string[]): void`, `frage(text: string): boolean`, `tischmarke(nummer: number, gross?: boolean): HTMLSpanElement`
 
 - [ ] **Step 1: `frontend/src/styles/components.css` schreiben**
 
@@ -1532,7 +1563,35 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 }
 .ox-muted { color: var(--ox-text-muted); font-size: var(--ox-text-sm); }
 .ox-center { text-align: center; padding: var(--ox-space-7) var(--ox-space-4); }
-.ox-big { font-size: var(--ox-text-2xl); font-family: var(--ox-font-serif); }
+.ox-big {
+    font-size: var(--ox-text-2xl);
+    font-family: var(--ox-font-display);
+    font-variation-settings: "opsz" 90, "SOFT" 0, "WONK" 1;
+}
+
+/* --- Tischmarke: das Erkennungszeichen ---
+   Dieses System dreht sich um den Tisch - der Gast sitzt an einem, die
+   Kueche kocht fuer einen, der Kellner kassiert einen. Die Marke sieht
+   auf ALLEN Ansichten identisch aus. Fuehrende Null, damit Nummern in
+   Listen untereinander fluchten. */
+.ox-tischmarke {
+    display: inline-block;
+    font-family: var(--ox-font-mono);
+    font-weight: 600;
+    font-size: var(--ox-text-xs);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    padding: var(--ox-space-1) var(--ox-space-3);
+    white-space: nowrap;
+}
+.ox-tischmarke--gross {
+    font-size: var(--ox-text-xl);
+    letter-spacing: .14em;
+    padding: var(--ox-space-2) var(--ox-space-4);
+}
 
 .ox-list { list-style: none; margin: var(--ox-space-2) 0; padding: 0; }
 .ox-list li {
@@ -1663,6 +1722,16 @@ export function zeigeNur(sichtbareId: string, alleIds: readonly string[]): void 
 /** Rueckfrage vor einer nicht umkehrbaren Aktion. */
 export function frage(text: string): boolean {
     return window.confirm(text);
+}
+
+/* Die Tischmarke - das Erkennungszeichen quer ueber alle Ansichten.
+   Immer ueber diesen Helfer bauen, damit die fuehrende Null und die
+   Beschriftung ueberall gleich sind. */
+export function tischmarke(nummer: number, gross = false): HTMLSpanElement {
+    const marke = document.createElement("span");
+    marke.className = "ox-tischmarke" + (gross ? " ox-tischmarke--gross" : "");
+    marke.textContent = `Tisch ${String(nummer).padStart(2, "0")}`;
+    return marke;
 }
 ```
 
@@ -1806,8 +1875,8 @@ cd /c/OrderXpress && mvn clean spring-boot:run
 
 `http://localhost:8080/` öffnen. Prüfen:
 
-- Schrift ist Inter, die Überschriften sind Lora (Serifen) — **nicht** mehr die Systemschrift
-- Hintergrund ist das warme Off-White `#fdfcfa`, nicht das alte Grau
+- Fließtext ist Instrument Sans, die Überschriften sind Fraunces (Serifen) — **nicht** mehr die Systemschrift
+- Hintergrund ist das kühle Papier `#f6f6f4`, nicht das alte Grau `#f4f5f7`
 - Alle fünf Links führen auf ihre Seiten
 - Entwicklerwerkzeuge → Konsole: keine Fehler
 - Entwicklerwerkzeuge → Netzwerk: **kein** Aufruf an `fonts.googleapis.com` oder einen anderen fremden Host

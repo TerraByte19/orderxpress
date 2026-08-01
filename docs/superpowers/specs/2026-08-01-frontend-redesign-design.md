@@ -60,7 +60,7 @@ C:\OrderXpress\
 │       │   ├── base.css               Reset, Typografie, Hell/Dunkel-Ebene
 │       │   ├── components.css         Karte, Knopf, Feld, Chip, Overlay, Liste, Leiste
 │       │   └── pages/                 guest.css, kitchen.css, admin.css, stats.css …
-│       ├── fonts/                     Lora + Inter als woff2 (Latin-Teilmenge)
+│       ├── styles/fonts.ts            bindet Fraunces, Instrument Sans, Plex Mono ein
 │       ├── lib/
 │       │   ├── types.ts               Backend-DTOs als TypeScript-Typen
 │       │   ├── api.ts                 fetch-Hülle, Auth-Header, Fehlerbehandlung
@@ -89,16 +89,39 @@ ein normaler Import, den Vite mitbündelt.
 
 ## 4. Design-System
 
+### Leitentscheidung
+
+Akzentfarbe und Hell/Dunkel stellt **jeder Laden selbst** ein. Über Farbe kann
+diese Plattform also gar keine eigene Handschrift haben — sie würde bei jedem
+Kunden überschrieben. Die Eigenständigkeit liegt deshalb in **Schrift und
+Struktur**.
+
 ### Schriften
 
-Selbst mitgeliefert, kein Aufruf an Google Fonts — die PWA muss offline
-funktionieren und die Content-Security-Policy soll eng bleiben.
+Selbst mitgeliefert als npm-Pakete (`@fontsource…`), kein Aufruf an Google Fonts
+— die PWA muss offline funktionieren und die Content-Security-Policy soll eng
+bleiben. Drei Schnitte mit klar getrennten Aufgaben:
 
-- **Lora** (Serif, OFL) — Gerichtnamen, Überschriften
-- **Inter** (Sans, OFL) — Fließtext, Bedienelemente, alle Personal-Seiten
+- **Fraunces** (variabler Serif, OFL) — Gerichtnamen, Überschriften. Trägt den
+  Charakter; wird mit `WONK`-Achse gesetzt, aber sparsam eingesetzt.
+- **Instrument Sans** (variabler Sans, OFL) — Fließtext, Bedienelemente.
+- **IBM Plex Mono** (OFL, Schnitte 400 und 600) — **alle Zahlen**: Preise,
+  Zeiten, Tisch- und Bestellnummern, gesetzt mit `tabular-nums`.
 
-Nur Latin-Teilmenge als `woff2`, zusammen etwa 60 KB, eingebunden per
-`@font-face` mit `font-display: swap`.
+Zur Mono-Entscheidung: die meisten Bestell-Oberflächen setzen Preise in der
+Fließtextschrift. Mono ist hier funktional begründet — in der geteilten Rechnung
+fluchten die Spalten dadurch tatsächlich untereinander, und es greift den
+**gedruckten Bon** auf, den das System ohnehin über ESC/POS ausgibt. Die Wärme
+kommt aus Fraunces und den Fotos, die Präzision aus den Zahlen.
+
+### Erkennungszeichen: die Tischmarke
+
+Das System dreht sich um den Tisch: der Gast sitzt an einem, die Küche kocht für
+einen, der Kellner kassiert einen, die Rechnung gehört zu einem. Die Marke
+(`TISCH 07` — Mono, gesperrt, Großbuchstaben, führende Null, dünner Rahmen)
+sieht auf **allen fünf Rollen-Ansichten identisch** aus. Sie ist das einzige
+bewusst auffällige Element; alles andere bleibt ruhig. Die führende Null ist
+nicht Zierde — sie lässt Nummern in Listen untereinander fluchten.
 
 ### Tokens (`tokens.css`)
 
@@ -106,24 +129,28 @@ Abstände auf 4px-Raster: `--ox-space-1: 4px` bis `--ox-space-8: 64px`.
 Radien: `--ox-radius-sm: 8px`, `-md: 12px`, `-lg: 18px`, `-pill: 999px`.
 Schriftgrade: `--ox-text-xs: 12px` bis `--ox-text-3xl: 34px`, Basis 15px.
 
-**Helle Grundpalette**
+**Helle Grundpalette** — kühles Papier, bewusst kein warmes Creme: ein warmer
+Grund legt einen Gelbstich über jedes Gericht-Foto, und die Karte verkauft über
+Fotos.
 
 ```
---ox-bg: #fdfcfa       --ox-text: #1a1917
---ox-surface: #ffffff  --ox-text-muted: #83807a
---ox-surface-2: #f7f6f3
---ox-border: #eceae5
+--ox-bg: #f6f6f4       --ox-text: #16171a
+--ox-surface: #ffffff  --ox-text-muted: #6e7076
+--ox-surface-2: #efefec
+--ox-border: #e2e2dd
 --ox-accent: #1f3d34   (Standard; vom Laden überschreibbar)
 --ox-success: #16794f  --ox-warn: #b26a00  --ox-danger: #b3261e
 ```
 
-**Dunkle Haut** (`[data-theme="dark"]` auf `<html>`)
+**Dunkle Haut** (`[data-theme="dark"]` auf `<html>`) — drei klar
+unterscheidbare Flächenstufen statt Fast-Schwarz mit einem einzelnen Akzent.
+Das ist der Unterschied zwischen „gedimmter Gastraum" und „Entwickler-Terminal".
 
 ```
---ox-bg: #131211       --ox-text: #f3efe8
---ox-surface: #1a1815  --ox-text-muted: #8d867a
---ox-surface-2: #221f1c
---ox-border: #26231f
+--ox-bg: #15181a       --ox-text: #edeeec
+--ox-surface: #1d2124  --ox-text-muted: #949a9e
+--ox-surface-2: #262b2f
+--ox-border: #333a3f
 --ox-accent: #c9a227
 --ox-success: #4caf82  --ox-warn: #e0a145  --ox-danger: #e5776d
 ```
@@ -155,7 +182,8 @@ und teils mit fettigen Fingern bedient wird.
 
 ### Gäste-Seite (höchste Priorität)
 
-**Optik:** Foto-Karten mit 16:9-Bild, Gerichtname in Lora, Beschreibung in Inter,
+**Optik:** Foto-Karten mit 16:9-Bild, Gerichtname in Fraunces, Beschreibung in
+Instrument Sans, Preis in Plex Mono, Tischmarke oben rechts,
 Haarlinien-Rahmen statt Schatten, Kategorie-Reiter klein und gesperrt
 (Großbuchstaben, weite Buchstabenabstände). Akzentfarbe nur am Hinzufügen-Knopf
 und am aktiven Reiter. Hell oder Dunkel je nach Laden-Einstellung.
