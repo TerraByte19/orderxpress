@@ -1,5 +1,6 @@
 target/
 data/
+.superpowers/
 *.log
 .idea/
 *.iml
