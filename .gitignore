@@ -6,3 +6,6 @@ data/
 *.iml
 .vscode/
 .DS_Store
+
+frontend/node_modules/
+src/main/resources/static/
