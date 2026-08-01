@@ -244,12 +244,12 @@ Alles Übrige am Backend bleibt unangetastet.
 `generate-resources`:
 
 1. `install-node-and-npm` — das Plugin lädt eine feste Node-Version nach
-   `frontend/node/`. **Es muss kein Node auf dem System oder im Docker-Bild
-   installiert sein.**
+   `target/node/`. **Es muss kein Node auf dem System oder im Docker-Bild
+   installiert sein.** `target/` ist bereits ignoriert.
 2. `npm ci` — Abhängigkeiten nach `frontend/node_modules/`
 3. `npm run build` — Vite schreibt nach `src/main/resources/static`
 
-`frontend/node/` und `frontend/node_modules/` kommen ebenfalls in die `.gitignore`.
+`frontend/node_modules/` kommt ebenfalls in die `.gitignore`.
 
 Damit baut `mvn spring-boot:run` das Frontend automatisch mit (die Phase läuft im
 Vorlauf), und `Dockerfile` sowie `render.yaml` bleiben unverändert — dort läuft
