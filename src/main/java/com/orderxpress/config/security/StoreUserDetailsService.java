@@ -47,7 +47,7 @@ public class StoreUserDetailsService implements UserDetailsService {
                 user.getPasswordHash(),
                 user.getRole().name(),
                 user.getRestaurant().getId(),
-                user.isActive());
+                user.isActive() && user.getRestaurant().isActive());
     }
 
     /**

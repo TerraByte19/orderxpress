@@ -42,17 +42,19 @@ public class DeviceTokenFilter extends OncePerRequestFilter {
         // Nur anmelden, wenn ein Token da ist und noch niemand angemeldet wurde.
         if (token != null && !token.isBlank()
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
-            deviceService.resolveDevice(token.trim()).ifPresent(device -> {
-                StoreUserDetails details = new StoreUserDetails(
-                        "Geraet: " + device.getLabel(),
-                        "",
-                        device.getRole().name(),
-                        device.getRestaurant().getId(),
-                        true);
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        details, null, details.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            });
+            deviceService.resolveDevice(token.trim())
+                    .filter(device -> device.getRestaurant().isActive())
+                    .ifPresent(device -> {
+                        StoreUserDetails details = new StoreUserDetails(
+                                "Geraet: " + device.getLabel(),
+                                "",
+                                device.getRole().name(),
+                                device.getRestaurant().getId(),
+                                true);
+                        var authentication = new UsernamePasswordAuthenticationToken(
+                                details, null, details.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    });
         }
 
         chain.doFilter(request, response);
