@@ -65,6 +65,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("OWNER")
                         .requestMatchers("/api/service/**").hasAnyRole("OWNER", "SERVICE")
                         .requestMatchers("/api/waiter/**").hasAnyRole("OWNER", "SERVICE", "WAITER")
+                        // "Kellner rufen"-Rufe: Inhaber, Kasse und Kellner sehen/erledigen sie
+                        .requestMatchers("/api/calls/**").hasAnyRole("OWNER", "SERVICE", "WAITER")
                         .requestMatchers("/api/kitchen/**").hasAnyRole("OWNER", "KITCHEN");
                     // Entwicklungswerkzeuge (H2-Konsole, Swagger) NUR lokal offen.
                     // Auf Render: ORDERXPRESS_DEV_TOOLS=false -> bleiben gesperrt.

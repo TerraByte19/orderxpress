@@ -27,9 +27,17 @@ public class MeController {
     public MeResponse me() {
         StoreUserDetails details = CurrentUser.details();
         Long restaurantId = details.getRestaurantId();
-        String restaurantName = restaurantRepository.findById(restaurantId)
-                .map(r -> r.getName())
-                .orElse("");
-        return new MeResponse(details.getUsername(), details.getRole(), restaurantId, restaurantName);
+        // Plattform-Admin hat keinen Laden (restaurantId == null) -> Standardwerte.
+        String restaurantName = "";
+        boolean kitchenDisplayEnabled = true;
+        if (restaurantId != null) {
+            var restaurant = restaurantRepository.findById(restaurantId).orElse(null);
+            if (restaurant != null) {
+                restaurantName = restaurant.getName();
+                kitchenDisplayEnabled = restaurant.isKitchenDisplayEnabled();
+            }
+        }
+        return new MeResponse(details.getUsername(), details.getRole(),
+                restaurantId, restaurantName, kitchenDisplayEnabled);
     }
 }

@@ -10,6 +10,7 @@ import com.orderxpress.service.MenuService;
 import com.orderxpress.service.OrderService;
 import com.orderxpress.service.RestaurantAdminService;
 import com.orderxpress.service.TableSessionService;
+import com.orderxpress.service.WaiterCallService;
 import com.orderxpress.web.dto.BillDto;
 import com.orderxpress.web.dto.GuestStatusResponse;
 import com.orderxpress.web.dto.JoinRequestDto;
@@ -52,6 +53,7 @@ public class GuestController {
     private final BillingService billingService;
     private final MenuImageService imageService;
     private final RestaurantAdminService restaurantAdminService;
+    private final WaiterCallService waiterCallService;
 
     public GuestController(TableSessionService sessionService,
                            GuestService guestService,
@@ -59,7 +61,8 @@ public class GuestController {
                            OrderService orderService,
                            BillingService billingService,
                            MenuImageService imageService,
-                           RestaurantAdminService restaurantAdminService) {
+                           RestaurantAdminService restaurantAdminService,
+                           WaiterCallService waiterCallService) {
         this.sessionService = sessionService;
         this.guestService = guestService;
         this.menuService = menuService;
@@ -67,6 +70,7 @@ public class GuestController {
         this.billingService = billingService;
         this.imageService = imageService;
         this.restaurantAdminService = restaurantAdminService;
+        this.waiterCallService = waiterCallService;
     }
 
     /** Gast hat den QR-Code am Tisch gescannt (erzeugt eine neue Person am Tisch). */
@@ -137,6 +141,13 @@ public class GuestController {
     @GetMapping("/guests/{guestToken}/bill")
     public BillDto bill(@PathVariable String guestToken) {
         return billingService.getBillForGuest(guestToken);
+    }
+
+    /** "Kellner rufen" - meldet dem Personal, dass der Tisch etwas braucht. */
+    @PostMapping("/guests/{guestToken}/call")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void callWaiter(@PathVariable String guestToken) {
+        waiterCallService.call(guestToken);
     }
 
     /** Foto eines Gerichts (fuer die Speisekarte). */

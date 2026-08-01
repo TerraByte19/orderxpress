@@ -24,16 +24,23 @@ public class ReceiptFormatter {
         String heavyDivider = "=".repeat(WIDTH);
 
         sb.append(heavyDivider).append('\n');
+        if (data.restaurantName() != null && !data.restaurantName().isBlank()) {
+            sb.append(center(data.restaurantName().toUpperCase(Locale.GERMANY))).append('\n');
+        }
         sb.append(center("NEUE BESTELLUNG")).append('\n');
         sb.append(heavyDivider).append('\n');
-        sb.append(leftRight("Tisch: " + data.tableNumber(), "Bestellung #" + data.orderId())).append('\n');
+        sb.append(leftRight("Tisch: " + data.tableNumber(), "Best. #" + data.orderId())).append('\n');
+        if (data.guestName() != null && !data.guestName().isBlank()) {
+            sb.append("Gast: ").append(data.guestName()).append('\n');
+        }
         sb.append(TIMESTAMP.format(data.createdAt())).append('\n');
         sb.append(divider).append('\n');
 
         for (ReceiptData.Line line : data.lines()) {
-            sb.append(String.format("%2dx %s", line.quantity(), line.name())).append('\n');
+            // Menge + Name, lange Namen sauber umbrechen (Fortsetzung eingerueckt)
+            appendWrapped(sb, String.format("%2dx ", line.quantity()), line.name(), "    ");
             if (line.note() != null && !line.note().isBlank()) {
-                sb.append("    > ").append(line.note()).append('\n');
+                appendWrapped(sb, "    > ", line.note(), "      ");
             }
         }
 
@@ -41,6 +48,25 @@ public class ReceiptFormatter {
         String total = String.format(Locale.GERMANY, "%,.2f EUR", data.total());
         sb.append(leftRight("SUMME:", total)).append('\n');
         return sb.toString();
+    }
+
+    /** Text hinter einem Praefix ausgeben und am Wortende auf WIDTH umbrechen. */
+    private static void appendWrapped(StringBuilder sb, String prefix, String text, String contIndent) {
+        String indent = prefix;
+        StringBuilder line = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            if (line.length() == 0) {
+                line.append(word);
+            } else if (indent.length() + line.length() + 1 + word.length() <= WIDTH) {
+                line.append(' ').append(word);
+            } else {
+                sb.append(indent).append(line).append('\n');
+                indent = contIndent;
+                line.setLength(0);
+                line.append(word);
+            }
+        }
+        sb.append(indent).append(line).append('\n');
     }
 
     private static String center(String text) {

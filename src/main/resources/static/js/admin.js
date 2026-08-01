@@ -498,6 +498,7 @@ const Admin = {
             document.getElementById("design-accent").value = t.accentColor || "#2563eb";
             document.getElementById("design-bg").value = t.backgroundColor || "#f4f5f7";
             document.getElementById("design-hamburger").checked = !!t.categoriesAsHamburger;
+            document.getElementById("design-kitchen").checked = t.kitchenDisplayEnabled !== false;
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -516,7 +517,8 @@ const Admin = {
                 body: JSON.stringify({
                     accentColor: document.getElementById("design-accent").value,
                     backgroundColor: document.getElementById("design-bg").value,
-                    categoriesAsHamburger: document.getElementById("design-hamburger").checked
+                    categoriesAsHamburger: document.getElementById("design-hamburger").checked,
+                    kitchenDisplayEnabled: document.getElementById("design-kitchen").checked
                 })
             });
             OX.toast("Design gespeichert");

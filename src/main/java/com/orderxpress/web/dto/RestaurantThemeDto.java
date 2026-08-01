@@ -9,6 +9,7 @@ public record RestaurantThemeDto(Long id,
                                  String accentColor,
                                  String backgroundColor,
                                  boolean categoriesAsHamburger,
+                                 boolean kitchenDisplayEnabled,
                                  String logoUrl,
                                  String backgroundUrl) {
 }

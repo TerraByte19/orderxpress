@@ -7,5 +7,6 @@ package com.orderxpress.web.dto;
 public record MeResponse(String name,
                          String role,
                          Long restaurantId,
-                         String restaurantName) {
+                         String restaurantName,
+                         boolean kitchenDisplayEnabled) {
 }

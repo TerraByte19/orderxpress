@@ -88,6 +88,7 @@ public class RestaurantAdminService {
         restaurant.setAccentColor(request.accentColor());
         restaurant.setBackgroundColor(request.backgroundColor());
         restaurant.setCategoriesAsHamburger(request.hamburgerOrDefault());
+        restaurant.setKitchenDisplayEnabled(request.kitchenEnabledOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -201,6 +202,7 @@ public class RestaurantAdminService {
                 restaurant.getAccentColor(),
                 restaurant.getBackgroundColor(),
                 restaurant.isCategoriesAsHamburger(),
+                restaurant.isKitchenDisplayEnabled(),
                 kinds.contains(AssetKind.LOGO) ? base + "/logo" : null,
                 kinds.contains(AssetKind.BACKGROUND) ? base + "/background" : null);
     }

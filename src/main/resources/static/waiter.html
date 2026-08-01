@@ -20,15 +20,24 @@
         <p class="muted">Diese Ansicht ist nur f&uuml;r Kellner. Lass dir von der
             Kasse deinen pers&ouml;nlichen QR-Code zeigen und scanne ihn &mdash;
             danach bist du automatisch angemeldet.</p>
+        <p><button class="green" onclick="QRScan.open()">QR-Code scannen (Kamera)</button></p>
     </div>
 
     <div id="view-app" style="display:none">
-        <p class="muted" style="margin:0 0 10px">Alle belegten Tische &ndash; live. Tippe einen Tisch an, um die Positionen je Person zu sehen.</p>
+        <!-- Kellner-Rufe (Gast hat "Kellner rufen" gedrueckt) -->
+        <div id="calls"></div>
+        <p class="muted" style="margin:0 0 10px">Alle belegten Tische &ndash; live. Tippe einen Tisch an, um die
+            Positionen je Person zu sehen. Mit &bdquo;Kassieren&ldquo; rechnest du einen Tisch ab.</p>
         <div id="tables"></div>
     </div>
 
+    <!-- Abrechnen: Positionen eines Tisches waehlen und als bezahlt markieren -->
+    <div id="view-kasse" style="display:none"></div>
+
 </main>
 <script src="/js/api.js"></script>
+<script src="/js/jsQR.js"></script>
+<script src="/js/qrscan.js"></script>
 <script src="/js/waiter.js"></script>
 </body>
 </html>

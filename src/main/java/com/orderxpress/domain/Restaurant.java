@@ -52,6 +52,14 @@ public class Restaurant {
     @Column(name = "categories_as_hamburger", nullable = false)
     private boolean categoriesAsHamburger = false;
 
+    /**
+     * true = der Laden nutzt einen Kuechen-Bildschirm (Kuechen-Monitor). false =
+     * es gibt kein Geraet in der Kueche, gearbeitet wird nur mit dem gedruckten Bon.
+     * Nullable, damit bestehende Datenbanken ohne Reset auskommen (null gilt als true).
+     */
+    @Column(name = "kitchen_display_enabled")
+    private Boolean kitchenDisplayEnabled = Boolean.TRUE;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -141,5 +149,14 @@ public class Restaurant {
 
     public void setStatsResetAt(Instant statsResetAt) {
         this.statsResetAt = statsResetAt;
+    }
+
+    /** null (alte Datensaetze) gilt als "Kueche vorhanden". */
+    public boolean isKitchenDisplayEnabled() {
+        return kitchenDisplayEnabled == null || kitchenDisplayEnabled;
+    }
+
+    public void setKitchenDisplayEnabled(boolean kitchenDisplayEnabled) {
+        this.kitchenDisplayEnabled = kitchenDisplayEnabled;
     }
 }

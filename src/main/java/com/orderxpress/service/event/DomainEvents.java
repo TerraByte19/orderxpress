@@ -27,4 +27,8 @@ public final class DomainEvents {
     /** Bestellstatus hat sich geaendert (in Zubereitung, fertig, ...). */
     public record OrderStatusChanged(Long restaurantId, Long orderId, int tableNumber, OrderStatus status) {
     }
+
+    /** Gast hat "Kellner rufen" gedrueckt -> Kasse/Kellner benachrichtigen. */
+    public record WaiterCalled(Long restaurantId, int tableNumber, String guestName) {
+    }
 }

@@ -22,6 +22,8 @@
         <p><input id="login-user" placeholder="Benutzername" value="inhaber"></p>
         <p><input id="login-pass" type="password" placeholder="Passwort"></p>
         <p><button style="width:100%" onclick="Admin.login()">Anmelden</button></p>
+        <p class="muted" style="text-align:center;margin:6px 0">oder</p>
+        <p><button class="ghost" style="width:100%" onclick="QRScan.open()">Mit QR-Code anmelden (Kamera)</button></p>
         <p class="muted">Dein Inhaber-Login wird vom Plattform-Admin beim Anlegen des Ladens vergeben
             (Demo: inhaber / inhaber123).</p>
     </div>
@@ -70,6 +72,11 @@
                 <div class="full check">
                     <input type="checkbox" id="design-hamburger">
                     <label for="design-hamburger" style="margin:0">Kategorien als Hamburger-Men&uuml; anzeigen</label>
+                </div>
+                <div class="full check">
+                    <input type="checkbox" id="design-kitchen">
+                    <label for="design-kitchen" style="margin:0">K&uuml;chen-Bildschirm verwenden
+                        <span class="muted">(aus = nur gedruckter Bon)</span></label>
                 </div>
                 <div class="full">
                     <button class="green small" onclick="Admin.saveDesign()">Farben &amp; Men&uuml; speichern</button>
@@ -141,6 +148,8 @@
 </div>
 
 <script src="/js/api.js"></script>
+<script src="/js/jsQR.js"></script>
+<script src="/js/qrscan.js"></script>
 <script src="/js/admin.js"></script>
 </body>
 </html>

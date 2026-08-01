@@ -53,14 +53,47 @@ const Service = {
         if (event === "session-requested" && data && data.message) {
             OX.toast(data.message); // "Tisch Nr. X freigeben?"
         }
+        if (event === "waiter-called" && data) {
+            OX.toast("Tisch " + data.tableNumber + " ruft den Kellner!");
+        }
         this.refresh();
     },
 
     refresh() {
         this.loadPending();
+        this.loadCalls();
         this.loadTables();
         this.loadOrders();
         this.loadDevices();
+    },
+
+    /* ---------- Kellner-Rufe ---------- */
+
+    async loadCalls() {
+        let calls;
+        try { calls = await OX.api("/api/calls"); }
+        catch (e) { return; }
+        const card = document.getElementById("calls-card");
+        const box = document.getElementById("calls-list");
+        if (!calls.length) { card.style.display = "none"; box.innerHTML = ""; return; }
+        card.style.display = "";
+        box.innerHTML = "";
+        for (const c of calls) {
+            const row = document.createElement("div");
+            row.className = "row";
+            row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line)";
+            row.innerHTML = "<span class='big'>Tisch " + c.tableNumber + "</span>" +
+                "<span class='muted'>" + this.esc(c.guestName) + " · " + OX.zeit(c.createdAt) + "</span>" +
+                "<span class='spacer'></span>";
+            row.appendChild(this.btn("Erledigt", "green", () => this.callDone(c.id)));
+            box.appendChild(row);
+        }
+    },
+
+    async callDone(id) {
+        try { await OX.api("/api/calls/" + id + "/done", { method: "POST" }); }
+        catch (e) { OX.toast(e.message, true); }
+        this.loadCalls();
     },
 
     /* ---------- Freigabe-Anfragen ---------- */

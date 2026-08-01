@@ -45,4 +45,10 @@ public class DomainEventListener {
         sseHub.notifyKitchen(event.restaurantId(), "order-status-changed", event);
         sseHub.notifyAdmins(event.restaurantId(), "order-status-changed", event);
     }
+
+    /** "Kellner rufen" -> Live-Meldung an Kasse/Service/Kellner des Ladens. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onWaiterCalled(DomainEvents.WaiterCalled event) {
+        sseHub.notifyAdmins(event.restaurantId(), "waiter-called", event);
+    }
 }

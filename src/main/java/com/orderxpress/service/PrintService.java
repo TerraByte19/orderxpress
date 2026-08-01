@@ -54,6 +54,8 @@ public class PrintService {
         return new ReceiptData(
                 order.getId(),
                 order.getSession().getRestaurantTable().getNumber(),
+                order.getSession().getRestaurantTable().getRestaurant().getName(),
+                order.getGuest().getName(),
                 order.getCreatedAt(),
                 order.getItems().stream()
                         .map(i -> new ReceiptData.Line(i.getQuantity(), i.getItemName(), i.getNote()))

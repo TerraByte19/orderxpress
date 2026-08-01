@@ -170,6 +170,7 @@ const Guest = {
         this.approved = true;
         document.getElementById("my-name").textContent = this.myName;
         document.getElementById("btn-bill").style.display = "";
+        document.getElementById("btn-call").style.display = "";
         // Erst Name eingeben, dann Speisekarte (Pflicht, einmal pro Person).
         if (!this.isNamed()) { this.showNameGate(); return; }
         this.enterMenu();
@@ -284,6 +285,23 @@ const Guest = {
             document.getElementById("my-name").textContent = this.myName;
             OX.toast("Name geändert");
         } catch (e) { OX.toast(e.message, true); }
+    },
+
+    /* ---------- Kellner rufen ---------- */
+
+    async callWaiter() {
+        const btn = document.getElementById("btn-call");
+        try {
+            await OX.api("/api/guest/guests/" + this.guestToken + "/call", { method: "POST" });
+            OX.toast("Der Kellner wurde gerufen und kommt gleich.");
+        } catch (e) { OX.toast(e.message, true); return; }
+        // kurze Sperre gegen Doppel-Rufe
+        if (btn) {
+            const label = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Kellner gerufen";
+            setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 30000);
+        }
     },
 
     /* ---------- Menue ---------- */

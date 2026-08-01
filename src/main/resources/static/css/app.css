@@ -343,3 +343,23 @@ input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; 
 /* Gefahrenzone: Zuruecksetzen / Verlauf loeschen */
 .danger { border-color: var(--red); }
 .danger h2 { color: var(--red); }
+
+/* QR-Login per Kamera (Overlay) */
+#qr-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+}
+#qr-overlay .qr-box { width: 100%; max-width: 420px; text-align: center; position: relative; }
+#qr-video {
+    width: 100%; max-height: 70vh; border-radius: 12px; background: #000; object-fit: cover;
+}
+#qr-overlay .qr-frame {
+    position: absolute; top: 50%; left: 50%; width: 60%; aspect-ratio: 1;
+    transform: translate(-50%, -55%);
+    border: 3px solid #fff; border-radius: 12px; box-shadow: 0 0 0 100vmax rgba(0,0,0,0.15);
+    pointer-events: none;
+}
+#qr-hint { color: #fff; margin: 12px 0; }
+#qr-close { color: #fff; border-color: #888; }

@@ -22,6 +22,8 @@
         <p><input id="login-user" placeholder="Benutzername" value="kueche"></p>
         <p><input id="login-pass" type="password" placeholder="Passwort"></p>
         <p><button style="width:100%" onclick="Kitchen.login()">Anmelden</button></p>
+        <p class="muted" style="text-align:center;margin:6px 0">oder</p>
+        <p><button class="ghost" style="width:100%" onclick="QRScan.open()">Mit QR-Code anmelden (Kamera)</button></p>
         <p class="muted">Zugangsdaten stehen in application.yml (orderxpress.security.kitchen).</p>
     </div>
 
@@ -34,6 +36,8 @@
 
 </main>
 <script src="/js/api.js"></script>
+<script src="/js/jsQR.js"></script>
+<script src="/js/qrscan.js"></script>
 <script src="/js/kitchen.js"></script>
 </body>
 </html>

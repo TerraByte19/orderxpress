@@ -17,7 +17,6 @@ const SHELL = [
     "/kitchen.html", "/js/kitchen.js",
     "/waiter.html", "/js/waiter.js",
     "/stats.html", "/js/stats.js",
-    "/guest.html", "/js/guest.js",
     "/device.html", "/js/device.js",
     "/platform.html", "/js/platform.js",
     "/icons/icon-192.png", "/icons/icon-512.png"

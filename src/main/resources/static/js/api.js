@@ -65,7 +65,9 @@ const OX = {
             { key: "stats", href: "/stats.html", label: "Statistik", roles: ["OWNER"] },
             { key: "service", href: "/service.html", label: "Service/Kasse", roles: ["OWNER", "SERVICE"] },
             { key: "kitchen", href: "/kitchen.html", label: "Küche", roles: ["OWNER", "KITCHEN"] }
-        ].filter(l => l.roles.includes(me.role));
+        ].filter(l => l.roles.includes(me.role))
+            // Laden ohne Kuechen-Bildschirm: Kuechen-Ansicht ausblenden
+            .filter(l => l.key !== "kitchen" || me.kitchenDisplayEnabled !== false);
 
         let bar = document.getElementById("ox-nav");
         if (!bar) {

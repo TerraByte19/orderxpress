@@ -86,6 +86,37 @@ class WaiterViewIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void kellnerKannAbrechnen() throws Exception {
+        Owner o = createRestaurant("waiter-bill");
+        long cat = createCategory(o, "Speisen");
+        long pizza = createItem(o, cat, "Pizza", "7.00");
+        TableRef t = createTable(o, 3);
+        String host = hostAtApprovedTable(o, t);
+        orderOneItem(host, pizza);
+
+        String waiterToken = createDeviceToken(as(o), "/api/admin/devices", "QR von Ahmad", "WAITER");
+
+        // Kellner sieht die Position und ihre orderItemId
+        String tables = mvc.perform(get("/api/waiter/tables").header("X-Device-Token", waiterToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long orderItemId = num(JsonPath.read(tables, "$[0].participants[0].items[0].orderItemId"));
+
+        // Kellner rechnet die Position ab
+        mvc.perform(post("/api/waiter/settle").header("X-Device-Token", waiterToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"orderItemIds\":[" + orderItemId + "]}"))
+                .andExpect(status().isNoContent());
+
+        // danach: Position bezahlt, nichts mehr offen
+        String after = mvc.perform(get("/api/waiter/tables").header("X-Device-Token", waiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].participants[0].items[0].paid").value(true))
+                .andReturn().getResponse().getContentAsString();
+        assertMoney(after, "$[0].openTotal", "0");
+    }
+
+    @Test
     void kellnerProfilUeberApiMe() throws Exception {
         Owner o = createRestaurant("waiter-me");
         String waiterToken = createDeviceToken(as(o), "/api/admin/devices", "QR von Lea", "WAITER");

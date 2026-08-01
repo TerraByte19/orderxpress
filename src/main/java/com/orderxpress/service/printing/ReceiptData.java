@@ -7,6 +7,8 @@ import java.util.List;
 /** Alles, was auf dem Kuechenbon steht - unabhaengig vom Druckertyp. */
 public record ReceiptData(long orderId,
                           int tableNumber,
+                          String restaurantName,
+                          String guestName,
                           Instant createdAt,
                           List<Line> lines,
                           BigDecimal total) {

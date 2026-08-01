@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bestellen - OrderXpress</title>
     <link rel="stylesheet" href="/css/app.css">
-    <script src="/js/pwa.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -21,6 +20,7 @@
         <strong id="my-name"></strong>
         <button class="small ghost" onclick="Guest.changeName()">Namen &auml;ndern</button>
         <span class="spacer"></span>
+        <button class="small" id="btn-call" onclick="Guest.callWaiter()" style="display:none">Kellner rufen</button>
         <button class="small ghost" id="btn-bill" onclick="Guest.showBill()" style="display:none">Rechnung teilen</button>
     </div>
 

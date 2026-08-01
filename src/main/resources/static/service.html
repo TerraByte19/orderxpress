@@ -22,11 +22,19 @@
         <p><input id="login-user" placeholder="Benutzername" autocomplete="username"></p>
         <p><input id="login-pass" type="password" placeholder="Passwort" autocomplete="current-password"></p>
         <p><button style="width:100%" onclick="Service.login()">Anmelden</button></p>
+        <p class="muted" style="text-align:center;margin:6px 0">oder</p>
+        <p><button class="ghost" style="width:100%" onclick="QRScan.open()">Mit QR-Code anmelden (Kamera)</button></p>
         <p class="muted">Mit deinem Service-/Kassen-Login anmelden. Der Inhaber legt diese Zug&auml;nge an.</p>
     </div>
 
     <!-- App -->
     <div id="view-app" style="display:none">
+
+        <!-- Kellner-Rufe (Gast hat "Kellner rufen" gedrueckt) -->
+        <div class="card" id="calls-card" style="display:none;border-color:var(--amber)">
+            <h2>Kellner-Rufe</h2>
+            <div id="calls-list"></div>
+        </div>
 
         <div class="card">
             <h2>Freigabe-Anfragen</h2>
@@ -91,6 +99,8 @@
 </div>
 
 <script src="/js/api.js"></script>
+<script src="/js/jsQR.js"></script>
+<script src="/js/qrscan.js"></script>
 <script src="/js/service.js"></script>
 </body>
 </html>
