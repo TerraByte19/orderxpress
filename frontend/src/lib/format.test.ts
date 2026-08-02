@@ -23,6 +23,22 @@ describe("zeit", () => {
         const ergebnis = zeit("2026-08-01T14:05:00Z");
         expect(ergebnis).toMatch(/^\d{2}:\d{2}$/);
     });
+
+    it("extrahiert Stunde und Minute korrekt aus dem Zeitstempel", () => {
+        // Berechne die erwartete Zeit aus demselben ISO-String
+        const iso = "2026-08-01T14:05:00Z";
+        const date = new Date(iso);
+        const expectedHours = String(date.getHours()).padStart(2, '0');
+        const expectedMinutes = String(date.getMinutes()).padStart(2, '0');
+        const ergebnis = zeit(iso);
+        expect(ergebnis).toBe(`${expectedHours}:${expectedMinutes}`);
+    });
+
+    it("gibt verschiedene Zeiten fuer verschiedene Zeitstempel aus", () => {
+        const ergebnis1 = zeit("2026-08-01T14:05:00Z");
+        const ergebnis2 = zeit("2026-08-01T15:30:00Z");
+        expect(ergebnis1).not.toBe(ergebnis2);
+    });
 });
 
 describe("dauerMinuten", () => {
@@ -31,8 +47,21 @@ describe("dauerMinuten", () => {
         expect(dauerMinuten("2026-08-01T14:08:00Z", jetzt)).toBe(22);
     });
 
+    it("rechnet mit angebrochener Minute ab", () => {
+        // 22 Minuten 45 Sekunden seit dem Zeitstempel
+        const jetzt = Date.parse("2026-08-01T14:30:45Z");
+        expect(dauerMinuten("2026-08-01T14:08:00Z", jetzt)).toBe(22);
+    });
+
     it("liefert 0 fuer die Zukunft statt einer negativen Zahl", () => {
         const jetzt = Date.parse("2026-08-01T14:00:00Z");
         expect(dauerMinuten("2026-08-01T14:09:00Z", jetzt)).toBe(0);
+    });
+
+    it("nutzt Date.now() als Standardwert", () => {
+        // Benutze einen Zeitstempel, der etwa 1-2 Minuten ago ist
+        const oneMinuteAgo = new Date(Date.now() - 90000); // 90 Sekunden = 1.5 Minuten
+        const iso = oneMinuteAgo.toISOString();
+        expect(dauerMinuten(iso)).toBeGreaterThanOrEqual(1);
     });
 });
