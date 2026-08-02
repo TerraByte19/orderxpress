@@ -81,9 +81,14 @@ class WaiterCallIntegrationTest extends IntegrationTestBase {
     @Test
     void kuecheDarfRufeNichtSehen() throws Exception {
         Owner o = createRestaurant("call-roles");
-        createStaffUser(o, "kueche", "KITCHEN");
+        // Benutzernamen sind plattformweit eindeutig (Login laeuft nur ueber den
+        // Namen). Ein fester Name wie "kueche" kollidiert mit dem Demo-Zugang aus
+        // dem DataInitializer -> 409. Deshalb wie in StaffUserIntegrationTest
+        // einen eindeutigen Namen erzeugen.
+        String kueche = uniqueSlug("call-kit");
+        createStaffUser(o, kueche, "KITCHEN");
 
-        mvc.perform(get("/api/calls").with(httpBasic("kueche", "geheim123")))
+        mvc.perform(get("/api/calls").with(httpBasic(kueche, "geheim123")))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/calls"))
                 .andExpect(status().isUnauthorized());
