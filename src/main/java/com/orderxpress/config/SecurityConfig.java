@@ -56,7 +56,11 @@ public class SecurityConfig {
                         // Frontend-Seiten und statische Dateien (Schutz erfolgt in der API, nicht im HTML)
                         .requestMatchers("/", "/index.html", "/guest.html", "/admin.html", "/kitchen.html",
                                 "/platform.html", "/service.html", "/device.html", "/waiter.html", "/stats.html",
-                                "/t/**", "/d/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                                "/t/**", "/d/**", "/css/**", "/js/**", "/favicon.ico",
+                                // Vite buendelt hierhin (JS/CSS/Fonts); die Dateinamen tragen einen
+                                // Pruefsummen-Hash (z.B. index-Ty9hc2Lx.js) und wechseln bei jedem Build,
+                                // koennen also nicht einzeln aufgezaehlt werden wie /css/** und /js/**.
+                                "/assets/**").permitAll()
                         // PWA: Manifest, Service Worker und App-Icons muessen oeffentlich erreichbar sein
                         .requestMatchers("/manifest.webmanifest", "/service-worker.js", "/icons/**").permitAll()
                         // "Wer bin ich?" - fuer jeden angemeldeten Laden-Benutzer bzw. jedes Geraet
