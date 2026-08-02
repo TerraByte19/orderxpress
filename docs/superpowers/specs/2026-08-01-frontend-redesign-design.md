@@ -349,3 +349,80 @@ Unverändert aus `CLAUDE.md` übernommen, nicht Teil dieses Vorhabens:
    `public-base-url` setzen.
 2. Später: PostgreSQL mit Flyway statt `ddl-auto: update`, echten Bondrucker
    testen, eventuell Bezahlung.
+
+---
+
+## 12. Übergaben aus Plan 1 an die Folgepläne
+
+Diese Punkte sind während der Umsetzung von Plan 1 (Fundament) aufgefallen. Keiner
+davon blockiert Plan 1, jeder wird in einem späteren Plan scharf. Sie stehen hier,
+weil sie sonst nur im Arbeitsprotokoll stünden, das nicht in der Versionsverwaltung
+liegt.
+
+### Muss vor Plan 4 entschieden werden
+
+**`setzeLadenDesign` schlägt die dunkle Haut.** `theme.ts` schreibt `--ox-bg` als
+Inline-Variable auf `<html>`. Inline-Stile schlagen jede Regel aus dem Stylesheet,
+also auch `:root[data-theme="dark"]`. Da `--ox-text` dabei auf dem dunklen Wert
+`#edeeec` bleibt, ergäbe das fast-weißen Text auf fast-weißem Grund, sobald Plan 4
+den Schalter `darkMode` einführt — und **jeder** Laden hat einen
+`backgroundColor` (Standard `#f4f5f7`, siehe `Restaurant.java`).
+
+Aktuell unerreichbar, weil noch keine Seite `setzeLadenDesign` aufruft. Die Tests
+aus Task 4 prüfen `{dunkel: true}` und `{accentColor}` nur einzeln, nie zusammen.
+
+Zu entscheiden: Entweder der Laden-Hintergrund gilt nur in der hellen Haut, oder
+die dunkle Haut leitet ihre Textfarbe aus dem tatsächlichen Hintergrund ab
+(dieselbe Luminanz-Rechnung wie bei `--ox-accent-text`). Die zweite Variante ist
+konsequenter, aber aufwendiger.
+
+### Muss vor Plan 3 erledigt werden
+
+**`sse.ts` hat keine Tests.** Die Frame-Zerlegung (Puffer, `\n\n`-Grenze,
+`event:`/`data:`, Filter auf `ping`/`connected`, Wiederverbinden nach 5 Sekunden)
+ist die verwickeltste Logik der Bibliothek. Ein Fehler zeigt sich nicht als roter
+Test, sondern als „Küchenbildschirm aktualisiert nicht mehr" — mitten im Betrieb.
+Das Verhalten wurde in Plan 1 Zeile für Zeile gegen den alten Code geprüft, aber
+nicht automatisiert abgesichert. Plan 3 baut den Küchen-Monitor darauf auf.
+
+**`textfarbeAuf` prüft seine Eingabe nicht.** `luminanz`, `kontrast` und
+`textfarbeAuf` nehmen jeden String an. Bei einem ungültigen Wert liefert
+`parseInt` `NaN`, der Vergleich `NaN >= NaN` ist `false`, und `textfarbeAuf` fällt
+still auf `#ffffff` zurück — also genau auf den Fehler, den die Funktion beheben
+soll. Heute unerreichbar, weil nur `setzeLadenDesign` sie aufruft und dort
+`istHexFarbe` vorgeschaltet ist. Ruft eine Seite die Funktion direkt auf, gehört
+ein Wächter hinein.
+
+### Für Plan 4
+
+**`ProblemDetail` ist unvollständig.** `types.ts` bildet nur `title`, `detail` und
+`status` ab. Spring liefert zusätzlich `type` und `instance`, und bei
+Validierungsfehlern ein `errors`-Objekt (Feldname → Meldung, gesetzt in
+`GlobalExceptionHandler.handleValidation`). Nötig, sobald ein Formular Feldfehler
+anzeigen soll.
+
+**`theme-color` angleichen.** Die umgestellten Seiten setzen `#1f3d34`, das
+`manifest.webmanifest` steht noch auf `#111827`. Die Mischung ist während des
+Umbaus unvermeidbar, weil die alten Seiten über `public/js/pwa.js` weiterhin den
+alten Wert setzen. Angleichen, sobald alle neun Seiten umgestellt sind.
+
+**Alte Dateien entfernen.** Ist die letzte Seite umgestellt, entfallen
+`frontend/public/css/` und `frontend/public/js/` vollständig.
+
+### Beobachtungen ohne Handlungsdruck
+
+- **Anmeldewechsel wirkt nur im eigenen Dokument.** `beiAnmeldungsWechsel` in
+  `auth.ts` bemerkt keine Änderung, die von außen kommt — weder vom alten
+  `OX.setAuth` noch aus einem anderen Tab (es wird kein `storage`-Ereignis
+  gehört). Verhaltensgleich zum abgelösten `OX._me`, also kein Rückschritt.
+  Relevant erst, wenn eine Seite altes und neues JavaScript zugleich lädt.
+- **Der Cache des Service Workers wächst unbegrenzt.** Sein Name (`ox-shell-v2`)
+  ändert sich nicht je Bau, also sammeln sich die Dateien mit Prüfsumme aus jedem
+  Deploy an; nichts räumt sie weg. Ebenso landet jede Einmal-Adresse
+  `/d/<token>` dauerhaft im Cache.
+- **Das Manifest wird als `application/octet-stream` ausgeliefert** statt als
+  `application/manifest+json`. Vorbestehend, betrifft die Installierbarkeit auf
+  iOS.
+- **`jsqr` ist in `package.json` deklariert, aber von nichts importiert.** Wird
+  erst gebraucht, wenn der QR-Scan-Login umgestellt wird. Bis dahin tote
+  Abhängigkeit, die aber nicht mitgebündelt wird.
