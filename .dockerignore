@@ -6,3 +6,8 @@ data/
 *.iml
 .vscode/
 *.log
+
+# Windows-Binaerdateien von esbuild/rollup - im Linux-Image nutzlos und
+# blaehen nur den Bau-Kontext auf. "npm ci" im Image installiert sie fuer
+# Linux frisch (siehe frontend-maven-plugin in der pom.xml).
+frontend/node_modules/

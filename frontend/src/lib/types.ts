@@ -1,5 +1,5 @@
 /* Gegenstelle zu den Java-Records unter web/dto.
-   Änderst sich dort ein Feld, muss es hier nachgezogen werden. */
+   Ändert sich dort ein Feld, muss es hier nachgezogen werden. */
 
 export type Rolle = "OWNER" | "SERVICE" | "KITCHEN" | "WAITER";
 export type SitzungsStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "CLOSED";

@@ -10,6 +10,10 @@ COPY pom.xml .
 RUN mvn -B dependency:go-offline || true
 
 COPY src ./src
+# Das frontend-maven-plugin baut in der Phase generate-resources mit
+# <workingDirectory>frontend</workingDirectory> (siehe pom.xml) - ohne diesen
+# Ordner im Kontext bricht "mvn package" mit "frontend doesn't exist" ab.
+COPY frontend ./frontend
 # Tests brauchen keine echte DB im Build und kosten Zeit -> beim Deploy ueberspringen.
 RUN mvn -B clean package -DskipTests
 

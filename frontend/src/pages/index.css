@@ -1,6 +1,7 @@
 /* Startseite: die Beschreibung soll in einer Zeile hinter dem Link stehen,
-   auf schmalen Bildschirmen darunter. */
-.ox-list a { font-weight: 500; }
+   auf schmalen Bildschirmen darunter. Die fünf Links sind die einzigen
+   Bedienelemente der Seite -> Berührungsziel mind. 44px (--ox-touch). */
+.ox-list a { display: inline-flex; align-items: center; min-height: var(--ox-touch); font-weight: 500; }
 
 @media (max-width: 500px) {
     .ox-list .ox-muted { display: block; }

@@ -2231,7 +2231,7 @@ Nach Task 10 ist der Zustand:
 - `frontend/` steht, die Build-Kette läuft von `mvn spring-boot:run` bis in die Auslieferung
 - Design-System und Bibliothek sind da und getestet
 - Zwei Seiten laufen darauf, sieben laufen noch auf dem alten Stand — **die App ist zu jedem Zeitpunkt vollständig benutzbar**
-- Backend unverändert, alle Tests grün
+- Backend minimal angepasst (`/assets/**` in `SecurityConfig` freigegeben, Commit `b8525f4`, samt neuem `AssetsSecurityIntegrationTest`) — sonst unverändert, alle Tests grün
 
 **Vor dem nächsten Plan noch prüfen:** ein Docker-Bau, damit sich der Render-Deploy nicht erst beim nächsten Push meldet.
 

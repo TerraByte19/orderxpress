@@ -60,8 +60,18 @@ self.addEventListener("fetch", (event) => {
                 }
                 return antwort;
             })
-            .catch(() => caches.match(anfrage).then((zwischengespeichert) =>
-                zwischengespeichert || caches.match("/index.html")
-            ))
+            .catch(() => caches.match(anfrage).then((zwischengespeichert) => {
+                if (zwischengespeichert) return zwischengespeichert;
+                // Der Rueckfall auf /index.html darf NUR bei Seitenaufrufen greifen
+                // (anfrage.mode === "navigate"). Fuer alles andere - vor allem
+                // Skripte und Stylesheets unter /assets/**, die Vite mit Pruefsumme
+                // benennt und die deshalb nicht zuverlaessig im Cache liegen - waere
+                // die HTML-Seite eine falsche Antwort: ein <script type="module">
+                // mit Content-Type text/html wird vom Browser verweigert, ein
+                // Stylesheet einfach ignoriert. Also ein echter Fehler statt einer
+                // falschen Erfolgsantwort.
+                if (anfrage.mode === "navigate") return caches.match("/index.html");
+                return Response.error();
+            }))
     );
 });
