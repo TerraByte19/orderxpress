@@ -1,0 +1,88 @@
+/* Gegenstelle zu den Java-Records unter web/dto.
+   Änderst sich dort ein Feld, muss es hier nachgezogen werden. */
+
+export type Rolle = "OWNER" | "SERVICE" | "KITCHEN" | "WAITER";
+export type SitzungsStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "CLOSED";
+export type GastStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type BestellStatus = "NEW" | "IN_PREPARATION" | "READY" | "SERVED" | "CANCELLED";
+
+/** MeResponse */
+export interface Me {
+    name: string;
+    role: Rolle;
+    restaurantId: number;
+    restaurantName: string;
+    kitchenDisplayEnabled: boolean;
+}
+
+/** ScanResponse */
+export interface ScanAntwort {
+    guestToken: string;
+    isHost: boolean;
+    sessionStatus: SitzungsStatus;
+    guestStatus: GastStatus;
+    guestName: string;
+    tableNumber: number;
+    restaurantId: number;
+    restaurantName: string;
+}
+
+/** GuestStatusResponse - Achtung: das Feld heißt "name", nicht "guestName"
+    (anders als in ScanResponse). */
+export interface GastStatusAntwort {
+    guestStatus: GastStatus;
+    sessionStatus: SitzungsStatus;
+    isHost: boolean;
+    name: string;
+    tableNumber: number;
+    restaurantId: number;
+    restaurantName: string;
+}
+
+/** RestaurantThemeDto */
+export interface LadenTheme {
+    id: number;
+    name: string;
+    accentColor: string;
+    backgroundColor: string;
+    categoriesAsHamburger: boolean;
+    kitchenDisplayEnabled: boolean;
+    logoUrl: string | null;
+    backgroundUrl: string | null;
+}
+
+/** OrderResponse.OrderLineDto */
+export interface BestellZeile {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+    note: string | null;
+}
+
+/** OrderResponse */
+export interface Bestellung {
+    id: number;
+    tableNumber: number;
+    status: BestellStatus;
+    createdAt: string;
+    totalAmount: number;
+    printed: boolean;
+    items: BestellZeile[];
+}
+
+/** DeviceActivationResponse */
+export interface GeraetAktivierung {
+    deviceToken: string;
+    role: Rolle;
+    label: string;
+    restaurantId: number;
+    restaurantName: string;
+}
+
+/** ProblemDetail aus dem GlobalExceptionHandler */
+export interface ProblemDetail {
+    title?: string;
+    detail?: string;
+    status?: number;
+}
