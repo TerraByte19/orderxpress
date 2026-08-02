@@ -48,6 +48,11 @@ img { max-width: 100%; }
     outline-offset: 2px;
 }
 
+/* Das native hidden-Attribut muss ALLE display-Regeln siegen.
+   Sonst ueberschreiben .ox-row, .ox-grid, .ox-btn mit display:flex|grid
+   das hidden und die Ansicht bleibt sichtbar - das ist eine Falle. */
+[hidden] { display: none !important; }
+
 /* Seitengeruest */
 main {
     max-width: 1100px;

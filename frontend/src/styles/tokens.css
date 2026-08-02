@@ -64,6 +64,9 @@
     --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .04);
     --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .12);
 
+    /* --- Overlay-Abdunklung --- */
+    --ox-scrim: rgba(0, 0, 0, .6);
+
     /* --- Mindestgroesse fuer Beruehrungsziele --- */
     --ox-touch: 44px;
     --ox-touch-lg: 56px;   /* Kueche und Kasse */
@@ -93,4 +96,7 @@
 
     --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
     --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .55);
+
+    /* Kräftigere Abdunklung im Dunkeln, da Untergrund ohnehin dunkel */
+    --ox-scrim: rgba(0, 0, 0, .8);
 }
