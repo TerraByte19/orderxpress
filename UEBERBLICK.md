@@ -120,7 +120,7 @@ Das System ist eine **Plattform mit mehreren Läden** (Multi-Store): Jeder Laden
 - **Multi-Store:** Jede Abfrage ist auf den eigenen Laden beschränkt (`restaurantId` aus dem angemeldeten Benutzer bzw. Gerät). Fremde Daten werden wie „nicht gefunden" behandelt.
 - **Live-Updates:** Server-Sent Events (SSE) je Laden – Freigabe-Anfragen und neue Bestellungen erscheinen sofort.
 - **Sicherheit:** Basic Auth (Passwort) bzw. Geräte-Token im Header; Preise werden **nur serverseitig** berechnet; Gast-Schutz über geheime Tokens + Freigabe; Spam-Schutz mit 5 Min Abklingzeit nach Ablehnung.
-- **Frontend:** eigener Ordner `frontend/` (Vite + TypeScript), gebaut nach `src/main/resources/static` – dieser Ordner ist **generiert** (nicht von Hand bearbeiten, jeder Bau leert ihn). Startseite und Geräte-Anmeldung sind bereits umgestellt; die restlichen sieben Seiten laufen unverändert als HTML/CSS/JS unter `frontend/public/` und werden von Vite nur durchgereicht, gemeinsames `api.js` weiterhin dabei.
+- **Frontend:** eigener Ordner `frontend/` (Vite + TypeScript), gebaut nach `src/main/resources/static` – dieser Ordner ist **generiert** (nicht von Hand bearbeiten, jeder Bau leert ihn). Startseite und Geräte-Anmeldung sind bereits umgestellt; die restlichen sieben Seiten laufen unverändert weiter – ihre `.html`-Dateien liegen wie alle Seiten direkt unter `frontend/`, ihr `css/app.css` und ihre `js/*.js` unter `frontend/public/`, das Vite nur durchreicht (gemeinsames `api.js` weiterhin dabei).
 - **Tests:** umfangreiche Integrationstests (Plattform, Mandanten-Trennung, Menü, Tische, Mitarbeiter, Design, Gäste/Beitritt/Rechnung, Küche, Statistik, Kellner, Geräte, Küchen-Schalter …).
 
 ---
