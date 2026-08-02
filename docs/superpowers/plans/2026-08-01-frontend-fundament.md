@@ -1507,7 +1507,9 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 }
 .ox-btn--gut    { background: var(--ox-success); color: var(--ox-on-signal); }
 .ox-btn--gefahr { background: var(--ox-danger);  color: var(--ox-on-signal); }
-.ox-btn--klein  { min-height: 34px; padding: 0 var(--ox-space-3); font-size: var(--ox-text-sm); }
+/* "klein" meint schmal und leise, NICHT schwer zu treffen: Schrift und
+   seitlicher Abstand schrumpfen, die Hoehe bleibt beim Mindestziel. */
+.ox-btn--klein  { min-height: var(--ox-touch); padding: 0 var(--ox-space-3); font-size: var(--ox-text-sm); }
 .ox-btn--gross  { min-height: var(--ox-touch-lg); font-size: var(--ox-text-lg); }
 .ox-btn--voll   { width: 100%; }
 
@@ -1787,6 +1789,7 @@ Erste Seite ohne Alt-Lasten. Klein und ohne API-Aufruf — beweist, dass Stile, 
     <meta name="theme-color" content="#1f3d34">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="OrderXpress">
 </head>
 <body>
@@ -1926,6 +1929,7 @@ Erste Seite mit echtem Backend-Aufruf. Prüft `api.ts`, `auth.ts`, `types.ts` un
     <meta name="theme-color" content="#1f3d34">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="OrderXpress">
 </head>
 <body>
