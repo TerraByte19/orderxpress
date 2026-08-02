@@ -58,5 +58,6 @@ describe("api", () => {
 
         const kopfzeilen = (gefaelscht.mock.calls[0] as unknown as [string, RequestInit])[1].headers as Record<string, string>;
         expect(kopfzeilen["X-Device-Token"]).toBe("abc123");
+        expect(kopfzeilen.Authorization).toBeUndefined();
     });
 });

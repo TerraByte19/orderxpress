@@ -32,7 +32,7 @@ export async function api<T>(pfad: string, optionen: RequestInit = {}): Promise<
 
     if (!antwort.ok) {
         const detail = (koerper as ProblemDetail | null)?.detail;
-        throw new ApiFehler(detail ?? `Fehler ${antwort.status}`, antwort.status);
+        throw new ApiFehler(detail || `Fehler ${antwort.status}`, antwort.status);
     }
 
     return koerper as T;

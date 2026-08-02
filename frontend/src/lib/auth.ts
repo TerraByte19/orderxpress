@@ -38,7 +38,10 @@ function schreibe(schluessel: string, wert: string): void {
 }
 
 export function setzeAnmeldung(benutzer: string, passwort: string): void {
-    schreibe(SCHLUESSEL_AUTH, "Basic " + btoa(benutzer + ":" + passwort));
+    // btoa() gehoert in den try: bei Zeichen ausserhalb von Latin-1 (€, kyrillisch,
+    // Emoji) wirft es eine DOMException - wie im alten api.js soll das verschluckt
+    // werden, statt setzeAnmeldung() zu verlassen, bevor meldeWechsel() laeuft.
+    try { schreibe(SCHLUESSEL_AUTH, "Basic " + btoa(benutzer + ":" + passwort)); } catch { /* ungueltige Zeichen fuer btoa */ }
     meldeWechsel();
 }
 
