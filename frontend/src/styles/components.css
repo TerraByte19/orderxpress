@@ -213,9 +213,12 @@
 }
 .ox-nav a {
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ox-touch);
     border: 1px solid var(--ox-border);
     border-radius: var(--ox-radius-pill);
-    padding: var(--ox-space-1) var(--ox-space-4);
+    padding: 0 var(--ox-space-4);
     font-size: var(--ox-text-sm);
 }
 .ox-nav a.is-current {

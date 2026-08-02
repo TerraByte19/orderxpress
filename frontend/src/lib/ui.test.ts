@@ -24,18 +24,16 @@ describe("tischmarke", () => {
 
     it("ergänzt die gross-Variante ohne Basisklasse zu verlieren", () => {
         const marke = tischmarke(5, true);
-        expect(marke.className).toContain("ox-tischmarke");
-        expect(marke.className).toContain("ox-tischmarke--gross");
+        expect(marke.classList.contains("ox-tischmarke")).toBe(true);
+        expect(marke.classList.contains("ox-tischmarke--gross")).toBe(true);
     });
 
-    it("nutzt textContent statt innerHTML", () => {
+    it("enthaelt nur reinen Text, keine Kindelemente", () => {
         const marke = tischmarke(5);
-        // Wenn textContent verwendet wird, ist .textContent === .textContent
-        // und .innerHTML != der Inhalt (da keine HTML-Tags)
+        // Reiner Text hat childElementCount === 0
+        // Das faengt den Fall, dass jemand HTML-Auszeichnung einbaut
+        expect(marke.childElementCount).toBe(0);
         expect(marke.textContent).toBe("Tisch 05");
-        // innerHTML würde "Tisch 05" sein, aber das ist ok - wir prüfen, dass
-        // es nicht interpretiert wird, indem wir prüfen, dass textContent stimmt
-        expect(marke instanceof HTMLSpanElement).toBe(true);
     });
 
     it("gibt ein HTMLSpanElement zurück", () => {
@@ -80,10 +78,15 @@ describe("toast", () => {
         expect(element.textContent).toBe("Zweite");
         expect(element.className).toContain("is-open");
 
-        // Nach weiteren 3.5 Sekunden (insgesamt 3.5 von der zweiten Meldung)
-        // Der Timer der ersten Meldung laeuft zwischenzeitlich ab (bei 3000ms),
-        // aber wird durch clearTimeout geloescht, wenn die zweite kommt.
-        vi.advanceTimersByTime(3500);
+        // Nach weiteren 2.5 Sekunden (insgesamt 3.5 von der ERSTEN Meldung)
+        // ohne clearTimeout: der erste Timer würde hier ablaufen und ausblenden.
+        // Mit clearTimeout (korrekt): der erste Timer läuft nicht, nur der zweite.
+        vi.advanceTimersByTime(2500);
+        expect(element.className).toContain("is-open");
+
+        // Nach weiteren 1 Sekunde (insgesamt 4.5 vom Start, 3.5 von der zweiten)
+        // sollte der Timer der zweiten Meldung auch abgelaufen sein.
+        vi.advanceTimersByTime(1000);
         expect(element.className).not.toContain("is-open");
     });
 
