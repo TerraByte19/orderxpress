@@ -1,0 +1,67 @@
+/* Reset und Grundtypografie. Nur Element-Selektoren - alles Benannte
+   gehoert nach components.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--ox-bg);
+    color: var(--ox-text);
+    font-family: var(--ox-font-sans);
+    font-size: var(--ox-text-base);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-family: var(--ox-font-display);
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0;
+    /* Fraunces: leicht optisch gross setzen, WONK an - das ist der Charakter */
+    font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 1;
+}
+h1 { font-size: var(--ox-text-xl); }
+h2 { font-size: var(--ox-text-lg); }
+h3 { font-size: var(--ox-text-base); }
+
+/* Alle Zahlen in Mono und tabellarisch - dadurch fluchten Preisspalten */
+.ox-num, .ox-preis, .ox-zeit {
+    font-family: var(--ox-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em;
+}
+.ox-preis { font-weight: 600; }
+
+p { margin: 0 0 var(--ox-space-3); }
+p:last-child { margin-bottom: 0; }
+
+a { color: inherit; }
+
+img { max-width: 100%; }
+
+/* Tastatur-Bedienung muss sichtbar bleiben */
+:focus-visible {
+    outline: 2px solid var(--ox-accent);
+    outline-offset: 2px;
+}
+
+/* Seitengeruest */
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--ox-space-4);
+}
+
+@media (max-width: 600px) {
+    main { padding: var(--ox-space-3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}

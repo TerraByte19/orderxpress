@@ -1,0 +1,96 @@
+/* Design-Tokens. Kein anderer Stil darf feste Farb-, Abstands- oder
+   Groessenwerte enthalten - immer var(--ox-...) benutzen.
+
+   Drei Ebenen ueberlagern sich:
+   1. diese Grundpalette (hell)
+   2. [data-theme="dark"] auf <html>  -> dunkle Haut
+   3. theme.ts setzt --ox-accent / --ox-bg als Inline-Variable -> Laden-Design */
+:root {
+    /* --- Flaechen und Text ---
+       Bewusst kuehles Papier, kein warmes Creme: ein warmer Grund legt einen
+       Gelbstich ueber jedes Gericht-Foto, und die Karte verkauft ueber Fotos. */
+    --ox-bg: #f6f6f4;
+    --ox-surface: #ffffff;
+    --ox-surface-2: #efefec;
+    --ox-border: #e2e2dd;
+    --ox-text: #16171a;
+    --ox-text-muted: #6e7076;
+
+    /* --- Akzent (vom Laden ueberschreibbar) --- */
+    --ox-accent: #1f3d34;
+    --ox-accent-text: #ffffff;   /* wird von theme.ts berechnet */
+
+    /* --- Signalfarben --- */
+    --ox-success: #16794f;
+    --ox-warn: #b26a00;
+    --ox-danger: #b3261e;
+    --ox-on-signal: #ffffff;
+
+    /* --- Abstaende (4px-Raster) --- */
+    --ox-space-1: 4px;
+    --ox-space-2: 8px;
+    --ox-space-3: 12px;
+    --ox-space-4: 16px;
+    --ox-space-5: 24px;
+    --ox-space-6: 32px;
+    --ox-space-7: 48px;
+    --ox-space-8: 64px;
+
+    /* --- Radien --- */
+    --ox-radius-sm: 8px;
+    --ox-radius-md: 12px;
+    --ox-radius-lg: 18px;
+    --ox-radius-pill: 999px;
+
+    /* --- Schrift: drei Aufgaben, drei Schnitte ---
+       display  Gerichtnamen und Ueberschriften. Traegt den Charakter.
+       sans     Fliesstext und Bedienelemente.
+       mono     ALLE Zahlen: Preise, Zeiten, Tisch- und Bestellnummern.
+                Grund: in der geteilten Rechnung fluchten die Spalten
+                tatsaechlich untereinander, und es greift den gedruckten
+                Bon auf, den das System ohnehin per ESC/POS ausgibt. */
+    --ox-font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+    --ox-font-sans: "Instrument Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ox-font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --ox-text-xs: 12px;
+    --ox-text-sm: 13px;
+    --ox-text-base: 15px;
+    --ox-text-lg: 17px;
+    --ox-text-xl: 21px;
+    --ox-text-2xl: 27px;
+    --ox-text-3xl: 34px;
+
+    /* --- Schatten (sparsam) --- */
+    --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .04);
+    --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .12);
+
+    /* --- Mindestgroesse fuer Beruehrungsziele --- */
+    --ox-touch: 44px;
+    --ox-touch-lg: 56px;   /* Kueche und Kasse */
+}
+
+/* Dunkle Haut. Wird pro Laden gesetzt (Plan 4), nicht ueber die
+   Systemeinstellung - der Inhaber entscheidet, wie seine Seite aussieht.
+
+   Drei klar unterscheidbare Flaechenstufen statt Fast-Schwarz mit einem
+   einzelnen Akzent. Das ist der Unterschied zwischen "gedimmter Gastraum"
+   und "Entwickler-Terminal". */
+:root[data-theme="dark"] {
+    --ox-bg: #15181a;
+    --ox-surface: #1d2124;
+    --ox-surface-2: #262b2f;
+    --ox-border: #333a3f;
+    --ox-text: #edeeec;
+    --ox-text-muted: #949a9e;
+
+    --ox-accent: #c9a227;
+    --ox-accent-text: #15181a;
+
+    --ox-success: #4caf82;
+    --ox-warn: #e0a145;
+    --ox-danger: #e5776d;
+    --ox-on-signal: #15181a;
+
+    --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+    --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .55);
+}
