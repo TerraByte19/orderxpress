@@ -667,7 +667,7 @@ export function dauerMinuten(iso: string, jetzt: number = Date.now()): number {
 cd /c/OrderXpress/frontend && npm test
 ```
 
-Erwartet: `8 passed` (bzw. alle Tests grün).
+Erwartet: alle Tests grün.
 
 - [ ] **Step 5: Commit**
 
