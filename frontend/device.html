@@ -3,35 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ger&auml;t anmelden - OrderXpress</title>
-    <link rel="stylesheet" href="/css/app.css">
-    <script src="/js/pwa.js"></script>
+    <title>Gerät anmelden – OrderXpress</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#1f3d34">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="OrderXpress">
 </head>
 <body>
-<header class="topbar"><h1>OrderXpress &ndash; Ger&auml;t anmelden</h1></header>
+<header class="ox-topbar">
+    <h1>Gerät anmelden</h1>
+</header>
 <main>
 
-    <div id="view-wait" class="center">
-        <p class="big">Einen Moment &hellip;</p>
-        <p class="muted">Das Ger&auml;t wird angemeldet.</p>
+    <div id="view-wait" class="ox-center">
+        <p class="ox-big">Einen Moment …</p>
+        <p class="ox-muted">Das Gerät wird angemeldet.</p>
     </div>
 
-    <div id="view-ok" class="center" style="display:none">
-        <p class="big">&#10003; Ger&auml;t angemeldet</p>
-        <p id="ok-text" class="muted"></p>
-        <p class="muted">Du wirst gleich weitergeleitet &hellip;</p>
-        <p><button id="btn-go">Jetzt loslegen</button></p>
+    <div id="view-ok" class="ox-center" hidden>
+        <p class="ox-big">Gerät angemeldet</p>
+        <p id="ok-text" class="ox-muted"></p>
+        <p class="ox-muted">Du wirst gleich weitergeleitet …</p>
+        <p><button type="button" class="ox-btn" id="btn-go">Jetzt loslegen</button></p>
     </div>
 
-    <div id="view-error" class="center" style="display:none">
-        <p class="big">Das hat nicht geklappt</p>
-        <p id="error-text" class="muted"></p>
-        <p class="muted">Ein QR-Code funktioniert nur EINMAL. Bitte lass dir vom
+    <div id="view-error" class="ox-center" hidden>
+        <p class="ox-big">Das hat nicht geklappt</p>
+        <p id="error-text" class="ox-muted"></p>
+        <p class="ox-muted">Ein QR-Code funktioniert nur EINMAL. Bitte lass dir vom
             Inhaber einen neuen Code anzeigen.</p>
     </div>
 
 </main>
-<script src="/js/api.js"></script>
-<script src="/js/device.js"></script>
+<script type="module" src="/src/pages/device.ts"></script>
 </body>
 </html>
