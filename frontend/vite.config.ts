@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -27,5 +27,8 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:8080"
     }
+  },
+  test: {
+    environment: "jsdom"
   }
 });
