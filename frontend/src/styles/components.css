@@ -1,1 +1,223 @@
-/* Bausteine - wird in Task 6 gefuellt. */
+/* Bausteine. Alle Werte kommen aus tokens.css. */
+
+/* --- Kopfleiste --- */
+.ox-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--ox-space-3);
+    padding: var(--ox-space-3) var(--ox-space-4);
+    background: var(--ox-surface);
+    border-bottom: 1px solid var(--ox-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.ox-topbar h1 { flex: 1; font-size: var(--ox-text-lg); }
+
+/* Verbindungsanzeige (SSE) */
+.ox-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: var(--ox-radius-pill);
+    background: var(--ox-danger);
+    flex: none;
+}
+.ox-dot.is-on { background: var(--ox-success); }
+
+/* --- Karte --- */
+.ox-card {
+    background: var(--ox-surface);
+    border: 1px solid var(--ox-border);
+    border-radius: var(--ox-radius-md);
+    padding: var(--ox-space-4);
+    margin-bottom: var(--ox-space-3);
+}
+.ox-card > h2 { margin-bottom: var(--ox-space-3); }
+
+/* --- Knopf --- */
+.ox-btn {
+    font: inherit;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: var(--ox-radius-sm);
+    padding: 0 var(--ox-space-4);
+    min-height: var(--ox-touch);
+    background: var(--ox-accent);
+    color: var(--ox-accent-text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ox-space-2);
+}
+.ox-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.ox-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.ox-btn--geist {
+    background: transparent;
+    color: var(--ox-text);
+    border-color: var(--ox-border);
+}
+.ox-btn--gut    { background: var(--ox-success); color: var(--ox-on-signal); }
+.ox-btn--gefahr { background: var(--ox-danger);  color: var(--ox-on-signal); }
+.ox-btn--klein  { min-height: 34px; padding: 0 var(--ox-space-3); font-size: var(--ox-text-sm); }
+.ox-btn--gross  { min-height: var(--ox-touch-lg); font-size: var(--ox-text-lg); }
+.ox-btn--voll   { width: 100%; }
+
+/* --- Eingabefeld --- */
+.ox-field {
+    font: inherit;
+    width: 100%;
+    min-height: var(--ox-touch);
+    padding: var(--ox-space-2) var(--ox-space-3);
+    border: 1px solid var(--ox-border);
+    border-radius: var(--ox-radius-sm);
+    background: var(--ox-surface);
+    color: var(--ox-text);
+    resize: vertical;
+}
+.ox-field::placeholder { color: var(--ox-text-muted); }
+
+.ox-label {
+    display: block;
+    font-size: var(--ox-text-xs);
+    color: var(--ox-text-muted);
+    margin-bottom: var(--ox-space-1);
+}
+
+/* --- Chip / Abzeichen --- */
+.ox-chip {
+    display: inline-block;
+    padding: 2px var(--ox-space-3);
+    border-radius: var(--ox-radius-pill);
+    font-size: var(--ox-text-xs);
+    font-weight: 600;
+    background: var(--ox-surface-2);
+    color: var(--ox-text-muted);
+    border: 1px solid var(--ox-border);
+}
+.ox-chip--gut    { background: var(--ox-success); color: var(--ox-on-signal); border-color: transparent; }
+.ox-chip--warn   { background: var(--ox-warn);    color: var(--ox-on-signal); border-color: transparent; }
+.ox-chip--gefahr { background: var(--ox-danger);  color: var(--ox-on-signal); border-color: transparent; }
+.ox-chip--akzent { background: var(--ox-accent);  color: var(--ox-accent-text); border-color: transparent; }
+
+/* --- Anordnung --- */
+.ox-row {
+    display: flex;
+    align-items: center;
+    gap: var(--ox-space-3);
+    flex-wrap: wrap;
+}
+.ox-spacer { flex: 1; }
+.ox-grid {
+    display: grid;
+    gap: var(--ox-space-3);
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.ox-muted { color: var(--ox-text-muted); font-size: var(--ox-text-sm); }
+.ox-center { text-align: center; padding: var(--ox-space-7) var(--ox-space-4); }
+.ox-big {
+    font-size: var(--ox-text-2xl);
+    font-family: var(--ox-font-display);
+    font-variation-settings: "opsz" 90, "SOFT" 0, "WONK" 1;
+}
+
+/* --- Tischmarke: das Erkennungszeichen ---
+   Dieses System dreht sich um den Tisch - der Gast sitzt an einem, die
+   Kueche kocht fuer einen, der Kellner kassiert einen. Die Marke sieht
+   auf ALLEN Ansichten identisch aus. Fuehrende Null, damit Nummern in
+   Listen untereinander fluchten. */
+.ox-tischmarke {
+    display: inline-block;
+    font-family: var(--ox-font-mono);
+    font-weight: 600;
+    font-size: var(--ox-text-xs);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    padding: var(--ox-space-1) var(--ox-space-3);
+    white-space: nowrap;
+}
+.ox-tischmarke--gross {
+    font-size: var(--ox-text-xl);
+    letter-spacing: .14em;
+    padding: var(--ox-space-2) var(--ox-space-4);
+}
+
+.ox-list { list-style: none; margin: var(--ox-space-2) 0; padding: 0; }
+.ox-list li {
+    padding: var(--ox-space-2) 0;
+    border-bottom: 1px solid var(--ox-border);
+}
+.ox-list li:last-child { border-bottom: none; }
+
+/* --- Overlay --- */
+.ox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ox-space-4);
+    z-index: 40;
+}
+.ox-overlay.is-open { display: flex; }
+.ox-overlay__box {
+    background: var(--ox-surface);
+    color: var(--ox-text);
+    border-radius: var(--ox-radius-lg);
+    box-shadow: var(--ox-shadow-2);
+    padding: var(--ox-space-5);
+    max-width: 440px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+}
+
+/* --- Toast --- */
+.ox-toast {
+    position: fixed;
+    bottom: var(--ox-space-6);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: var(--ox-space-3) var(--ox-space-5);
+    border-radius: var(--ox-radius-pill);
+    background: var(--ox-text);
+    color: var(--ox-bg);
+    box-shadow: var(--ox-shadow-2);
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+    z-index: 50;
+}
+.ox-toast.is-open { opacity: 1; }
+.ox-toast.is-error { background: var(--ox-danger); color: var(--ox-on-signal); }
+
+/* --- Rollen-Navigation --- */
+.ox-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--ox-space-2);
+    flex-wrap: wrap;
+    background: var(--ox-surface);
+    border: 1px solid var(--ox-border);
+    border-radius: var(--ox-radius-md);
+    padding: var(--ox-space-2) var(--ox-space-3);
+    margin-bottom: var(--ox-space-4);
+}
+.ox-nav a {
+    text-decoration: none;
+    border: 1px solid var(--ox-border);
+    border-radius: var(--ox-radius-pill);
+    padding: var(--ox-space-1) var(--ox-space-4);
+    font-size: var(--ox-text-sm);
+}
+.ox-nav a.is-current {
+    background: var(--ox-accent);
+    color: var(--ox-accent-text);
+    border-color: transparent;
+}
