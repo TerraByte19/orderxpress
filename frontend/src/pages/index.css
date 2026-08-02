@@ -1,0 +1,7 @@
+/* Startseite: die Beschreibung soll in einer Zeile hinter dem Link stehen,
+   auf schmalen Bildschirmen darunter. */
+.ox-list a { font-weight: 500; }
+
+@media (max-width: 500px) {
+    .ox-list .ox-muted { display: block; }
+}

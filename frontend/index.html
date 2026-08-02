@@ -4,30 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OrderXpress</title>
-    <link rel="stylesheet" href="/css/app.css">
-    <script src="/js/pwa.js"></script>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#1f3d34">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="OrderXpress">
 </head>
 <body>
-<header class="topbar"><h1>OrderXpress</h1></header>
+<header class="ox-topbar">
+    <h1>OrderXpress</h1>
+</header>
 <main>
-    <div class="card">
+    <section class="ox-card">
         <h2>Ansichten</h2>
-        <ul class="plain">
-            <li><a href="/platform.html">Plattform-Verwaltung</a> &ndash; L&auml;den anlegen (Plattform-Admin)</li>
-            <li><a href="/admin.html">Inhaber-Ansicht</a> &ndash; Speisekarte, Tische, Design, Mitarbeiter-Logins</li>
-            <li><a href="/service.html">Service / Kasse</a> &ndash; Tische freigeben, Bestellungen im Blick (Kellner)</li>
-            <li><a href="/kitchen.html">K&uuml;chen-Monitor</a> &ndash; eingehende Bestellungen abarbeiten</li>
-            <li><a href="/swagger-ui.html">Swagger (API testen)</a></li>
+        <ul class="ox-list">
+            <li><a href="/platform.html">Plattform-Verwaltung</a>
+                <span class="ox-muted">– Läden anlegen (Plattform-Admin)</span></li>
+            <li><a href="/admin.html">Inhaber-Ansicht</a>
+                <span class="ox-muted">– Speisekarte, Tische, Design, Mitarbeiter-Logins</span></li>
+            <li><a href="/service.html">Service / Kasse</a>
+                <span class="ox-muted">– Tische freigeben, Bestellungen im Blick</span></li>
+            <li><a href="/kitchen.html">Küchen-Monitor</a>
+                <span class="ox-muted">– eingehende Bestellungen abarbeiten</span></li>
+            <li><a href="/waiter.html">Kellner-Ansicht</a>
+                <span class="ox-muted">– Tische einsehen und kassieren</span></li>
         </ul>
-    </div>
-    <div class="card">
-        <h2>Wie kommen G&auml;ste auf ihre Seite?</h2>
-        <p class="muted">
-            Jeder Tisch hat einen QR-Code. In der Inhaber-Ansicht bei einem Tisch auf
-            &bdquo;QR&ldquo; klicken (zum Ausdrucken) oder auf &bdquo;Gast-Ansicht&ldquo;,
-            um die Seite direkt im Browser auszuprobieren.
-        </p>
-    </div>
+    </section>
+
+    <section class="ox-card">
+        <h2>Wie kommen Gäste auf ihre Seite?</h2>
+        <p class="ox-muted">Jeder Tisch hat einen QR-Code. In der Inhaber-Ansicht bei
+            einem Tisch auf „QR“ klicken (zum Ausdrucken) oder auf „Gast-Ansicht“, um
+            die Seite direkt im Browser auszuprobieren.</p>
+    </section>
 </main>
+<script type="module" src="/src/pages/index.ts"></script>
 </body>
 </html>
