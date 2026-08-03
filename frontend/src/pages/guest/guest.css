@@ -1,0 +1,160 @@
+/* Gaeste-Seite: nur was components.css/base.css NICHT abdecken.
+   Detail-Overlay, Preis, Mengen-Stepper, Hinweisfeld etc. brauchen keine
+   Zeile hier - die kommen vollstaendig aus vorhandenen Bausteinen
+   (.ox-overlay, .ox-preis, .ox-row, .ox-btn, .ox-num, .ox-field, .ox-label).
+   Wirklich neu sind nur zwei Dinge: Foto-Karten und Kategorie-Leiste.
+
+   Wie ueberall im Design-System: keine festen Farb-, Abstands- oder
+   Groessenwerte, alles kommt aus var(--ox-...). */
+
+/* ---------- Foto-Karte ---------- */
+
+/* Baut auf .ox-card auf (Flaeche, Haarlinien-Rahmen, Radius) - das Padding
+   wird hier auf 0 gesetzt, damit das Bild randlos bis zum Kartenrand reicht.
+   overflow:hidden schneidet das Bild sauber auf den Kartenradius zu. */
+.ox-gericht {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Bild + Name + Beschreibung als EIN Knopf (immer aktiv, siehe menu.ts) -
+   all:unset entfernt die Browser-Vorgaben eines <button>, box-sizing wird
+   dabei mitzurueckgesetzt und hier bewusst wieder auf border-box gestellt
+   (globaler Reset in base.css gilt fuer <button> sonst nicht mehr). */
+.ox-gericht__oeffnen {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    cursor: pointer;
+}
+.ox-gericht__oeffnen:focus-visible {
+    outline: 2px solid var(--ox-accent);
+    outline-offset: -2px;
+}
+
+/* Festes 16:9-Verhaeltnis - verhindert Spruenge beim Nachladen der Bilder
+   (siehe Aufgabenstellung). object-fit gleicht unterschiedliche
+   Bild-Seitenverhaeltnisse sauber aus. */
+.ox-gericht__bild {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+}
+/* Gericht ohne Foto: eine ruhige Flaeche statt eines Platzhalter-Symbols -
+   bewusste Entscheidung aus der Spec (Abschnitt 5). */
+.ox-gericht__bild--leer {
+    background: var(--ox-surface-2);
+}
+
+.ox-gericht__inhalt {
+    box-sizing: border-box;
+    padding: var(--ox-space-3) var(--ox-space-4) var(--ox-space-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ox-space-1);
+    text-align: left;
+}
+
+/* Traegt den Charakter der Seite - Fraunces, dieselbe Optik wie die
+   Ueberschriften aus base.css, aber bewusst KEIN <h3> (steckt in einem
+   <button>, siehe menu.ts: Ueberschriften sind fuer <button>-Inhalt laut
+   HTML-Spezifikation nicht vorgesehen). Kategorienamen bleiben echte <h2>. */
+.ox-gericht__name {
+    font-family: var(--ox-font-display);
+    font-size: var(--ox-text-lg);
+    font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 1;
+}
+
+/* Preiszeile unterhalb des Knopfs - eigenstaendiges Element (kein
+   verschachteltes <button>), traegt dieselbe seitliche Polsterung wie
+   .ox-gericht__inhalt darueber. */
+.ox-gericht__fuss {
+    box-sizing: border-box;
+    padding: 0 var(--ox-space-4) var(--ox-space-4);
+}
+
+/* ---------- Kategorie-Leiste ---------- */
+
+/* Standardweg: klein und gesperrt - Grossbuchstaben, weite
+   Buchstabenabstaende, NICHT fett (Spec Abschnitt 5). Waagerecht
+   scrollbar, falls viele Kategorien nicht auf eine Zeile passen. */
+.ox-kategorie-leiste {
+    display: flex;
+    gap: var(--ox-space-5);
+    overflow-x: auto;
+    margin-bottom: var(--ox-space-4);
+    border-bottom: 1px solid var(--ox-border);
+}
+.ox-kategorie-reiter {
+    all: unset;
+    box-sizing: border-box;
+    flex: none;
+    display: flex;
+    align-items: center;
+    min-height: var(--ox-touch);
+    cursor: pointer;
+    font-size: var(--ox-text-xs);
+    font-weight: 400;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ox-text-muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+/* Akzentfarbe NUR hier und am Hinzufuegen-Knopf - sonst nirgends auf der Seite. */
+.ox-kategorie-reiter.is-active {
+    color: var(--ox-accent);
+    border-bottom-color: var(--ox-accent);
+}
+
+/* Hamburger-Weg: der Laden kann das ueber categoriesAsHamburger im Theme
+   einstellen (siehe Aufgabenstellung) - Knopf mit ausklappbarem Panel
+   statt der Reiter-Leiste. Knopf selbst nutzt .ox-btn--geist, keine neue
+   Farbe noetig. */
+.ox-kategorie-hamburger {
+    position: relative;
+    margin-bottom: var(--ox-space-4);
+}
+.ox-kategorie-panel {
+    position: absolute;
+    top: calc(100% + var(--ox-space-1));
+    left: 0;
+    z-index: 20;
+    background: var(--ox-surface);
+    border: 1px solid var(--ox-border);
+    border-radius: var(--ox-radius-md);
+    box-shadow: var(--ox-shadow-2);
+    padding: var(--ox-space-2);
+}
+/* Kein festes min-width am Panel noetig: die Eintraege (block, 100%,
+   nowrap) richten sich am breitesten Kategorienamen aus - das Panel
+   waechst mit dem Inhalt. */
+.ox-kategorie-panel__eintrag {
+    all: unset;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: var(--ox-touch);
+    padding: var(--ox-space-2) var(--ox-space-3);
+    border-radius: var(--ox-radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ox-kategorie-panel__eintrag:hover,
+.ox-kategorie-panel__eintrag:focus-visible {
+    background: var(--ox-surface-2);
+}
+
+/* ---------- Detail-Overlay: die eine wirklich neue Kleinigkeit ---------- */
+
+/* Etwas Abstand zwischen der Beschreibung und dem Zutaten-Block - alles
+   andere im Overlay (Rahmen, Knoepfe, Preis, Feld) kommt unveraendert aus
+   components.css/base.css. */
+.ox-detail__zutaten {
+    margin-top: var(--ox-space-3);
+}
