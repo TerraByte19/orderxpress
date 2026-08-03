@@ -5,7 +5,16 @@
  * Jetzt entscheidet die Helligkeit der Farbe, ob Schwarz oder Weiss
  * daraufkommt (Verfahren nach WCAG 2.1). */
 
+/** Wirft bei ungueltiger Hex-Farbe, statt parseInt unten still NaN liefern
+ *  zu lassen. Ohne diesen Waechter ist NaN >= NaN false, und textfarbeAuf
+ *  faellt still auf #ffffff zurueck - genau der Fehler, den die Funktion
+ *  eigentlich beheben soll. Bisher unerreichbar, weil nur setzeLadenDesign()
+ *  ruft und dort istHexFarbe vorgeschaltet ist; ruft eine Seite luminanz,
+ *  kontrast oder textfarbeAuf direkt auf, ist es scharf. */
 function hexZuRgb(hex: string): [number, number, number] {
+    if (!istHexFarbe(hex)) {
+        throw new Error(`Ungueltige Hex-Farbe: "${hex}"`);
+    }
     const roh = hex.replace("#", "");
     return [
         parseInt(roh.slice(0, 2), 16),
@@ -44,6 +53,34 @@ function istHexFarbe(wert: unknown): wert is string {
     return typeof wert === "string" && /^#[0-9a-fA-F]{6}$/.test(wert);
 }
 
+/** Mischt zwei Hex-Farben linear je Kanal - dieselbe Rechnung wie die
+ *  CSS-Funktion color-mix(in srgb, ...), mit der das Ergebnis unten
+ *  tatsaechlich geschrieben wird. Dient hier nur der Kontrast-Vorabpruefung,
+ *  bevor der fertige color-mix()-Ausdruck auf <html> landet. */
+function mischeHex(hexA: string, hexB: string, anteilA: number): string {
+    const [ar, ag, ab] = hexZuRgb(hexA);
+    const [br, bg, bb] = hexZuRgb(hexB);
+    const t = anteilA / 100;
+    const kanal = (a: number, b: number) => Math.round(a * t + b * (1 - t)).toString(16).padStart(2, "0");
+    return `#${kanal(ar, br)}${kanal(ag, bg)}${kanal(ab, bb)}`;
+}
+
+/** Gedaempfter, aber weiterhin WCAG-AA-lesbarer Ton fuer --ox-text-muted:
+ *  dieselbe Textfarbe wie --ox-text, per color-mix() Richtung Hintergrund
+ *  abgeschwaecht. Start bei 60% Textfarbe; reicht das nicht fuer 4.5:1 (z. B.
+ *  bei einem mittelgrauen Laden-Hintergrund), wird der Anteil erhoeht. Reine
+ *  Textfarbe (100%, = --ox-text selbst) erreicht laut WCAG-Rechnung immer
+ *  mindestens ~4.58:1 gegen jeden Hintergrund - die Schleife terminiert also
+ *  immer, bevor der Notanker unten noetig wird. */
+function gedaempfterText(textfarbe: string, hintergrund: string): string {
+    for (const anteil of [60, 70, 80, 90, 100]) {
+        if (kontrast(mischeHex(textfarbe, hintergrund, anteil), hintergrund) >= 4.5) {
+            return `color-mix(in srgb, ${textfarbe} ${anteil}%, ${hintergrund} ${100 - anteil}%)`;
+        }
+    }
+    return textfarbe; // Notanker, falls Rundung den Grenzfall verschieben sollte
+}
+
 export interface LadenDesign {
     accentColor?: string | null;
     backgroundColor?: string | null;
@@ -67,5 +104,13 @@ export function setzeLadenDesign(design: LadenDesign): void {
 
     if (istHexFarbe(design.backgroundColor)) {
         wurzel.style.setProperty("--ox-bg", design.backgroundColor);
+
+        // Inline-Stile schlagen jede Stylesheet-Regel, auch die der dunklen
+        // Haut (:root[data-theme="dark"]). Ohne dies bliebe --ox-text auf
+        // dem Haut-Wert stehen, z. B. der helle Text der dunklen Haut auf
+        // dem (haeufigen) hellen Laden-Hintergrund: fast-weiss auf fast-weiss.
+        const textfarbe = textfarbeAuf(design.backgroundColor);
+        wurzel.style.setProperty("--ox-text", textfarbe);
+        wurzel.style.setProperty("--ox-text-muted", gedaempfterText(textfarbe, design.backgroundColor));
     }
 }
