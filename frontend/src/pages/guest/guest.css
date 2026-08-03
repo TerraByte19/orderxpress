@@ -199,3 +199,35 @@
     cursor: default;
     opacity: .6;
 }
+
+/* ---------- Laden-Design: Logo und Hintergrundbild (index.ts, erster
+   Verbraucher von theme.ts) ---------- */
+
+/* Logo in der Kopfzeile - die Bild-Adresse (inkl. Cache-Buster) setzt
+   index.ts zur Laufzeit, hier nur die Groesse/Form. */
+#brand-logo {
+    height: 32px;
+    max-width: 160px;
+    object-fit: contain;
+    border-radius: var(--ox-radius-sm);
+}
+
+/* Optionales Laden-Hintergrundbild: die URL ist Laufzeitdaten (kommt vom
+   Theme-Endpunkt, siehe index.ts/wendeThemeAn) und wird darum bewusst per
+   style.backgroundImage gesetzt, nicht hier - das ist kein Inline-Style im
+   HTML, sondern derselbe Weg wie theme.ts es fuer --ox-accent/--ox-bg tut.
+   Hier nur die Wiederholung/Anordnung, die sich nicht aendert. */
+.ox-bg-bild {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* ---------- Warenkorb-Leiste unten (guest.html nennt sie so: "unten") ---------- */
+#cartbar {
+    position: sticky;
+    bottom: 0;
+    background: var(--ox-surface);
+    border-top: 1px solid var(--ox-border);
+    padding: var(--ox-space-3) var(--ox-space-4);
+}

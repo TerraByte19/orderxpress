@@ -57,13 +57,13 @@
     </div>
 
     <!-- Ansicht: Speisekarte - auch waehrend des Wartens sichtbar. Der
-         Bestellen-Knopf je Gericht wird bis zur Freigabe gesperrt. -->
+         Bestellen-Knopf je Gericht wird bis zur Freigabe gesperrt.
+         Kategorie-Leiste bzw. Hamburger-Menue sind hier bewusst NICHT als
+         eigene Elemente vorhanden: menu.ts baut sie (wie das Detail-Overlay
+         unten) vollstaendig selbst und haengt sie in menu-container ein
+         (siehe menu.ts, zeichneSpeisekarte/baueKategorieLeiste) - separate
+         Platzhalter dafuer waeren funktionslos. -->
     <div id="view-menu" hidden>
-        <div id="cat-bar" class="ox-row" hidden>
-            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-cat-toggle" aria-label="Kategorien anzeigen">☰</button>
-            <span class="ox-muted">Kategorien</span>
-        </div>
-        <div id="cat-panel" hidden></div>
         <div id="menu-container"></div>
     </div>
 
@@ -138,38 +138,16 @@
     <button type="button" class="ox-btn ox-btn--klein" id="btn-cartbar-show">Warenkorb ansehen</button>
 </div>
 
-<!-- Overlay: Gericht-Details (Foto, Preis, Beschreibung, Zutaten, Menge, Hinweis). -->
-<div id="overlay" class="ox-overlay" role="dialog" aria-modal="true" aria-label="Gericht-Details">
-    <div class="ox-overlay__box">
-        <img id="detail-img" alt="" hidden>
-        <h2 id="detail-name"></h2>
-        <p id="detail-price" class="ox-big ox-preis"></p>
-        <p id="detail-desc" class="ox-muted"></p>
-        <div id="detail-details-wrap" hidden>
-            <strong>Zutaten &amp; Details</strong>
-            <p id="detail-details" class="ox-muted"></p>
-        </div>
-        <div class="ox-row">
-            <span>Menge:</span>
-            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-detail-qty-minus" aria-label="Menge verringern">−</button>
-            <strong id="detail-qty" class="ox-num">1</strong>
-            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-detail-qty-plus" aria-label="Menge erhöhen">+</button>
-        </div>
-        <label class="ox-label" for="detail-note">Hinweis</label>
-        <input type="text" id="detail-note" class="ox-field" placeholder="z. B. ohne Zwiebeln" maxlength="200">
-        <div class="ox-row">
-            <button type="button" class="ox-btn ox-btn--geist" id="btn-detail-close">Schließen</button>
-            <span class="ox-spacer"></span>
-            <button type="button" class="ox-btn ox-btn--gut" id="detail-add">In den Warenkorb</button>
-        </div>
-    </div>
-</div>
+<!-- Kein statisches Overlay-Markup hier: das Detail-Overlay fuer ein Gericht
+     (Foto, Preis, Beschreibung, Zutaten, Menge, Hinweis) baut menu.ts
+     vollstaendig selbst und haengt es bei Bedarf an document.body an (siehe
+     menu.ts, oeffneDetail/holeOderErstelleOverlay - dasselbe Muster wie
+     toast() in lib/ui.ts). Ein zusaetzlicher statischer Platzhalter mit
+     eigenen Ids waere nie angesprochen worden und damit funktionslos. -->
 
-<!-- Einstiegspunkt (frontend/src/pages/guest/index.ts) kommt erst mit der
-     Verdrahtung in einer spaeteren Aufgabe dieses Plans. Er bindet dann auch
-     app.css und fonts.ts ein (wie bei index.html/device.html per Import,
-     nicht per <link>). Bis dahin absichtlich kein <script>-Tag: ein Verweis
-     auf das noch fehlende Modul liesse "vite build" mit einem
-     Aufloesungsfehler abbrechen. -->
+<!-- Einstiegspunkt: verdrahtet alle Module (session/menu/cart/orders/bill)
+     und bindet app.css/fonts.ts ein (wie bei index.html/device.html per
+     Import, nicht per <link>). -->
+<script type="module" src="/src/pages/guest/index.ts"></script>
 </body>
 </html>
