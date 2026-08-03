@@ -23,6 +23,12 @@
  *    sicherheitsrelevant, deshalb wird explizit auf childElementCount === 0
  *    geprueft (haette die Implementierung innerHTML genutzt, waeren echte
  *    Kindelemente entstanden).
+ * 6. Die Karte (Foto/Name) und der "+"-Knopf in der Preiszeile rufen ZWEI
+ *    GETRENNTE Rueckrufe auf (beiAuswahl vs. beiSchnellHinzufuegen). Eine
+ *    zwischenzeitliche Regression liess "+" denselben Rueckruf wie die Karte
+ *    aufrufen, wodurch "+" faelschlich das Detail-Overlay statt des
+ *    Schnell-Hinzufuegens ausloeste - deshalb hier mit ZWEI unterscheidbaren
+ *    Spionen geprueft (welcher Rueckruf kam, nicht nur "irgendeiner kam").
  *
  * Zusaetzlich: categoriesAsHamburger (Laden-Einstellung) muss BEIDE Wege
  * unterstuetzen, und das Detail-Overlay (Bild, Preis, Beschreibung, Zutaten &
@@ -99,7 +105,7 @@ describe("zeichneSpeisekarte - Grundfunktion", () => {
             })
         ];
 
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true);
 
         expect(ziel.querySelectorAll("h2").length).toBe(2);
         expect(Array.from(ziel.querySelectorAll(".ox-gericht__name")).map((n) => n.textContent))
@@ -113,7 +119,7 @@ describe("zeichneSpeisekarte - Grundfunktion", () => {
             kategorie({ id: 2, name: "Saisonal (gerade leer)", items: [] })
         ];
 
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true);
 
         const ueberschriften = Array.from(ziel.querySelectorAll("h2")).map((h) => h.textContent);
         expect(ueberschriften).toEqual(["Vorspeisen"]);
@@ -122,8 +128,8 @@ describe("zeichneSpeisekarte - Grundfunktion", () => {
 
     it("leert ein zuvor befuelltes Ziel-Element bei erneutem Aufruf, statt anzuhaengen", () => {
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [gericht({ name: "Alt" })] })], ziel, () => {}, true);
-        zeichneSpeisekarte([kategorie({ items: [gericht({ name: "Neu" })] })], ziel, () => {}, true);
+        zeichneSpeisekarte([kategorie({ items: [gericht({ name: "Alt" })] })], ziel, () => {}, () => {}, true);
+        zeichneSpeisekarte([kategorie({ items: [gericht({ name: "Neu" })] })], ziel, () => {}, () => {}, true);
 
         expect(Array.from(ziel.querySelectorAll(".ox-gericht__name")).map((n) => n.textContent)).toEqual(["Neu"]);
     });
@@ -132,7 +138,7 @@ describe("zeichneSpeisekarte - Grundfunktion", () => {
 describe("zeichneSpeisekarte - Bild-Handling", () => {
     it("Gericht ohne Bild bekommt eine ruhige Flaeche statt eines <img> mit leerem src", () => {
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: null })] })], ziel, () => {}, true);
+        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: null })] })], ziel, () => {}, () => {}, true);
 
         expect(ziel.querySelectorAll("img").length).toBe(0);
         const flaeche = ziel.querySelector(".ox-gericht__bild--leer");
@@ -144,7 +150,7 @@ describe("zeichneSpeisekarte - Bild-Handling", () => {
         const ziel = document.createElement("div");
         zeichneSpeisekarte(
             [kategorie({ items: [gericht({ imageUrl: "https://cdn.example.com/pizza.jpg" })] })],
-            ziel, () => {}, true
+            ziel, () => {}, () => {}, true
         );
 
         const bild = ziel.querySelector<HTMLImageElement>("img")!;
@@ -162,7 +168,7 @@ describe("zeichneSpeisekarte - Preisformatierung", () => {
         // (Punkt statt Komma, kein Tausenderpunkt, normales statt schmales
         // Leerzeichen) - preis(1234.5) dagegen "1.234,50 €".
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [gericht({ price: 1234.5 })] })], ziel, () => {}, true);
+        zeichneSpeisekarte([kategorie({ items: [gericht({ price: 1234.5 })] })], ziel, () => {}, () => {}, true);
 
         const preisElement = ziel.querySelector(".ox-preis")!;
         expect(preisElement.textContent).toBe(preis(1234.5));
@@ -174,7 +180,7 @@ describe("zeichneSpeisekarte - Sicherheit: reiner Text statt Markup", () => {
     it("ein Gerichtname mit < und & erzeugt KEIN Markup (textContent, nicht innerHTML)", () => {
         const boesartig = 'Königsberger Klopse <img src=x onerror="alert(1)"> & Kartoffeln';
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [gericht({ name: boesartig, imageUrl: null })] })], ziel, () => {}, true);
+        zeichneSpeisekarte([kategorie({ items: [gericht({ name: boesartig, imageUrl: null })] })], ziel, () => {}, () => {}, true);
 
         const nameElement = ziel.querySelector(".ox-gericht__name")!;
         expect(nameElement.textContent).toBe(boesartig);
@@ -187,7 +193,7 @@ describe("zeichneSpeisekarte - Sicherheit: reiner Text statt Markup", () => {
     it("ein Kategoriename mit Markup erzeugt ebenfalls kein Markup", () => {
         const boesartig = "Snacks <b>fett</b> & Getränke";
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ name: boesartig, items: [gericht()] })], ziel, () => {}, true);
+        zeichneSpeisekarte([kategorie({ name: boesartig, items: [gericht()] })], ziel, () => {}, () => {}, true);
 
         const ueberschrift = ziel.querySelector("h2")!;
         expect(ueberschrift.textContent).toBe(boesartig);
@@ -195,39 +201,71 @@ describe("zeichneSpeisekarte - Sicherheit: reiner Text statt Markup", () => {
     });
 });
 
-describe("zeichneSpeisekarte - Karte: Auswahl und Hinzufuegen", () => {
-    it("ein Klick auf die Karte (Foto/Name) ruft beiAuswahl mit dem Gericht auf", () => {
+describe("zeichneSpeisekarte - Karte: Detail-Overlay vs. Schnell-Hinzufuegen", () => {
+    it("ein Klick auf die Karte (Foto/Name) ruft NUR beiAuswahl auf, nicht beiSchnellHinzufuegen", () => {
         const g = gericht({ id: 7, name: "Calzone" });
-        const ausgewaehlt: Gericht[] = [];
+        const beiAuswahl = vi.fn();
+        const beiSchnellHinzufuegen = vi.fn();
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [g] })], ziel, (x) => ausgewaehlt.push(x), true);
+        zeichneSpeisekarte([kategorie({ items: [g] })], ziel, beiAuswahl, beiSchnellHinzufuegen, true);
 
         ziel.querySelector<HTMLButtonElement>(".ox-gericht__oeffnen")!.click();
 
-        expect(ausgewaehlt).toEqual([g]);
+        expect(beiAuswahl).toHaveBeenCalledWith(g);
+        expect(beiSchnellHinzufuegen).not.toHaveBeenCalled();
     });
 
-    it("der Hinzufuegen-Knopf auf der Karte ruft ebenfalls beiAuswahl mit dem Gericht auf", () => {
+    it("der '+'-Knopf ruft NUR beiSchnellHinzufuegen auf, nicht beiAuswahl " +
+       "(Regression: beide riefen zwischenzeitlich beiAuswahl auf, '+' oeffnete dadurch faelschlich das Overlay)", () => {
         const g = gericht({ id: 8, name: "Diavola" });
-        const ausgewaehlt: Gericht[] = [];
+        const beiAuswahl = vi.fn();
+        const beiSchnellHinzufuegen = vi.fn();
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [g] })], ziel, (x) => ausgewaehlt.push(x), true);
+        zeichneSpeisekarte([kategorie({ items: [g] })], ziel, beiAuswahl, beiSchnellHinzufuegen, true);
 
         ziel.querySelector<HTMLButtonElement>(".ox-gericht__hinzufuegen")!.click();
 
-        expect(ausgewaehlt).toEqual([g]);
+        expect(beiSchnellHinzufuegen).toHaveBeenCalledWith(g);
+        expect(beiAuswahl).not.toHaveBeenCalled();
+    });
+
+    it("Karte und '+' liefern beide dasselbe Gericht-Objekt an ihren jeweiligen Rueckruf", () => {
+        const g = gericht({ id: 9, name: "Quattro Stagioni" });
+        const beiAuswahl = vi.fn();
+        const beiSchnellHinzufuegen = vi.fn();
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie({ items: [g] })], ziel, beiAuswahl, beiSchnellHinzufuegen, true);
+
+        ziel.querySelector<HTMLButtonElement>(".ox-gericht__oeffnen")!.click();
+        ziel.querySelector<HTMLButtonElement>(".ox-gericht__hinzufuegen")!.click();
+
+        expect(beiAuswahl.mock.calls[0][0]).toBe(g);
+        expect(beiSchnellHinzufuegen.mock.calls[0][0]).toBe(g);
+    });
+
+    it("der '+'-Knopf stoppt die Ereignis-Ausbreitung, damit kein umschliessender Klick-Handler zusaetzlich ausgeloest wird", () => {
+        const ziel = document.createElement("div");
+        const ausbreitungsSpion = vi.fn();
+        ziel.addEventListener("click", ausbreitungsSpion);
+        zeichneSpeisekarte([kategorie({ items: [gericht()] })], ziel, () => {}, () => {}, true);
+
+        ziel.querySelector<HTMLButtonElement>(".ox-gericht__hinzufuegen")!.click();
+
+        // Ohne stopPropagation wuerde der Klick bis zu "ziel" durchreichen
+        // (echtes DOM-Bubbling in jsdom) - der Spion bliebe dann NICHT stumm.
+        expect(ausbreitungsSpion).not.toHaveBeenCalled();
     });
 
     it("die Karte bleibt anklickbar (Browsen erlaubt), auch wenn bestellenErlaubt=false ist - " +
        "nur der Hinzufuegen-Knopf ist gesperrt", () => {
-        const ausgewaehlt: Gericht[] = [];
+        const beiAuswahl = vi.fn();
         const ziel = document.createElement("div");
-        zeichneSpeisekarte([kategorie({ items: [gericht()] })], ziel, (x) => ausgewaehlt.push(x), false);
+        zeichneSpeisekarte([kategorie({ items: [gericht()] })], ziel, beiAuswahl, () => {}, false);
 
         const oeffnenKnopf = ziel.querySelector<HTMLButtonElement>(".ox-gericht__oeffnen")!;
         expect(oeffnenKnopf.disabled).toBe(false);
         oeffnenKnopf.click();
-        expect(ausgewaehlt).toHaveLength(1);
+        expect(beiAuswahl).toHaveBeenCalledTimes(1);
 
         const hinzufuegenKnopf = ziel.querySelector<HTMLButtonElement>(".ox-gericht__hinzufuegen")!;
         expect(hinzufuegenKnopf.disabled).toBe(true);
@@ -239,7 +277,7 @@ describe("setzeBestellenErlaubt", () => {
         const ziel = document.createElement("div");
         document.body.appendChild(ziel);
         const kategorien = [kategorie({ items: [gericht({ id: 1 }), gericht({ id: 2, name: "Diavola" })] })];
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true);
 
         setzeBestellenErlaubt(false);
 
@@ -252,7 +290,7 @@ describe("setzeBestellenErlaubt", () => {
        "sonst verliert der Gast seine Scrollposition waehrend des Wartens", () => {
         const ziel = document.createElement("div");
         document.body.appendChild(ziel);
-        zeichneSpeisekarte([kategorie({ items: [gericht()] })], ziel, () => {}, false);
+        zeichneSpeisekarte([kategorie({ items: [gericht()] })], ziel, () => {}, () => {}, false);
 
         const karteVorher = ziel.querySelector(".ox-gericht");
         const abschnittVorher = ziel.querySelector(".ox-kategorie-abschnitt");
@@ -289,7 +327,7 @@ describe("Kategorie-Leiste", () => {
             kategorie({ id: 1, name: "Vorspeisen", items: [gericht({ id: 1 })] }),
             kategorie({ id: 2, name: "Hauptgerichte", items: [gericht({ id: 2 })] })
         ];
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true, false);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true, false);
 
         const reiter = ziel.querySelectorAll<HTMLButtonElement>(".ox-kategorie-reiter");
         expect(reiter.length).toBe(2);
@@ -305,7 +343,7 @@ describe("Kategorie-Leiste", () => {
             kategorie({ id: 1, name: "Vorspeisen", items: [gericht({ id: 1 })] }),
             kategorie({ id: 2, name: "Hauptgerichte", items: [gericht({ id: 2 })] })
         ];
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true, false);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true, false);
 
         const reiter = ziel.querySelectorAll<HTMLButtonElement>(".ox-kategorie-reiter");
         reiter[1].click();
@@ -320,7 +358,7 @@ describe("Kategorie-Leiste", () => {
             kategorie({ id: 1, name: "Vorspeisen", items: [gericht({ id: 1 })] }),
             kategorie({ id: 2, name: "Saisonal", items: [] })
         ];
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true, false);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true, false);
 
         expect(ziel.querySelector(".ox-kategorie-leiste")).toBeNull();
         expect(ziel.querySelector(".ox-kategorie-hamburger")).toBeNull();
@@ -332,7 +370,7 @@ describe("Kategorie-Leiste", () => {
             kategorie({ id: 1, name: "Vorspeisen", items: [gericht({ id: 1 })] }),
             kategorie({ id: 2, name: "Hauptgerichte", items: [gericht({ id: 2 })] })
         ];
-        zeichneSpeisekarte(kategorien, ziel, () => {}, true, true);
+        zeichneSpeisekarte(kategorien, ziel, () => {}, () => {}, true, true);
 
         expect(ziel.querySelector(".ox-kategorie-leiste")).toBeNull();
         const hamburgerKnopf = ziel.querySelector<HTMLButtonElement>(".ox-kategorie-hamburger button");

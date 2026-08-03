@@ -260,7 +260,7 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
 
     kategorien = menuErgebnis.status === "fulfilled" ? menuErgebnis.value : [];
     const ziel = document.getElementById("menu-container");
-    if (ziel) zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, genehmigt, hamburgerModus);
+    if (ziel) zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, genehmigt, hamburgerModus);
     if (menuErgebnis.status === "rejected") {
         toast("Speisekarte konnte nicht geladen werden.", true);
     }
@@ -269,11 +269,19 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
     aktualisiereWarenkorbLeiste();
 }
 
-/** menu.ts unterscheidet "Foto/Name antippen" und "+ antippen" nicht (beide
- *  rufen beiAuswahl mit demselben Gericht auf, siehe menu.ts) - hier darum
- *  fuer beide dasselbe: das Detail-Overlay oeffnen, Menge/Hinweis waehlen. */
+/** Karte antippen (Foto/Name): oeffnet das Detail-Overlay - Menge/Hinweis
+ *  werden dort gewaehlt. menu.ts ruft diesen Rueckruf NUR vom .oeffnen-Knopf
+ *  auf, NICHT vom "+"-Knopf (der hat einen eigenen Rueckruf, siehe
+ *  beiSchnellHinzufuegen direkt darunter). */
 function beiGerichtAusgewaehlt(gericht: Gericht): void {
     oeffneDetail(gericht, beiHinzufuegen, genehmigt);
+}
+
+/** "+"-Knopf in der Preiszeile der Karte: EIN Tipp statt drei - legt sofort
+ *  mit Menge 1 und leerem Hinweis in den Warenkorb, ohne das Detail-Overlay
+ *  zu oeffnen. Eigener Rueckruf an zeichneSpeisekarte (siehe menu.ts). */
+function beiSchnellHinzufuegen(gericht: Gericht): void {
+    beiHinzufuegen(gericht, 1, "");
 }
 
 function beiHinzufuegen(gericht: Gericht, menge: number, hinweis: string): void {

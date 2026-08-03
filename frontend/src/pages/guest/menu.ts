@@ -48,13 +48,17 @@ function bildElement(url: string): HTMLImageElement {
 
 /* ---------- Speisekarte zeichnen ---------- */
 
-/** hamburger (Standardwert false, also weiter mit vier Argumenten aufrufbar)
+/** beiAuswahl (Karte antippen: Foto/Name) oeffnet das Detail-Overlay,
+ *  beiSchnellHinzufuegen (der "+"-Knopf in der Preiszeile) legt sofort mit
+ *  Menge 1 hinzu - zwei GETRENNTE Rueckrufe, siehe baueGerichtKarte unten.
+ *  hamburger (Standardwert false, also weiter mit fuenf Argumenten aufrufbar)
  *  ist die bewusste Erweiterung fuer categoriesAsHamburger aus dem Theme:
  *  der Laden kann Kategorien als Hamburger-Menue statt als Reiter zeigen. */
 export function zeichneSpeisekarte(
     kategorien: Kategorie[],
     ziel: HTMLElement,
     beiAuswahl: (gericht: Gericht) => void,
+    beiSchnellHinzufuegen: (gericht: Gericht) => void,
     bestellenErlaubt: boolean,
     hamburger = false
 ): void {
@@ -73,7 +77,7 @@ export function zeichneSpeisekarte(
 
         const grid = el("div", "ox-grid");
         for (const gericht of kategorie.items) {
-            grid.appendChild(baueGerichtKarte(gericht, beiAuswahl, bestellenErlaubt));
+            grid.appendChild(baueGerichtKarte(gericht, beiAuswahl, beiSchnellHinzufuegen, bestellenErlaubt));
         }
         abschnitt.appendChild(grid);
         ziel.appendChild(abschnitt);
@@ -83,10 +87,15 @@ export function zeichneSpeisekarte(
 /** Foto-Karte auf .ox-card (Padding 0, Bild reicht randlos zum Rand). Zwei
  *  GESCHWISTER-Knoepfe statt Verschachtelung (ein <button> darf keinen
  *  weiteren enthalten): .oeffnen (immer aktiv - Browsen bleibt waehrend des
- *  Wartens erlaubt) und .hinzufuegen (nur die Preis-Zeile, wird gesperrt). */
+ *  Wartens erlaubt, ruft beiAuswahl -> Detail-Overlay) und .hinzufuegen (nur
+ *  die Preis-Zeile, wird gesperrt, ruft beiSchnellHinzufuegen -> sofort mit
+ *  Menge 1 in den Warenkorb, EIN Tipp statt drei). Regression (behoben):
+ *  beide Knoepfe hingen zwischenzeitlich am selben Rueckruf, wodurch der
+ *  "+"-Knopf faelschlich ebenfalls das Overlay oeffnete. */
 function baueGerichtKarte(
     gericht: Gericht,
     beiAuswahl: (gericht: Gericht) => void,
+    beiSchnellHinzufuegen: (gericht: Gericht) => void,
     bestellenErlaubt: boolean
 ): HTMLElement {
     const oeffnenKnopf = knopf("ox-gericht__oeffnen", undefined,
@@ -103,7 +112,14 @@ function baueGerichtKarte(
     const fuss = el("div", "ox-row ox-gericht__fuss");
     const hinzufuegenKnopf = knopf("ox-btn ox-btn--klein ox-gericht__hinzufuegen", "+", `${gericht.name} hinzufügen`);
     hinzufuegenKnopf.disabled = !bestellenErlaubt;
-    hinzufuegenKnopf.addEventListener("click", () => beiAuswahl(gericht));
+    // stopPropagation vorsorglich (Vorgabe CLAUDE.md): .oeffnen und .hinzufuegen
+    // sind zwar GESCHWISTER, kein Klick-Bereich umschliesst den "+" also heute
+    // schon - schadet hier aber nicht und schuetzt, falls sich die
+    // Verschachtelung kuenftig aendert.
+    hinzufuegenKnopf.addEventListener("click", (ereignis) => {
+        ereignis.stopPropagation();
+        beiSchnellHinzufuegen(gericht);
+    });
     fuss.append(el("span", "ox-preis", preis(gericht.price)), el("span", "ox-spacer"), hinzufuegenKnopf);
 
     const karte = el("article", "ox-card ox-gericht");
