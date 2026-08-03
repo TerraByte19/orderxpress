@@ -17,9 +17,27 @@ nachgewiesen:
 → „Warenkorb ansehen" → „Jetzt bestellen" → die Bestell-Ansicht erscheint von selbst
 mit Status-Chip „Angenommen", „Bestellung #1", Uhrzeit und „1× Bruschetta".
 
-### Die offene Regression
+### Die Regression ist behoben (Commit `5045c27`)
 
-**Der „+"-Knopf fügt nicht mehr direkt hinzu, sondern öffnet das Detail-Overlay.**
+**Der „+"-Knopf fügt wieder direkt hinzu.** Live mit laufender App in beide Richtungen
+nachgewiesen:
+
+- „+" antippen → Overlay bleibt **zu**, `localStorage` enthält
+  `[{"gerichtId":1,"menge":1,"hinweis":""}]`, Leiste zeigt „1 Artikel · 6,50 €".
+  Ein Tipp statt drei.
+- Karte antippen → Overlay öffnet sich, Warenkorb bleibt unverändert.
+
+`zeichneSpeisekarte` und `baueGerichtKarte` haben jetzt einen zweiten Rückruf
+`beiSchnellHinzufuegen`, der nur am „+" hängt, mit `stopPropagation`. Zwei neue Tests
+mit **unterscheidbaren** Attrappen prüfen die Trennung in beide Richtungen — sie hätten
+die Regression gefangen. Tests: 212 Frontend, 120 Backend.
+
+Der folgende Abschnitt beschreibt den behobenen Zustand und bleibt als Beleg stehen.
+
+<details>
+<summary>Was die Regression war</summary>
+
+**Der „+"-Knopf fügte nicht direkt hinzu, sondern öffnete das Detail-Overlay.**
 
 `CLAUDE.md:46` hält die ursprüngliche Absicht fest: *„+"-Button bleibt für
 Schnell-Hinzufügen, stopPropagation beachten*. Gedacht war: Zeile antippen öffnet das
@@ -39,11 +57,12 @@ Rückruf für das Schnell-Hinzufügen, der an den „+"-Knopf gebunden wird. `in
 `stopPropagation`, damit nicht zusätzlich die Karte auslöst — genau das meint der
 Hinweis in `CLAUDE.md`.
 
-`menu.ts` hat 37 Tests; die Signaturänderung berührt sie. Ein Test für den neuen Weg
-gehört dazu: „+" antippen füllt den Warenkorb **ohne** Overlay.
+`menu.ts` hatte 37 Tests; die Signaturänderung berührte sie.
 
-**Kleiner Zusatzbefund:** „Jetzt bestellen" ist bei leerem Warenkorb nicht gesperrt und
-läuft in ein 400 vom Backend.
+</details>
+
+**Noch offen, klein:** „Jetzt bestellen" ist bei leerem Warenkorb nicht gesperrt und läuft
+in ein 400 vom Backend.
 
 ### Eine Warnung zur Arbeitsweise
 
@@ -188,14 +207,12 @@ Abschnitt 12 (versioniert):
 
 ## Nächste Schritte
 
-1. **Schnell-Hinzufügen wiederherstellen** — zweiter Rückruf in `menu.ts`, Test dazu,
-   im laufenden Container gegenprüfen: „+" füllt den Warenkorb, ohne das Overlay zu öffnen.
-2. **Optik beurteilen** — bisher hat noch niemand die Seite mit Augen gesehen. Besonders:
+1. **Optik beurteilen** — bisher hat noch niemand die Seite mit Augen gesehen. Besonders:
    eine grelle Akzentfarbe einstellen (Gelb `#ffff00`) und prüfen, dass die Knopfschrift
    schwarz wird.
-3. **Plan 3** — Küche, Kasse, Kellner. Voraussetzung erfüllt: `sse.ts` hat inzwischen
+2. **Plan 3** — Küche, Kasse, Kellner. Voraussetzung erfüllt: `sse.ts` hat inzwischen
    Tests, das war die Bedingung, bevor der Küchen-Monitor darauf aufbaut.
-4. **Mergen** ist aus technischer Sicht möglich — Docker-Bau, Tests und der
+3. **Mergen** ist aus technischer Sicht möglich — Docker-Bau, Tests und der
    Bestellablauf sind nachgewiesen. Die Regression aus Punkt 1 ist eine
    Bedienverschlechterung, kein Fehlverhalten. Ob sie vorher raus soll, ist deine
    Entscheidung.
