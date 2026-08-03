@@ -7,45 +7,54 @@ um weiterzumachen, ohne die alte Unterhaltung zu kennen.
 
 ---
 
-## Das Wichtigste zuerst: ein blockierender Defekt
+## Stand: die Gäste-Seite funktioniert, eine kleine Regression ist offen
 
-**Die Gäste-Seite ist in diesem Zustand nicht auslieferbar.** Der „+"-Knopf auf einer
-Gericht-Karte tut nichts.
+Der komplette Bestellablauf wurde im laufenden Docker-Container Schritt für Schritt
+nachgewiesen:
 
-Belegt im laufenden Docker-Container:
+„+" antippen → Detail-Overlay öffnet sich → „In den Warenkorb" → Leiste zeigt
+„1 Artikel · 6,50 €", `localStorage` enthält `[{"gerichtId":1,"menge":1,"hinweis":""}]`
+→ „Warenkorb ansehen" → „Jetzt bestellen" → die Bestell-Ansicht erscheint von selbst
+mit Status-Chip „Angenommen", „Bestellung #1", Uhrzeit und „1× Bruschetta".
 
-- Der Knopf existiert, trägt `class="ox-btn ox-btn--klein ox-gericht__hinzufuegen"`
-  und ist **nicht** `disabled`.
-- Ein Klick erzeugt **keinen** `ox-cart-*`-Eintrag im `localStorage`.
-- `#cartbar` bleibt `hidden`.
-- Nur `ox-guest-*` liegt im Speicher.
+### Die offene Regression
 
-Per `fetch` direkt gegen `POST /api/guest/orders` funktioniert das Bestellen (**201**).
-**Das Backend ist in Ordnung — der Fehler liegt in der Verdrahtung im Frontend.**
+**Der „+"-Knopf fügt nicht mehr direkt hinzu, sondern öffnet das Detail-Overlay.**
 
-**Wo zu suchen ist:** `frontend/src/pages/guest/index.ts`. Dort wird der Rückruf von
-`menu.ts` (Klick auf „+") an `cart.ts` (Warenkorb) gehängt. `menu.ts` nimmt einen
-Rückruf `beiAuswahl` entgegen; prüf, ob er übergeben wird und ob er tatsächlich den
-Warenkorb füllt.
+`CLAUDE.md:46` hält die ursprüngliche Absicht fest: *„+"-Button bleibt für
+Schnell-Hinzufügen, stopPropagation beachten*. Gedacht war: Zeile antippen öffnet das
+Overlay, „+" fügt mit Menge 1 sofort hinzu. Jetzt tun beide dasselbe — aus einem Tipp
+werden drei.
 
-**Zwei Folgebeobachtungen, vermutlich dieselbe Ursache:**
+**Ursache, im Code dokumentiert:**
 
-- `#view-orders` bleibt leer, obwohl `GET /api/guest/guests/{token}/orders` die
-  Bestellung samt Status liefert.
-- Es gibt **keinen Knopf**, der zur Bestell-Ansicht führt.
+- `frontend/src/pages/guest/menu.ts:101` und `:106` hängen **denselben** Rückruf
+  `beiAuswahl` an die Karte **und** an den „+"-Knopf.
+- `frontend/src/pages/guest/index.ts:275` (`beiGerichtAusgewaehlt`) öffnet daraufhin für
+  beide das Overlay. Der Kommentar darüber benennt das offen.
+
+**Behebung:** `zeichneSpeisekarte` und `baueGerichtKarte` brauchen einen **zweiten**
+Rückruf für das Schnell-Hinzufügen, der an den „+"-Knopf gebunden wird. `index.ts`
+übergibt dafür `gericht => beiHinzufuegen(gericht, 1, "")`. Auf dem „+" gehört ein
+`stopPropagation`, damit nicht zusätzlich die Karte auslöst — genau das meint der
+Hinweis in `CLAUDE.md`.
+
+`menu.ts` hat 37 Tests; die Signaturänderung berührt sie. Ein Test für den neuen Weg
+gehört dazu: „+" antippen füllt den Warenkorb **ohne** Overlay.
 
 **Kleiner Zusatzbefund:** „Jetzt bestellen" ist bei leerem Warenkorb nicht gesperrt und
 läuft in ein 400 vom Backend.
 
-### Warum 210 Tests das nicht gefunden haben
+### Eine Warnung zur Arbeitsweise
 
-Alle Tests prüfen die Module **einzeln**. `index.ts` — die Datei, die sie verbindet —
-hat **keine Testdatei**. Genau dort sitzt der Fehler.
+Diese Regression wurde zuerst als **blockierender Defekt** gemeldet („+ tut gar nichts",
+„Bestell-Ansicht unerreichbar"). Beides war falsch — gemessen wurde nur `localStorage`
+und die Warenkorb-Leiste, nicht das Overlay; und der Testklick traf einen
+Kategorie-Reiter statt den „+"-Knopf.
 
-Das ist in diesem Projekt schon dreimal so gelaufen (siehe „Gelernt" unten). Bevor die
-Reparatur als fertig gilt, gehören Tests für `index.ts` dazu, die genau diesen Pfad
-abdecken: Klick auf „+" → Warenkorb gefüllt → Leiste sichtbar → bestellen → Status
-erscheint.
+**Lehre: Wenn ein Klick scheinbar nichts tut, prüf zuerst, ob du den richtigen Knopf
+getroffen hast und ob sich woanders etwas geöffnet hat.** Ein falscher Befund kostet
+mehr als gar keiner.
 
 ---
 
@@ -179,11 +188,14 @@ Abschnitt 12 (versioniert):
 
 ## Nächste Schritte
 
-1. **Den Defekt beheben** — Verdrahtung in `index.ts`, dann Tests dafür, dann im
-   laufenden Container gegenprüfen (Klick auf „+" muss den Warenkorb füllen).
+1. **Schnell-Hinzufügen wiederherstellen** — zweiter Rückruf in `menu.ts`, Test dazu,
+   im laufenden Container gegenprüfen: „+" füllt den Warenkorb, ohne das Overlay zu öffnen.
 2. **Optik beurteilen** — bisher hat noch niemand die Seite mit Augen gesehen. Besonders:
    eine grelle Akzentfarbe einstellen (Gelb `#ffff00`) und prüfen, dass die Knopfschrift
    schwarz wird.
 3. **Plan 3** — Küche, Kasse, Kellner. Voraussetzung erfüllt: `sse.ts` hat inzwischen
    Tests, das war die Bedingung, bevor der Küchen-Monitor darauf aufbaut.
-4. **Erst danach mergen.**
+4. **Mergen** ist aus technischer Sicht möglich — Docker-Bau, Tests und der
+   Bestellablauf sind nachgewiesen. Die Regression aus Punkt 1 ist eine
+   Bedienverschlechterung, kein Fehlverhalten. Ob sie vorher raus soll, ist deine
+   Entscheidung.
