@@ -1,13 +1,13 @@
 # Übergabe: Frontend-Umbau OrderXpress
 
-**Stand:** 03.08.2026 · Branch `frontend-redesign`, 38 Commits vor `main` · `main` ist unberührt
+**Stand:** 03.08.2026 · Branch `frontend-redesign`, 42 Commits vor `main` · `main` ist unberührt
 
 Diese Datei ist für eine **neue Chat-Sitzung** gedacht. Sie enthält alles, was du brauchst,
 um weiterzumachen, ohne die alte Unterhaltung zu kennen.
 
 ---
 
-## Stand: die Gäste-Seite funktioniert, eine kleine Regression ist offen
+## Stand: die Gäste-Seite funktioniert
 
 Der komplette Bestellablauf wurde im laufenden Docker-Container Schritt für Schritt
 nachgewiesen:
@@ -91,7 +91,7 @@ mehr als gar keiner.
   führender Null.
 - **Theming greift:** `--ox-text` wurde auf `#000000` gesetzt, abgeleitet aus dem hellen
   Laden-Hintergrund. `--ox-accent-text` wird aus der Akzentfarbe berechnet.
-- **Tests:** 120 Backend, 210 Frontend, alle grün. `tsc --noEmit` sauber.
+- **Tests:** 120 Backend, 212 Frontend, alle grün. `tsc --noEmit` sauber.
 
 ---
 
@@ -121,7 +121,7 @@ Das `frontend-maven-plugin` baut das Frontend in der Phase `generate-resources` 
 
 ```bash
 # Frontend
-cd frontend && npm test          # 210 Tests
+cd frontend && npm test          # 212 Tests
 cd frontend && npx tsc --noEmit
 cd frontend && npm run build
 cd frontend && npm run dev       # Vite-Server, /api geht auf :8080
@@ -212,7 +212,6 @@ Abschnitt 12 (versioniert):
    schwarz wird.
 2. **Plan 3** — Küche, Kasse, Kellner. Voraussetzung erfüllt: `sse.ts` hat inzwischen
    Tests, das war die Bedingung, bevor der Küchen-Monitor darauf aufbaut.
-3. **Mergen** ist aus technischer Sicht möglich — Docker-Bau, Tests und der
-   Bestellablauf sind nachgewiesen. Die Regression aus Punkt 1 ist eine
-   Bedienverschlechterung, kein Fehlverhalten. Ob sie vorher raus soll, ist deine
-   Entscheidung.
+3. **Mergen** ist aus technischer Sicht möglich — Docker-Bau, Tests und der komplette
+   Bestellablauf sind mit laufender App nachgewiesen. Offen ist nur die Sichtprüfung
+   aus Punkt 1.
