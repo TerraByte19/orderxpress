@@ -158,3 +158,23 @@
 .ox-detail__zutaten {
     margin-top: var(--ox-space-3);
 }
+
+/* ---------- Bestell-Status (orders.ts) ---------- */
+
+/* components.css deckt .ox-chip nur mit --gut/--warn/--gefahr/--akzent ab.
+   Fuer den Status SERVED reicht keine dieser Signalfarben - "Serviert" ist
+   fachlich neutral (wie NEW/"Angenommen"), muss aber sichtbar zurueck-
+   treten, weil die Bestellung erledigt ist. Deshalb dieser einzige neue
+   Chip-Zusatz: gleiche neutrale Flaeche wie die Basisklasse, nur gedaempft -
+   damit NEW und SERVED trotz gleicher Chip-"Familie" unterscheidbar bleiben. */
+.ox-chip--gedaempft {
+    opacity: .6;
+}
+
+/* Trennlinie unter der Gesamtsumme aller Bestellungen - dieselbe Haarlinie
+   wie ueberall im System, kein Schatten. */
+.ox-bestellungen__gesamt {
+    padding-bottom: var(--ox-space-3);
+    margin-bottom: var(--ox-space-3);
+    border-bottom: 1px solid var(--ox-border);
+}
