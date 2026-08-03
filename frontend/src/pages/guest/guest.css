@@ -178,3 +178,24 @@
     margin-bottom: var(--ox-space-3);
     border-bottom: 1px solid var(--ox-border);
 }
+
+/* ---------- Geteilte Rechnung (bill.ts) ---------- */
+
+/* Eine Position ist ein <label>, das Kontrollkaestchen + Text + Preis
+   umschliesst - ein Klick irgendwo in der Zeile trifft das Kaestchen.
+   Weder components.css noch base.css geben dafuer einen Zeiger-Cursor oder
+   ein Mindest-Beruehrungsziel her (das kommt dort nur ueber .ox-btn); beides
+   wird hier nachgetragen, damit die kleine native Checkbox trotzdem ein
+   ausreichend grosses Ziel hat. */
+.ox-rechnung__zeile {
+    min-height: var(--ox-touch);
+    cursor: pointer;
+}
+/* Bezahlte Position: bill.ts haengt bewusst gar keinen Handler an (siehe
+   dort) - hier nur die optische Seite, damit sie nicht mit einer noch
+   offenen Position verwechselt wird. Gleiches Muster wie .ox-btn:disabled
+   in components.css. */
+.ox-rechnung__zeile--bezahlt {
+    cursor: default;
+    opacity: .6;
+}
