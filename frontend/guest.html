@@ -3,151 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bestellen - OrderXpress</title>
-    <link rel="stylesheet" href="/css/app.css">
+    <title>Bestellen – OrderXpress</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#1f3d34">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OrderXpress">
+    <!-- Bewusst OHNE <link rel="manifest">: Gaeste sollen die App nicht
+         installieren, sie scannen den QR-Code und bestellen im Browser.
+         Aus demselben Grund ruft diese Seite auch registriereServiceWorker()
+         nicht auf (siehe frontend/src/lib/pwa.ts). Das gilt nur fuer diese
+         Seite - alle anderen bleiben PWA-faehig. -->
 </head>
 <body>
-<header class="topbar">
-    <img id="brand-logo" class="brand-logo" alt="" style="display:none">
-    <h1 id="page-title">Willkommen!</h1>
-    <span id="table-badge" class="badge blue" style="display:none"></span>
+<header class="ox-topbar">
+    <img id="brand-logo" alt="" hidden>
+    <h1 id="page-title">Willkommen</h1>
+    <!-- Tischmarke: wird von tischmarke() aus lib/ui.ts erzeugt und hier
+         eingehaengt - nicht von Hand als Text schreiben. -->
+    <span id="table-badge"></span>
 </header>
 <main>
 
-    <!-- Namensleiste + Beitritts-Anfragen (nur nach Freigabe sichtbar) -->
-    <div id="name-bar" class="row" style="display:none;margin-bottom:10px">
-        <span class="muted">Du bist:</span>
+    <!-- Namensleiste: erscheint sobald Theme/Karte geladen sind, noch waehrend
+         der Tisch auf Freigabe wartet (siehe Aufgabe 3/8). -->
+    <div id="name-bar" class="ox-row" hidden>
+        <span class="ox-muted">Du bist:</span>
         <strong id="my-name"></strong>
-        <button class="small ghost" onclick="Guest.changeName()">Namen &auml;ndern</button>
-        <span class="spacer"></span>
-        <button class="small" id="btn-call" onclick="Guest.callWaiter()" style="display:none">Kellner rufen</button>
-        <button class="small ghost" id="btn-bill" onclick="Guest.showBill()" style="display:none">Rechnung teilen</button>
+        <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-change-name">Namen ändern</button>
+        <span class="ox-spacer"></span>
+        <button type="button" class="ox-btn ox-btn--klein" id="btn-call" hidden>Kellner rufen</button>
+        <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-bill" hidden>Rechnung teilen</button>
     </div>
 
-    <!-- Beitritts-Anfragen an den Gastgeber ("X m&ouml;chte beitreten") -->
-    <div id="join-banner" style="display:none"></div>
+    <!-- Beitritts-Anfragen ("X moechte beitreten") - nur der Gastgeber sieht das. -->
+    <div id="join-banner" hidden></div>
 
-    <!-- Ansicht: laedt / wartet auf Freigabe -->
-    <div id="view-wait" class="center" style="display:none">
-        <p class="big">Einen Moment bitte &hellip;</p>
-        <p id="wait-text" class="muted">Das Personal gibt deinen Tisch gleich frei.</p>
+    <!-- Ansicht: wartet auf Freigabe (Personal beim Gastgeber, Gastgeber bei
+         weiteren Personen). Die Speisekarte ist parallel schon erreichbar,
+         diese Ansicht steht nur ganz am Anfang bzw. wenn nichts anderes passt. -->
+    <div id="view-wait" class="ox-center">
+        <p class="ox-big">Einen Moment …</p>
+        <p id="wait-text" class="ox-muted">Dein Tisch wird gleich freigegeben.</p>
     </div>
 
-    <!-- Ansicht: Fehler (ungueltiger QR, abgelehnt, ...) -->
-    <div id="view-error" class="center" style="display:none">
-        <p class="big" id="error-title">Das hat nicht geklappt</p>
-        <p id="error-text" class="muted"></p>
-        <p><button onclick="location.reload()">Erneut versuchen</button></p>
+    <!-- Ansicht: Fehler - ungueltiger QR-Code, abgelehnt, Sitzung beendet. -->
+    <div id="view-error" class="ox-center" hidden>
+        <p class="ox-big" id="error-title">Das hat nicht geklappt</p>
+        <p id="error-text" class="ox-muted"></p>
+        <p><button type="button" class="ox-btn" id="btn-retry">Erneut versuchen</button></p>
     </div>
 
-    <!-- Ansicht: Name eingeben (Pflicht - die Speisekarte erscheint erst danach) -->
-    <div id="view-name" style="display:none">
-        <div class="card" style="max-width:420px;margin:30px auto">
-            <h2 style="margin-top:0">Wie hei&szlig;t du?</h2>
-            <p class="muted">Bitte gib deinen Namen ein. Er erscheint in der geteilten
-                Rechnung, damit alle am Tisch sehen, wer was bestellt hat.</p>
-            <input id="name-input" placeholder="Dein Name" maxlength="60"
-                   autocomplete="name" style="margin-bottom:12px">
-            <button class="green" style="width:100%" onclick="Guest.confirmName()">Weiter zur Speisekarte</button>
+    <!-- Ansicht: Speisekarte - auch waehrend des Wartens sichtbar. Der
+         Bestellen-Knopf je Gericht wird bis zur Freigabe gesperrt. -->
+    <div id="view-menu" hidden>
+        <div id="cat-bar" class="ox-row" hidden>
+            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-cat-toggle" aria-label="Kategorien anzeigen">☰</button>
+            <span class="ox-muted">Kategorien</span>
         </div>
-    </div>
-
-    <!-- Ansicht: Speisekarte -->
-    <div id="view-menu" style="display:none">
-        <!-- Kategorie-Leiste mit Hamburger-Menue (nur wenn der Laden das aktiviert hat) -->
-        <div id="cat-bar" class="cat-bar" style="display:none">
-            <button class="burger" onclick="Guest.toggleCatPanel()" aria-label="Kategorien">&#9776;</button>
-            <span class="cat-title">Kategorien</span>
-        </div>
-        <div id="cat-panel" class="cat-panel"></div>
+        <div id="cat-panel" hidden></div>
         <div id="menu-container"></div>
     </div>
 
-    <!-- Ansicht: Warenkorb -->
-    <div id="view-cart" style="display:none">
-        <div class="card">
+    <!-- Ansicht: Warenkorb. -->
+    <div id="view-cart" hidden>
+        <div class="ox-card">
             <h2>Deine Bestellung</h2>
             <div id="cart-lines"></div>
-            <div class="row" style="margin-top:12px">
-                <span class="big" id="cart-total"></span>
-                <span class="spacer"></span>
-                <button class="ghost" onclick="Guest.showMenu()">Zur&uuml;ck</button>
-                <button class="green" id="btn-send" onclick="Guest.placeOrder()">Jetzt bestellen</button>
+            <div class="ox-row">
+                <span id="cart-total" class="ox-big ox-preis"></span>
+                <span class="ox-spacer"></span>
+                <button type="button" class="ox-btn ox-btn--geist" id="btn-cart-back">Zurück</button>
+                <button type="button" class="ox-btn ox-btn--gut" id="btn-send">Jetzt bestellen</button>
             </div>
         </div>
     </div>
 
-    <!-- Ansicht: Bestellung abgeschickt / meine Bestellungen -->
-    <div id="view-done" style="display:none">
-        <div class="center">
-            <p class="big">Bestellung ist in der K&uuml;che! &#127860;</p>
-            <p class="muted">Du kannst jederzeit weiter bestellen.</p>
-            <p><button onclick="Guest.showMenu()">Weiter bestellen</button></p>
-        </div>
-        <div class="card">
-            <h2>Deine bisherigen Bestellungen</h2>
-            <div id="my-orders"></div>
+    <!-- Ansicht: eigene Bestellungen mit Status (Angenommen / In der Kueche /
+         Fertig / Serviert / Storniert). -->
+    <div id="view-orders" hidden>
+        <div class="ox-card">
+            <div class="ox-row">
+                <h2>Deine Bestellungen</h2>
+                <span class="ox-spacer"></span>
+                <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-orders-back">Zur Speisekarte</button>
+            </div>
+            <div id="orders-container"></div>
         </div>
     </div>
 
-    <!-- Ansicht: geteilte Rechnung (alle Personen am Tisch) -->
-    <div id="view-bill" style="display:none">
-        <div class="card">
-            <div class="row">
-                <h2 style="margin:0">Rechnung teilen</h2>
-                <span class="spacer"></span>
-                <button class="ghost small" onclick="Guest.showMenu()">Zur&uuml;ck</button>
+    <!-- Ansicht: geteilte Rechnung. Nur Ansicht/Auswahl - kassiert wird an
+         der Kasse, die Auswahl geht nicht ans Backend. -->
+    <div id="view-bill" hidden>
+        <div class="ox-card">
+            <div class="ox-row">
+                <h2>Rechnung teilen</h2>
+                <span class="ox-spacer"></span>
+                <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-bill-back">Zurück</button>
             </div>
-            <p class="muted">Tippe Positionen an, um ihre Summe zu sehen (z.B. was du zahlst).
+            <p class="ox-muted">Tippe Positionen an, um ihre Summe zu sehen (z. B. was du zahlst).
                 Das Personal an der Kasse markiert sie dann als bezahlt.</p>
             <div id="bill-container"></div>
-            <div class="row" style="position:sticky;bottom:0;background:var(--card);padding-top:10px;
-                        border-top:1px solid var(--line);margin-top:10px">
-                <strong id="bill-selected">Ausgew&auml;hlt: 0,00 &euro;</strong>
-                <span class="spacer"></span>
-                <button class="ghost small" onclick="Guest.clearBillSelection()">Auswahl leeren</button>
+            <div class="ox-row">
+                <strong id="bill-selected" class="ox-preis">Ausgewählt: 0,00 €</strong>
+                <span class="ox-spacer"></span>
+                <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-bill-clear">Auswahl leeren</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Ansicht: Namenseingabe. Nicht mehr blockierend (Speisekarte steht
+         bereits offen) - erreichbar ueber "Namen ändern" in der Namensleiste. -->
+    <div id="view-name" hidden>
+        <div class="ox-card">
+            <h2>Wie heißt du?</h2>
+            <p class="ox-muted">Dein Name erscheint in der geteilten Rechnung, damit alle am Tisch
+                sehen, wer was bestellt hat.</p>
+            <p>
+                <label class="ox-label" for="name-input">Dein Name</label>
+                <input type="text" id="name-input" class="ox-field" placeholder="Dein Name" maxlength="60" autocomplete="name">
+            </p>
+            <button type="button" class="ox-btn ox-btn--gut ox-btn--voll" id="btn-name-save">Namen speichern</button>
         </div>
     </div>
 
 </main>
 
-<!-- Warenkorb-Leiste unten -->
-<div id="cartbar" class="cartbar" style="display:none">
+<!-- Warenkorb-Leiste unten, nur bei gefuelltem Warenkorb auf der Speisekarte sichtbar. -->
+<div id="cartbar" class="ox-row" hidden>
     <span id="cartbar-info"></span>
-    <span class="spacer"></span>
-    <button onclick="Guest.showCart()">Warenkorb ansehen</button>
+    <span class="ox-spacer"></span>
+    <button type="button" class="ox-btn ox-btn--klein" id="btn-cartbar-show">Warenkorb ansehen</button>
 </div>
 
-<!-- Detail-Ansicht eines Gerichts -->
-<div id="overlay">
-    <div class="box detail-box" onclick="event.stopPropagation()">
-        <img id="detail-img" class="detail-img" alt="" style="display:none">
-        <h2 id="detail-name" style="margin:10px 0 4px"></h2>
-        <p id="detail-price" class="big" style="margin:0 0 8px"></p>
-        <p id="detail-desc" class="muted" style="margin:0 0 10px"></p>
-        <div id="detail-details-wrap">
+<!-- Overlay: Gericht-Details (Foto, Preis, Beschreibung, Zutaten, Menge, Hinweis). -->
+<div id="overlay" class="ox-overlay" role="dialog" aria-modal="true" aria-label="Gericht-Details">
+    <div class="ox-overlay__box">
+        <img id="detail-img" alt="" hidden>
+        <h2 id="detail-name"></h2>
+        <p id="detail-price" class="ox-big ox-preis"></p>
+        <p id="detail-desc" class="ox-muted"></p>
+        <div id="detail-details-wrap" hidden>
             <strong>Zutaten &amp; Details</strong>
-            <p id="detail-details" class="muted" style="white-space:pre-line;margin:4px 0 12px"></p>
+            <p id="detail-details" class="ox-muted"></p>
         </div>
-        <div class="row" style="margin-bottom:10px">
+        <div class="ox-row">
             <span>Menge:</span>
-            <span class="qty">
-                <button onclick="Guest.detailQtyChange(-1)">&minus;</button>
-                <strong id="detail-qty">1</strong>
-                <button onclick="Guest.detailQtyChange(1)">+</button>
-            </span>
+            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-detail-qty-minus" aria-label="Menge verringern">−</button>
+            <strong id="detail-qty" class="ox-num">1</strong>
+            <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-detail-qty-plus" aria-label="Menge erhöhen">+</button>
         </div>
-        <input id="detail-note" placeholder="Hinweis, z.B. ohne Zwiebeln" maxlength="200">
-        <div class="row" style="margin-top:12px">
-            <button class="ghost" onclick="Guest.closeDetail()">Schlie&szlig;en</button>
-            <span class="spacer"></span>
-            <button class="green" id="detail-add" onclick="Guest.detailAddToCart()"></button>
+        <label class="ox-label" for="detail-note">Hinweis</label>
+        <input type="text" id="detail-note" class="ox-field" placeholder="z. B. ohne Zwiebeln" maxlength="200">
+        <div class="ox-row">
+            <button type="button" class="ox-btn ox-btn--geist" id="btn-detail-close">Schließen</button>
+            <span class="ox-spacer"></span>
+            <button type="button" class="ox-btn ox-btn--gut" id="detail-add">In den Warenkorb</button>
         </div>
     </div>
 </div>
 
-<script src="/js/api.js"></script>
-<script src="/js/guest.js"></script>
+<!-- Einstiegspunkt (frontend/src/pages/guest/index.ts) kommt erst mit der
+     Verdrahtung in einer spaeteren Aufgabe dieses Plans. Er bindet dann auch
+     app.css und fonts.ts ein (wie bei index.html/device.html per Import,
+     nicht per <link>). Bis dahin absichtlich kein <script>-Tag: ein Verweis
+     auf das noch fehlende Modul liesse "vite build" mit einem
+     Aufloesungsfehler abbrechen. -->
 </body>
 </html>
