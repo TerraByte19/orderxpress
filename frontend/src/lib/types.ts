@@ -86,3 +86,60 @@ export interface ProblemDetail {
     detail?: string;
     status?: number;
 }
+
+/** MenuItemDto */
+export interface Gericht {
+    id: number;
+    name: string;
+    description: string | null;
+    details: string | null;
+    price: number;
+    imageUrl: string | null;
+}
+
+/** MenuCategoryDto */
+export interface Kategorie {
+    id: number;
+    name: string;
+    items: Gericht[];
+}
+
+/** BillDto.Line */
+export interface RechnungsZeile {
+    orderItemId: number;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+    note: string | null;
+    paid: boolean;
+}
+
+/** BillDto.Participant */
+export interface RechnungsPerson {
+    guestId: number;
+    name: string;
+    isHost: boolean;
+    items: RechnungsZeile[];
+    total: number;
+    paidTotal: number;
+    openTotal: number;
+}
+
+/** BillDto */
+export interface Rechnung {
+    tableNumber: number;
+    sessionId: number;
+    participants: RechnungsPerson[];
+    grandTotal: number;
+    paidTotal: number;
+    openTotal: number;
+}
+
+/** JoinRequestDto - Rueckgabe von GET /guests/{token}/join-requests.
+    Nur der Gastgeber sieht diese Liste (offene Beitritts-Anfragen). */
+export interface BeitrittsAnfrage {
+    id: number;
+    name: string;
+    createdAt: string;
+}
