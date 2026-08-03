@@ -1,26 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { luminanz, kontrast, textfarbeAuf, setzeLadenDesign } from "./theme";
 
-/** Unabhaengige Nachbildung von color-mix(in srgb, ...): linear je Kanal im
- *  (bereits gamma-kodierten) sRGB-Raum mischen. Absichtlich NICHT aus
- *  theme.ts importiert - der Test soll das erzeugte Ergebnis nachrechnen,
- *  nicht der Implementierung vertrauen. */
-function mischeFuerTest(hexA: string, hexB: string, anteilA: number): string {
-    const zuRgb = (hex: string): [number, number, number] => {
-        const roh = hex.replace("#", "");
-        return [
-            parseInt(roh.slice(0, 2), 16),
-            parseInt(roh.slice(2, 4), 16),
-            parseInt(roh.slice(4, 6), 16)
-        ];
-    };
-    const [ar, ag, ab] = zuRgb(hexA);
-    const [br, bg, bb] = zuRgb(hexB);
-    const t = anteilA / 100;
-    const kanal = (a: number, b: number) => Math.round(a * t + b * (1 - t)).toString(16).padStart(2, "0");
-    return `#${kanal(ar, br)}${kanal(ag, bg)}${kanal(ab, bb)}`;
-}
-
 describe("luminanz", () => {
     it("ist 0 fuer Schwarz", () => {
         expect(luminanz("#000000")).toBeCloseTo(0, 5);
@@ -160,19 +140,17 @@ describe("setzeLadenDesign", () => {
         });
 
         it("setzt --ox-text-muted als abgeschwaechten, aber weiterhin ausreichend lesbaren Ton", () => {
+            // --ox-text-muted ist ein fertig ausgerechneter Hex-Wert (siehe
+            // gedaempfterText in theme.ts) - kein color-mix()-Ausdruck, den
+            // jsdom ohnehin nicht auswerten wuerde. Der Kontrast wird darum
+            // direkt auf dem tatsaechlich gelesenen Wert geprueft, nicht auf
+            // einer im Test parallel nachgerechneten Mischung.
             for (const hintergrund of hintergruende) {
                 setzeLadenDesign({ dunkel: true, backgroundColor: hintergrund });
                 const gedaempft = document.documentElement.style.getPropertyValue("--ox-text-muted");
 
-                const treffer = /^color-mix\(in srgb, (#[0-9a-fA-F]{6}) (\d+)%, (#[0-9a-fA-F]{6}) (\d+)%\)$/.exec(gedaempft);
-                expect(treffer).not.toBeNull();
-                const [, textfarbe, textAnteil, hintergrundFarbe, hintergrundAnteil] = treffer!;
-
-                expect(hintergrundFarbe).toBe(hintergrund);
-                expect(Number(textAnteil) + Number(hintergrundAnteil)).toBe(100);
-
-                const nachgerechnet = mischeFuerTest(textfarbe, hintergrundFarbe, Number(textAnteil));
-                expect(kontrast(nachgerechnet, hintergrund)).toBeGreaterThanOrEqual(4.5);
+                expect(gedaempft).toMatch(/^#[0-9a-fA-F]{6}$/);
+                expect(kontrast(gedaempft, hintergrund)).toBeGreaterThanOrEqual(4.5);
             }
         });
     });

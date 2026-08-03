@@ -54,9 +54,10 @@ function istHexFarbe(wert: unknown): wert is string {
 }
 
 /** Mischt zwei Hex-Farben linear je Kanal - dieselbe Rechnung wie die
- *  CSS-Funktion color-mix(in srgb, ...), mit der das Ergebnis unten
- *  tatsaechlich geschrieben wird. Dient hier nur der Kontrast-Vorabpruefung,
- *  bevor der fertige color-mix()-Ausdruck auf <html> landet. */
+ *  CSS-Funktion color-mix(in srgb, ...). Das Ergebnis ist der fertige
+ *  Hex-Wert, der unten tatsaechlich auf <html> landet (siehe
+ *  gedaempfterText) - keine Vorabpruefung fuer einen spaeter erst vom
+ *  Browser ausgewerteten Ausdruck. */
 function mischeHex(hexA: string, hexB: string, anteilA: number): string {
     const [ar, ag, ab] = hexZuRgb(hexA);
     const [br, bg, bb] = hexZuRgb(hexB);
@@ -66,16 +67,26 @@ function mischeHex(hexA: string, hexB: string, anteilA: number): string {
 }
 
 /** Gedaempfter, aber weiterhin WCAG-AA-lesbarer Ton fuer --ox-text-muted:
- *  dieselbe Textfarbe wie --ox-text, per color-mix() Richtung Hintergrund
+ *  dieselbe Textfarbe wie --ox-text, per mischeHex() Richtung Hintergrund
  *  abgeschwaecht. Start bei 60% Textfarbe; reicht das nicht fuer 4.5:1 (z. B.
  *  bei einem mittelgrauen Laden-Hintergrund), wird der Anteil erhoeht. Reine
  *  Textfarbe (100%, = --ox-text selbst) erreicht laut WCAG-Rechnung immer
  *  mindestens ~4.58:1 gegen jeden Hintergrund - die Schleife terminiert also
- *  immer, bevor der Notanker unten noetig wird. */
+ *  immer, bevor der Notanker unten noetig wird.
+ *
+ *  Absichtlich ein fertig ausgerechneter Hex-Wert statt eines
+ *  color-mix()-Ausdrucks: jsdom (und damit unsere Tests) wertet
+ *  CSS-Farbfunktionen nicht aus, ein color-mix()-String wuerde also nur
+ *  ungeprueft durchgereicht - die 4.5:1-Zusicherung waere nicht pruefbar,
+ *  ausser durch eine zweite, parallele Nachrechnung im Test. Mit einem
+ *  Hex-Wert kann der Test den tatsaechlich ausgelieferten Wert lesen und
+ *  direkt den Kontrast pruefen. Bitte nicht "vereinfachend" wieder auf
+ *  color-mix() umstellen. */
 function gedaempfterText(textfarbe: string, hintergrund: string): string {
     for (const anteil of [60, 70, 80, 90, 100]) {
-        if (kontrast(mischeHex(textfarbe, hintergrund, anteil), hintergrund) >= 4.5) {
-            return `color-mix(in srgb, ${textfarbe} ${anteil}%, ${hintergrund} ${100 - anteil}%)`;
+        const gemischt = mischeHex(textfarbe, hintergrund, anteil);
+        if (kontrast(gemischt, hintergrund) >= 4.5) {
+            return gemischt;
         }
     }
     return textfarbe; // Notanker, falls Rundung den Grenzfall verschieben sollte
