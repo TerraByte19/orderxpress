@@ -1,5 +1,13 @@
 /* Gaeste-Seite: die Klammer. Verdrahtet session.ts/menu.ts/cart.ts/orders.ts/
- * bill.ts zu einer Seite und ist der ERSTE Verbraucher von theme.ts.
+ * bill.ts zu einer Seite und ist der ERSTE Verbraucher von theme.ts. Drei
+ * weitere Bausteine dieser Seite leben aus Groessengruenden in eigenen
+ * Dateien (siehe Bericht zu Aufgabe 9): laden-design.ts (Theme holen/
+ * anwenden), ansichten.ts (Ansichts-Inhalt, Kopf-/Namensleiste, Wartehinweis)
+ * und live-daten.ts (der Takt, den der Dateikopf unten beschreibt). Der
+ * Zustand und die Verdrahtung der Ablaeufe (Start, Warenkorb, Bestellungen,
+ * Rechnung, Beitritts-Anfragen) bleiben bewusst HIER - sie teilen sich
+ * denselben veraenderlichen Zustand und werden zur Laufzeit (nicht beim
+ * Zeichnen) ausgewertet; siehe Bericht fuer die Abwaegung.
  *
  * Ablauf: QR-Token lesen -> gemerkten guestToken nachschlagen, sonst scannen
  * -> SOFORT Theme + Speisekarte laden, view-menu zeigen (auch bei PENDING,
@@ -11,23 +19,22 @@
  * 3000 ms) bleibt einzige Quelle fuer Freigabe/Ablehnung, meldet aber nur bei
  * AENDERUNG von GastStatusAntwort - weder Beitritts-Anfragen noch
  * Bestell-Status stecken darin (geprueft: GuestStatusResponse.java kennt
- * keine der beiden Listen). Dafuer EIN eigener, schlanker Takt (LIVE_TAKT_MS)
+ * keine der beiden Listen). Dafuer EIN eigener, schlanker Takt (live-daten.ts)
  * - bewusst nur einer, nicht zwei, und nur aktiv, waehrend er etwas zu tun
  * hat. Abwaegung dazu im Bericht.
  *
  * Cache-Buster (?v=Zeitstempel) fuer Logo/Hintergrundbild aus der alten
  * Fassung uebernommen (guest.js, loadTheme()) - ohne ihn haengt ein
- * ausgetauschtes Bild im Browser-Cache fest. */
+ * ausgetauschtes Bild im Browser-Cache fest. Liegt jetzt in laden-design.ts. */
 
 import "../../styles/app.css";
 import "../../styles/fonts";
 import "./guest.css";
 
-import { api, ApiFehler } from "../../lib/api";
-import { setzeLadenDesign } from "../../lib/theme";
-import { el, tischmarke, toast, zeigeNur } from "../../lib/ui";
+import { ApiFehler } from "../../lib/api";
+import { el, toast } from "../../lib/ui";
 import { preis } from "../../lib/format";
-import type { BeitrittsAnfrage, GastStatusAntwort, Gericht, Kategorie, LadenTheme, ScanAntwort } from "../../lib/types";
+import type { BeitrittsAnfrage, GastStatusAntwort, Gericht, Kategorie, ScanAntwort } from "../../lib/types";
 
 import {
     entscheideBeitritt,
@@ -47,6 +54,17 @@ import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
+import { ladeTheme, wendeThemeAn } from "./laden-design";
+import {
+    aktualisiereFreigabeKnoepfe,
+    aktualisiereNameAnzeige,
+    aktualisiereTischmarke,
+    fuelleFehlerAnsicht,
+    zeigeAnsichtInhalt,
+    zeigeWartehinweis
+} from "./ansichten";
+import type { Ansicht } from "./ansichten";
+import { starteLiveDatenTakt } from "./live-daten";
 
 /* ---------- Zustand ---------- */
 
@@ -59,18 +77,22 @@ let restaurantId = 0;
 let restaurantName = "";
 let genehmigt = false;
 let kategorien: Kategorie[] = [];
+let aktuelleAnsicht: Ansicht = "view-wait";
 
 const warenkorb = new Warenkorb();
 let aktuelleAuswahl: Auswahl | null = null;
-let wartehinweisElement: HTMLParagraphElement | null = null;
 let statusAbfrage: { stop(): void } | null = null;
 
-/** Eigener, schlanker Takt fuer Beitritts-Anfragen/Bestell-Status - siehe
- *  Dateikopf. Derselbe Wert wie session.ts' (dort private) STANDARD_TAKT_MS,
- *  damit sich die ganze Seite fuer den Gast gleich "schnell" anfuehlt. */
-const LIVE_TAKT_MS = 3000;
-let liveDatenAktiv = false;
-let liveDatenZeitgeber: ReturnType<typeof setTimeout> | null = null;
+/** Siehe live-daten.ts: istGastgeber/aktuelleAnsicht werden dort ERST beim
+ *  jeweiligen Tick gelesen (Rueckruf), nicht hier einmalig als Wert
+ *  uebergeben - sonst wuerde der Takt einen zwischenzeitlichen Wechsel
+ *  (Ansicht, Gastgeber-Rolle) verpassen. */
+const liveDaten = starteLiveDatenTakt({
+    istGastgeber: () => istGastgeber,
+    aktuelleAnsicht: () => aktuelleAnsicht,
+    aktualisiereBeitrittsAnfragen,
+    aktualisiereBestellungen
+});
 
 /* ---------- Kleiner DOM-Helfer (analog zu el() aus lib/ui.ts, nur fuer
    Knoepfe mit type="button" - dieselbe Kurzform wie in menu.ts, dort privat
@@ -85,41 +107,16 @@ function knopf(klasse: string, text: string, ariaLabel?: string): HTMLButtonElem
     return b;
 }
 
-/* ---------- Ansichten ---------- */
-
-const ANSICHTEN = ["view-wait", "view-error", "view-menu", "view-cart", "view-orders", "view-bill", "view-name"] as const;
-type Ansicht = (typeof ANSICHTEN)[number];
-const NAME_BAR_ANSICHTEN: readonly Ansicht[] = ["view-menu", "view-cart", "view-orders", "view-bill"];
-const TITEL: Partial<Record<Ansicht, string>> = {
-    "view-menu": "Speisekarte",
-    "view-cart": "Warenkorb",
-    "view-orders": "Deine Bestellungen",
-    "view-bill": "Rechnung teilen",
-    "view-name": "Wie heißt du?"
-};
-
-let aktuelleAnsicht: Ansicht = "view-wait";
+/* ---------- Ansichten umschalten (Inhalt/Konstanten: ansichten.ts) ---------- */
 
 function zeigeAnsicht(id: Ansicht): void {
     aktuelleAnsicht = id;
-    zeigeNur(id, ANSICHTEN);
-
-    const titel = document.getElementById("page-title");
-    if (titel) titel.textContent = TITEL[id] ?? (restaurantName || "Willkommen!");
-
-    const nameLeiste = document.getElementById("name-bar");
-    if (nameLeiste) nameLeiste.hidden = !NAME_BAR_ANSICHTEN.includes(id);
-
+    zeigeAnsichtInhalt(id, restaurantName);
     aktualisiereWarenkorbLeiste();
 }
 
 function zeigeFehler(titel: string, text: string): void {
-    const titelFeld = document.getElementById("error-title");
-    const textFeld = document.getElementById("error-text");
-    if (titelFeld) titelFeld.textContent = titel;
-    if (textFeld) textFeld.textContent = text;
-    const banner = document.getElementById("join-banner");
-    if (banner) banner.hidden = true;
+    fuelleFehlerAnsicht(titel, text);
     zeigeAnsicht("view-error");
 }
 
@@ -203,8 +200,8 @@ function wendeStatusAn(status: GastStatusAntwort, istErsterAufruf: boolean): boo
     tischNummer = status.tableNumber;
     restaurantId = status.restaurantId;
     if (status.restaurantName) restaurantName = status.restaurantName;
-    aktualisiereNameAnzeige();
-    aktualisiereTischmarke();
+    aktualisiereNameAnzeige(meinName);
+    aktualisiereTischmarke(tischNummer);
 
     if (status.guestStatus === "REJECTED") {
         beendeMitFehler("Nicht freigegeben", istGastgeber
@@ -224,73 +221,25 @@ function wendeStatusAn(status: GastStatusAntwort, istErsterAufruf: boolean): boo
     const warGenehmigt = genehmigt;
     genehmigt = status.guestStatus === "APPROVED" && status.sessionStatus === "APPROVED";
     setzeBestellenErlaubt(genehmigt);
-    zeigeWartehinweis(!genehmigt);
-    aktualisiereFreigabeKnoepfe();
+    zeigeWartehinweis(!genehmigt, istGastgeber);
+    aktualisiereFreigabeKnoepfe(genehmigt);
     if (genehmigt && !warGenehmigt && !istErsterAufruf) {
         toast("Der Tisch wurde freigegeben – du kannst jetzt bestellen!");
     }
-    aktualisiereLiveDatenTakt();
+    liveDaten.aktualisiere(genehmigt);
     return true;
 }
 
 function beendeMitFehler(titel: string, text: string): void {
     statusAbfrage?.stop();
     statusAbfrage = null;
-    liveDatenAktiv = false;
-    if (liveDatenZeitgeber !== null) {
-        clearTimeout(liveDatenZeitgeber);
-        liveDatenZeitgeber = null;
-    }
+    liveDaten.stoppe();
     genehmigt = false;
     warenkorb.leeren();
     zeigeFehler(titel, text);
 }
 
-/* ---------- Laden-Design (theme.ts, erster Einsatz ueberhaupt) ---------- */
-
-function ladeTheme(restaurantId: number): Promise<LadenTheme> {
-    return api<LadenTheme>(`/api/guest/theme/${restaurantId}`);
-}
-
-/** DAS ist die Stelle, an der die Plan-1-Kontrast-Rechnung zum ersten Mal
- *  greift: Knopf-Textfarbe wird aus der Akzentfarbe berechnet (nicht mehr
- *  immer weiss), Text-Textfarbe aus dem Laden-Hintergrund. "dunkel" wird
- *  bewusst NICHT gesetzt - das Feld gibt es im Backend noch nicht, die Seite
- *  bleibt bis dahin hell (theme.ts: ohne design.dunkel wird nur das
- *  data-theme-Attribut entfernt, nichts erzwungen). */
-function wendeThemeAn(theme: LadenTheme): void {
-    setzeLadenDesign({ accentColor: theme.accentColor, backgroundColor: theme.backgroundColor });
-
-    if (theme.name) {
-        document.title = `${theme.name} – Bestellen`;
-        if (!restaurantName) restaurantName = theme.name;
-    }
-
-    // Cache-Buster wie in der alten Fassung (guest.js, loadTheme()): ohne ihn
-    // bleibt ein ausgetauschtes Logo/Hintergrundbild im Browser-Cache haengen.
-    const zeitstempel = `?v=${Date.now()}`;
-
-    const logo = document.getElementById("brand-logo") as HTMLImageElement | null;
-    if (logo) {
-        if (theme.logoUrl) {
-            logo.src = theme.logoUrl + zeitstempel;
-            logo.hidden = false;
-        } else {
-            logo.removeAttribute("src");
-            logo.hidden = true;
-        }
-    }
-
-    if (theme.backgroundUrl) {
-        document.body.classList.add("ox-bg-bild");
-        document.body.style.backgroundImage = `url("${theme.backgroundUrl}${zeitstempel}")`;
-    } else {
-        document.body.classList.remove("ox-bg-bild");
-        document.body.style.backgroundImage = "";
-    }
-}
-
-/* ---------- Speisekarte laden + Warenkorb wiederherstellen ---------- */
+/* ---------- Speisekarte laden + Warenkorb wiederherstellen (Theme: laden-design.ts) ---------- */
 
 /** Theme und Speisekarte laufen PARALLEL; das Theme ist fachlich optional
  *  (fehlt es, bleibt die Standard-Optik aus tokens.css). allSettled() statt
@@ -303,6 +252,9 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
 
     if (themeErgebnis.status === "fulfilled") {
         wendeThemeAn(themeErgebnis.value);
+        // Rueckfall wie zuvor in wendeThemeAn: nur uebernehmen, wenn die
+        // Statusabfrage noch keinen restaurantName geliefert hat (siehe laden-design.ts, Dateikopf).
+        if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;
     }
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
 
@@ -329,23 +281,6 @@ function beiHinzufuegen(gericht: Gericht, menge: number, hinweis: string): void 
     warenkorb.sichere(guestToken);
     aktualisiereWarenkorbLeiste();
     toast(`${menge}× ${gericht.name} hinzugefügt`);
-}
-
-/** Persistenter Hinweis oben in view-menu, solange nicht genehmigt. Wird
- *  EINMAL lazy angelegt (Text haengt vom Gastgeber-Status ab, der sich fuer
- *  eine Person nie aendert) und danach nur ein-/ausgeblendet - kein
- *  erneutes Zeichnen der Speisekarte darunter, siehe menu.ts. */
-function zeigeWartehinweis(sichtbar: boolean): void {
-    const menu = document.getElementById("view-menu");
-    if (!menu) return;
-    if (!wartehinweisElement) {
-        wartehinweisElement = el("p", "ox-muted");
-        wartehinweisElement.textContent = istGastgeber
-            ? "Dein Tisch wird gleich freigegeben – bestellen kannst du, sobald es so weit ist."
-            : "Der Gastgeber lässt dich gleich rein – bestellen kannst du, sobald es so weit ist.";
-        menu.insertBefore(wartehinweisElement, menu.firstChild);
-    }
-    wartehinweisElement.hidden = !sichtbar;
 }
 
 /* ---------- Warenkorb-Ansicht (cart.ts liefert nur Daten, keine Anzeige) ---------- */
@@ -466,12 +401,7 @@ function aktualisiereAusgewaehlteSumme(): void {
 }
 
 /* ---------- Name (view-name ist NICHT mehr blockierend, siehe guest.html -
-   nur ueber "Namen ändern" in der Namensleiste erreichbar). ---------- */
-
-function aktualisiereNameAnzeige(): void {
-    const feld = document.getElementById("my-name");
-    if (feld) feld.textContent = meinName;
-}
+   nur ueber "Namen ändern" in der Namensleiste erreichbar; Anzeige: ansichten.ts). ---------- */
 
 function oeffneNamensAnsicht(): void {
     const eingabe = document.getElementById("name-input") as HTMLInputElement | null;
@@ -495,7 +425,7 @@ async function speichereName(): Promise<void> {
     try {
         await setzeName(guestToken, name);
         meinName = name;
-        aktualisiereNameAnzeige();
+        aktualisiereNameAnzeige(meinName);
         toast("Name geändert");
         zeigeAnsicht("view-menu");
     } catch (fehler) {
@@ -566,53 +496,6 @@ async function entscheide(joinerId: number, aktion: "approve" | "reject"): Promi
         toast((fehler as Error).message, true);
     }
     await aktualisiereBeitrittsAnfragen();
-}
-
-/* ---------- Live-Daten-Takt (Beitritts-Anfragen + Bestell-Status,
-   siehe Dateikopf) ---------- */
-
-function aktualisiereLiveDatenTakt(): void {
-    if (genehmigt && !liveDatenAktiv) {
-        liveDatenAktiv = true;
-        if (istGastgeber) void aktualisiereBeitrittsAnfragen();
-        planeLiveDatenTick();
-    } else if (!genehmigt && liveDatenAktiv) {
-        liveDatenAktiv = false;
-        if (liveDatenZeitgeber !== null) {
-            clearTimeout(liveDatenZeitgeber);
-            liveDatenZeitgeber = null;
-        }
-    }
-}
-
-function planeLiveDatenTick(): void {
-    liveDatenZeitgeber = setTimeout(() => {
-        void (async () => {
-            if (!document.hidden) {
-                if (istGastgeber) await aktualisiereBeitrittsAnfragen();
-                if (aktuelleAnsicht === "view-orders") await aktualisiereBestellungen();
-            }
-            if (liveDatenAktiv) planeLiveDatenTick();
-        })();
-    }, LIVE_TAKT_MS);
-}
-
-/* ---------- Tischmarke + Namensleisten-Knoepfe ---------- */
-
-function aktualisiereTischmarke(): void {
-    const badge = document.getElementById("table-badge");
-    if (!badge) return;
-    badge.textContent = "";
-    badge.appendChild(tischmarke(tischNummer));
-}
-
-/** "Kellner rufen"/"Rechnung teilen" sind erst nach Freigabe sinnvoll -
- *  bleiben bis dahin hidden (Ausgangszustand in guest.html). */
-function aktualisiereFreigabeKnoepfe(): void {
-    const anruf = document.getElementById("btn-call");
-    if (anruf) anruf.hidden = !genehmigt;
-    const rechnung = document.getElementById("btn-bill");
-    if (rechnung) rechnung.hidden = !genehmigt;
 }
 
 /* ---------- Ereignisse verdrahten ---------- */
