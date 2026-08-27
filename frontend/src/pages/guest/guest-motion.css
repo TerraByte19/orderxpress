@@ -1,0 +1,5 @@
+/* Bewegungs- und Animationsregeln der Gaeste-Seite (Kategorie-Strich,
+ * Warte-Puls, Kassenbon, Stempel/Haken, Chip-Uebergang, Tischmarke-Zustaende).
+ * Getrennt von guest.css, damit beide Dateien unter ~250 Zeilen bleiben.
+ * Keyframes selbst liegen global in styles/animation.css.
+ * Alle Effekte respektieren prefers-reduced-motion (eigene @media-Bloecke). */

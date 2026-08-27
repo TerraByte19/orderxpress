@@ -49,7 +49,7 @@
                 Grund: in der geteilten Rechnung fluchten die Spalten
                 tatsaechlich untereinander, und es greift den gedruckten
                 Bon auf, den das System ohnehin per ESC/POS ausgibt. */
-    --ox-font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+    --ox-font-display: "Bricolage Grotesque Variable", "Fraunces Variable", Georgia, serif;
     --ox-font-sans: "Instrument Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
     --ox-font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
     --ox-text-xs: 12px;
@@ -63,6 +63,13 @@
     /* --- Schatten (sparsam) --- */
     --ox-shadow-1: 0 1px 2px rgba(0, 0, 0, .04);
     --ox-shadow-2: 0 8px 24px rgba(0, 0, 0, .12);
+
+    /* --- Bewegung --- */
+    --ox-ease-out: cubic-bezier(.2, .7, .2, 1);
+    --ox-ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+    --ox-dur-fast: 140ms;
+    --ox-dur: 260ms;
+    --ox-dur-slow: 460ms;
 
     /* --- Overlay-Abdunklung --- */
     --ox-scrim: rgba(0, 0, 0, .6);
@@ -100,3 +107,18 @@
     /* Kräftigere Abdunklung im Dunkeln, da Untergrund ohnehin dunkel */
     --ox-scrim: rgba(0, 0, 0, .8);
 }
+
+/* --- Form pro Laden: weiche Radien. Standard (Attribut fehlt) = eckig,
+   die Werte oben in :root. --- */
+:root[data-shape="soft"] {
+    --ox-radius-sm: 14px;
+    --ox-radius-md: 18px;
+    --ox-radius-lg: 26px;
+}
+
+/* --- Ueberschrift-Schrift pro Laden. Kommt NACH data-shape und data-theme,
+   gleiche Spezifitaet -> gewinnt bei --ox-font-display. --- */
+:root[data-font="bricolage"] { --ox-font-display: "Bricolage Grotesque Variable", system-ui, sans-serif; }
+:root[data-font="fraunces"]  { --ox-font-display: "Fraunces Variable", Georgia, "Times New Roman", serif; }
+:root[data-font="space"]     { --ox-font-display: "Space Grotesk Variable", system-ui, sans-serif; }
+:root[data-font="iserif"]    { --ox-font-display: "Instrument Serif", Georgia, serif; }

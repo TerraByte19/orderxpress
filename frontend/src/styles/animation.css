@@ -1,0 +1,71 @@
+/* Alle Keyframes und wiederverwendbaren Bewegungsklassen der App an einem Ort.
+ *
+ * AUSSCHALTER: base.css setzt unter @media (prefers-reduced-motion: reduce)
+ * bereits alle animation-/transition-Dauern auf ~0. Hier zusaetzlich die
+ * Startzustaende neutralisieren, damit "unsichtbar bis Animation" nicht
+ * dauerhaft unsichtbar bleibt. */
+
+@keyframes ox-atmen {
+    0%, 100% { opacity: .5; transform: scale(.98); }
+    50%      { opacity: 1;  transform: scale(1); }
+}
+@keyframes ox-welle {
+    0%   { transform: scale(1);   opacity: .7; }
+    100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes ox-schnapp {
+    0%   { transform: scale(.8); }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+@keyframes ox-pop {
+    0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); }
+}
+@keyframes ox-zeile-rein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ox-stempeln {
+    0%   { transform: rotate(-14deg) scale(2.4); opacity: 0; }
+    60%  { transform: rotate(-14deg) scale(.92); opacity: 1; }
+    100% { transform: rotate(-14deg) scale(1);   opacity: 1; }
+}
+@keyframes ox-haken-zeichnen { to { stroke-dashoffset: 0; } }
+@keyframes ox-blinken { 50% { opacity: .3; } }
+
+/* Gestaffeltes Einblenden (Karten, Listen). is-in wird per JS gesetzt
+   (animation.ts staffelEin). */
+.ox-anim-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity var(--ox-dur-slow) var(--ox-ease-out),
+                transform var(--ox-dur-slow) var(--ox-ease-out);
+}
+.ox-anim-stagger.is-in { opacity: 1; transform: none; }
+
+/* Flieger-Klon (animation.ts fliegeZu) */
+.ox-flieger {
+    position: fixed;
+    z-index: 70;
+    border-radius: var(--ox-radius-sm);
+    background: var(--ox-accent);
+    color: var(--ox-accent-text);
+    display: grid;
+    place-items: center;
+    font-family: var(--ox-font-mono);
+    font-weight: 600;
+    pointer-events: none;
+    transition: transform var(--ox-dur-slow) cubic-bezier(.5, 0, .75, 0),
+                opacity var(--ox-dur-slow) linear;
+}
+.ox-flieger img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* Bon fliegt zur Kueche */
+.ox-bon--weg {
+    transition: transform var(--ox-dur-slow) cubic-bezier(.5, 0, .75, 0),
+                opacity var(--ox-dur-slow) linear;
+    transform: translateY(-140%) rotate(-6deg) scale(.88);
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ox-anim-stagger { opacity: 1; transform: none; }
+    .ox-bon--weg { transform: none; opacity: 0; }
+}

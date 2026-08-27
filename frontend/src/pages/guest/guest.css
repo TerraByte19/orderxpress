@@ -1,3 +1,5 @@
+@import "./guest-motion.css";
+
 /* Gaeste-Seite: nur was components.css/base.css NICHT abdecken.
    Detail-Overlay, Preis, Mengen-Stepper, Hinweisfeld etc. brauchen keine
    Zeile hier - die kommen vollstaendig aus vorhandenen Bausteinen
