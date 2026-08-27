@@ -16,7 +16,7 @@
 - **`src/main/resources/static/` ist generiert und gitignored.** Nie dort editieren — nur unter `frontend/`.
 - **Kein fester Farb-/Abstands-/Größenwert in CSS** außerhalb von `tokens.css` — immer `var(--ox-...)`.
 - **Kein `onclick`/Inline-Style in neuem HTML.** (Die alte `admin.html` nutzt beides bereits — dort dem bestehenden Stil folgen.)
-- **Keine Datei über ~250 Zeilen**, außer der bereits bewusst größeren `frontend/src/pages/guest/index.ts` (~537 Zeilen) — dort NICHTS Größeres hinzufügen, neue Logik kommt in neue Module.
+- **Keine Datei über ~250 Zeilen**, außer der bereits bewusst größeren `frontend/src/pages/guest/index.ts` (~537 Zeilen) — dort NICHTS Größeres hinzufügen, neue Logik kommt in neue Module. **Neue Gäste-Seiten-CSS-Regeln (neue Selektoren, `@keyframes`, `transition`/`animation`) gehören in `frontend/src/pages/guest/guest-motion.css`** (in Task 2 angelegt, von `guest.css` per `@import` eingebunden); `guest.css` selbst wird nur an BESTEHENDEN Selektoren geändert (z. B. Karten-Layout), damit es unter ~250 Zeilen bleibt.
 - **Kein zweiter Netzwerk-Takt** auf der Gäste-Seite. Alle Live-Effekte hängen an der bestehenden 3-Sekunden-Statusabfrage.
 - **Prüfnetz:** `mvn clean test` (~76 Integrationstests + neue), `frontend/`: `npm test`, `test-api.ps1` (33/33). Nach Claude-Änderungen `mvn clean ...` (Zeitstempel-Falle).
 - **Referenz-Muster mit funktionierendem Animationscode:** `guest-prototype.html` (im Arbeitsverzeichnis der Brainstorming-Sitzung; nicht eingecheckt). Die CSS-`@keyframes` und JS-Helfer dort sind die Vorlage für die Frontend-Tasks — Werte übernehmen, aber in Tokens/Variablen überführen.
@@ -46,8 +46,9 @@ Frontend-Abbildung: `SQUARE→data-shape=square` (Standard, Attribut kann auch f
 **Frontend — Fundament (ändern):**
 - `frontend/package.json`, `frontend/src/styles/fonts.ts` — 3 neue `@fontsource`-Pakete.
 - `frontend/src/styles/tokens.css` — Bewegungs-Tokens, `[data-shape="soft"]`, `[data-font="…"]`.
-- `frontend/src/styles/animation.css` (neu) — alle `@keyframes` + Bewegungsklassen.
+- `frontend/src/styles/animation.css` (neu) — alle globalen `@keyframes` + Bewegungsklassen.
 - `frontend/src/styles/app.css` — `animation.css` importieren.
+- `frontend/src/pages/guest/guest-motion.css` (neu) — alle NEUEN Bewegungs-/Animationsregeln der Gäste-Seite; von `guest.css` per `@import` eingebunden.
 - `frontend/src/lib/types.ts` — `LadenTheme` + 4 Felder.
 - `frontend/src/lib/theme.ts` — `LadenDesign` + `shape`/`font`; `setzeLadenDesign` setzt die Attribute.
 - `frontend/src/pages/guest/laden-design.ts` — `wendeThemeAn` gibt Flieger-/Bestätigungs-Modus zurück.
@@ -59,7 +60,8 @@ Frontend-Abbildung: `SQUARE→data-shape=square` (Standard, Attribut kann auch f
 - `frontend/src/pages/guest/orders.ts` — Chip morpht in place + blinkender Punkt.
 - `frontend/src/pages/guest/ansichten.ts` — `aktualisiereTischmarke(nr, wartet)`.
 - `frontend/src/pages/guest/index.ts` — Modus-Zustand, Verdrahtung: Bon-Klassen, Bestätigung, Ansichtswechsel über `mitAnsichtsWechsel`.
-- `frontend/src/pages/guest/guest.css` — Thumbnail, Kategorie-Strich, Warte-Puls, Bon-Perforierung + Zeilen-Tippen, Stempel/Haken, Chip-Übergang.
+- `frontend/src/pages/guest/guest.css` — nur BESTEHENDE Selektoren ändern (Thumbnail-Karten-Layout) + `@import "./guest-motion.css";` am Anfang.
+- `frontend/src/pages/guest/guest-motion.css` — Kategorie-Strich, Warte-Puls, Bon-Perforierung + Zeilen-Tippen, Stempel/Haken, Chip-Übergang, Tischmarke-Zustände.
 - `frontend/guest.html` — `#view-wait` Puls-Markup.
 - Tests: `animation.test.ts` (neu), Anpassungen in `menu.test.ts` / `orders.test.ts`.
 
@@ -321,6 +323,8 @@ git commit -m "feat: vier Design-Achsen pro Laden (Form, Schrift, Flieger, Besta
 - Modify: `frontend/src/styles/tokens.css`
 - Create: `frontend/src/styles/animation.css`
 - Modify: `frontend/src/styles/app.css`
+- Create: `frontend/src/pages/guest/guest-motion.css` (Skelett)
+- Modify: `frontend/src/pages/guest/guest.css` (`@import` am Anfang)
 
 **Interfaces:**
 - Produces (für alle folgenden Frontend-Tasks):
@@ -484,18 +488,37 @@ Ans Ende von `tokens.css` (nach dem `[data-theme="dark"]`-Block) anfügen:
 @import "./animation.css";
 ```
 
-- [ ] **Step 7: Build + Tests prüfen**
+- [ ] **Step 7: `guest-motion.css` anlegen + in `guest.css` einbinden**
+
+`frontend/src/pages/guest/guest-motion.css` (neu):
+
+```css
+/* Bewegungs- und Animationsregeln der Gaeste-Seite (Kategorie-Strich,
+ * Warte-Puls, Kassenbon, Stempel/Haken, Chip-Uebergang, Tischmarke-Zustaende).
+ * Getrennt von guest.css, damit beide Dateien unter ~250 Zeilen bleiben.
+ * Keyframes selbst liegen global in styles/animation.css.
+ * Alle Effekte respektieren prefers-reduced-motion (eigene @media-Bloecke). */
+```
+
+In `frontend/src/pages/guest/guest.css` als ERSTE Zeile (vor dem Datei-Kommentar oder direkt danach):
+
+```css
+@import "./guest-motion.css";
+```
+
+- [ ] **Step 8: Build + Tests prüfen**
 
 Run: `cd frontend && npm run build && npm test`
 Expected: `tsc --noEmit` grün, Vite-Build erzeugt `../src/main/resources/static`, bestehende Vitest-Suite grün (keine Teständerung in diesem Task).
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add frontend/package.json frontend/package-lock.json \
         frontend/src/styles/fonts.ts frontend/src/styles/tokens.css \
-        frontend/src/styles/animation.css frontend/src/styles/app.css
-git commit -m "feat: Bewegungs-Tokens, Form-/Schrift-Achsen, animation.css"
+        frontend/src/styles/animation.css frontend/src/styles/app.css \
+        frontend/src/pages/guest/guest-motion.css frontend/src/pages/guest/guest.css
+git commit -m "feat: Bewegungs-Tokens, Form-/Schrift-Achsen, animation.css, guest-motion.css"
 ```
 
 ---
@@ -876,9 +899,11 @@ Im Reiter-Klick-Listener nach `reiter.classList.add("is-active")` ergänzen: `se
 
 (jsdom liefert `offsetWidth`/`offsetLeft` als `0` — Test prüft nur die Existenz des Elements, nicht die Position.)
 
-- [ ] **Step 4: `guest.css` — Thumbnail-Karte + Strich**
+- [ ] **Step 4: Thumbnail-Karte (`guest.css`) + Strich/„+"-Dreh (`guest-motion.css`)**
 
-`.ox-gericht` / `.ox-gericht__oeffnen` auf Zeilen-Layout umstellen (Bild links, Text rechts), Bild fest 84×84:
+Die Umstellung der BESTEHENDEN `.ox-gericht*`-Regeln bleibt in `guest.css`. NEUE Selektoren (`.ox-kategorie-strich`, `.ox-gericht:active`, `.ox-gericht__hinzufuegen`-Übergang, `.ox-anim-pop`) kommen nach `guest-motion.css`.
+
+`.ox-gericht` / `.ox-gericht__oeffnen` in `guest.css` auf Zeilen-Layout umstellen (Bild links, Text rechts), Bild fest 84×84:
 
 ```css
 .ox-gericht { padding: 0; overflow: hidden; }
@@ -906,7 +931,7 @@ Im Reiter-Klick-Listener nach `reiter.classList.add("is-active")` ergänzen: `se
 
 `.ox-gericht__fuss` bleibt (Preiszeile unter dem Öffnen-Knopf).
 
-Kategorie-Strich (die Leiste ist bereits `position: relative`-fähig via `border-bottom`; Strich absolut):
+Kategorie-Strich — **in `guest-motion.css`** (die Leiste ist bereits `position: relative`-fähig via `border-bottom`; Strich absolut):
 
 ```css
 .ox-kategorie-leiste { position: relative; }
@@ -1104,7 +1129,7 @@ export function fliegeBonWeg(karte: HTMLElement): Promise<void> {
 }
 ```
 
-- [ ] **Step 3: `guest.css` — Bon-Optik, Stempel, Haken, Zeilen-Tippen**
+- [ ] **Step 3: `guest-motion.css` — Bon-Optik, Stempel, Haken, Zeilen-Tippen** (alle neuen Selektoren dort, NICHT in `guest.css`)
 
 ```css
 /* ---------- Kassenbon-Warenkorb ---------- */
@@ -1292,7 +1317,7 @@ Neu `aktualisiereBestellKarte(karte, bestellung)`: Chip-`className` und -Text ne
 
 `STATUS_KLASSE` für `IN_PREPARATION` → beim Bauen des Chips einen `<span class="ox-chip__punkt">` als erstes Kind einfügen, wenn Status `IN_PREPARATION`.
 
-- [ ] **Step 3: `components.css` bzw. `guest.css` — Chip-Übergang + Punkt**
+- [ ] **Step 3: Chip-Übergang (`components.css`) + Punkt (`guest-motion.css`)**
 
 In `components.css` bei `.ox-chip`:
 
@@ -1300,7 +1325,7 @@ In `components.css` bei `.ox-chip`:
 .ox-chip { transition: background var(--ox-dur) var(--ox-ease-out), color var(--ox-dur) var(--ox-ease-out); }
 ```
 
-In `guest.css`:
+In `guest-motion.css`:
 
 ```css
 .ox-chip__punkt {
@@ -1350,7 +1375,7 @@ Prüfen, wie `tischmarke()` in `lib/ui.ts` den Text formatiert (führende Null!)
 
 In `wendeStatusAn`: `aktualisiereTischmarke(tischNummer, !genehmigt);` — Achtung: an der bestehenden Aufrufstelle steht `aktualisiereTischmarke(tischNummer);` VOR der Berechnung von `genehmigt`. Aufruf ans Ende von `wendeStatusAn` verschieben (nach `genehmigt = ...`), bzw. mit `status.guestStatus === "APPROVED" && status.sessionStatus === "APPROVED"` inline.
 
-- [ ] **Step 6: `guest.html` — Warte-Puls + `guest.css`**
+- [ ] **Step 6: `guest.html` — Warte-Puls-Markup + `guest-motion.css`**
 
 `#view-wait` Inhalt ergänzen (vor dem `<p class="ox-big">`):
 
@@ -1358,7 +1383,7 @@ In `wendeStatusAn`: `aktualisiereTischmarke(tischNummer, !genehmigt);` — Achtu
     <div class="ox-puls" aria-hidden="true"></div>
 ```
 
-`guest.css`:
+`guest-motion.css`:
 
 ```css
 .ox-puls {
@@ -1429,7 +1454,7 @@ function zeigeAnsicht(id: Ansicht): void {
 
 (`document.startViewTransition` blendet automatisch cross-fade; ohne API sofort. jsdom-Tests: `mitAnsichtsWechsel` ruft direkt — unverändertes Verhalten, bestehende Tests bleiben grün.)
 
-- [ ] **Step 2: Detail-Overlay Slide-up** — `menu.ts` `holeOderErstelleOverlay`: der Box bekommt zusätzlich `.ox-overlay__box--sheet`. `guest.css`:
+- [ ] **Step 2: Detail-Overlay Slide-up** — `menu.ts` `holeOderErstelleOverlay`: der Box bekommt zusätzlich `.ox-overlay__box--sheet`. In `guest-motion.css`:
 
 ```css
 .ox-overlay__box--sheet {
