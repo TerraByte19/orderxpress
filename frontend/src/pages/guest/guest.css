@@ -12,25 +12,26 @@
 /* ---------- Foto-Karte ---------- */
 
 /* Baut auf .ox-card auf (Flaeche, Haarlinien-Rahmen, Radius) - das Padding
-   wird hier auf 0 gesetzt, damit das Bild randlos bis zum Kartenrand reicht.
-   overflow:hidden schneidet das Bild sauber auf den Kartenradius zu. */
+   wird hier auf 0 gesetzt, die Polsterung tragen .ox-gericht__oeffnen und
+   .ox-gericht__fuss. overflow:hidden schneidet auf den Kartenradius zu. */
 .ox-gericht {
     padding: 0;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
-/* Bild + Name + Beschreibung als EIN Knopf (immer aktiv, siehe menu.ts) -
-   all:unset entfernt die Browser-Vorgaben eines <button>, box-sizing wird
-   dabei mitzurueckgesetzt und hier bewusst wieder auf border-box gestellt
-   (globaler Reset in base.css gilt fuer <button> sonst nicht mehr). */
+/* Zeilen-Layout: kleines Thumbnail links, Name + Beschreibung rechts - als
+   EIN Knopf (immer aktiv, siehe menu.ts). all:unset entfernt die
+   Browser-Vorgaben eines <button>, box-sizing wird dabei mitzurueckgesetzt
+   und hier bewusst wieder auf border-box gestellt (globaler Reset in
+   base.css gilt fuer <button> sonst nicht mehr). */
 .ox-gericht__oeffnen {
     all: unset;
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
+    gap: var(--ox-space-3);
+    align-items: flex-start;
     width: 100%;
+    padding: var(--ox-space-3) var(--ox-space-4);
     cursor: pointer;
 }
 .ox-gericht__oeffnen:focus-visible {
@@ -38,14 +39,15 @@
     outline-offset: -2px;
 }
 
-/* Festes 16:9-Verhaeltnis - verhindert Spruenge beim Nachladen der Bilder
-   (siehe Aufgabenstellung). object-fit gleicht unterschiedliche
-   Bild-Seitenverhaeltnisse sauber aus. */
+/* Festes 84x84-Thumbnail - verhindert Spruenge beim Nachladen der Bilder.
+   object-fit gleicht unterschiedliche Bild-Seitenverhaeltnisse sauber aus. */
 .ox-gericht__bild {
-    width: 100%;
-    aspect-ratio: 16 / 9;
+    flex: none;
+    width: 84px;
+    height: 84px;
+    border-radius: var(--ox-radius-sm);
     object-fit: cover;
-    display: block;
+    background: var(--ox-surface-2);
 }
 /* Gericht ohne Foto: eine ruhige Flaeche statt eines Platzhalter-Symbols -
    bewusste Entscheidung aus der Spec (Abschnitt 5). */
@@ -54,12 +56,10 @@
 }
 
 .ox-gericht__inhalt {
-    box-sizing: border-box;
-    padding: var(--ox-space-3) var(--ox-space-4) var(--ox-space-2);
     display: flex;
     flex-direction: column;
-    gap: var(--ox-space-1);
-    text-align: left;
+    gap: 2px;
+    min-width: 0;
 }
 
 /* Traegt den Charakter der Seite - Fraunces, dieselbe Optik wie die

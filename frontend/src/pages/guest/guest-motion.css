@@ -2,4 +2,34 @@
  * Warte-Puls, Kassenbon, Stempel/Haken, Chip-Uebergang, Tischmarke-Zustaende).
  * Getrennt von guest.css, damit beide Dateien unter ~250 Zeilen bleiben.
  * Keyframes selbst liegen global in styles/animation.css.
- * Alle Effekte respektieren prefers-reduced-motion (eigene @media-Bloecke). */
+ * Alle Effekte respektieren prefers-reduced-motion (base.css setzt global
+ * alle transition-/animation-Dauern auf ~0). */
+
+/* ---------- Gleitender Kategorie-Strich (menu.ts baueKategorieLeiste) ----------
+   Die Leiste traegt bereits border-bottom; der Strich sitzt absolut auf
+   dieser Linie und gleitet beim Reiterwechsel zur neuen Breite/Position. */
+.ox-kategorie-leiste {
+    position: relative;
+}
+.ox-kategorie-strich {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background: var(--ox-accent);
+    transition: transform var(--ox-dur) var(--ox-ease-spring),
+                width var(--ox-dur) var(--ox-ease-spring);
+}
+
+/* ---------- Karte beim Druecken leicht anheben ---------- */
+.ox-gericht:active {
+    box-shadow: var(--ox-shadow-2);
+}
+
+/* ---------- Der "+"-Knopf dreht kurz beim Druecken ---------- */
+.ox-gericht__hinzufuegen {
+    transition: transform var(--ox-dur-fast) var(--ox-ease-spring);
+}
+.ox-gericht__hinzufuegen:active {
+    transform: scale(.82) rotate(90deg);
+}

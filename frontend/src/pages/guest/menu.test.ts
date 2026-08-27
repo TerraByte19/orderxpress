@@ -225,7 +225,9 @@ describe("zeichneSpeisekarte - Karte: Detail-Overlay vs. Schnell-Hinzufuegen", (
 
         ziel.querySelector<HTMLButtonElement>(".ox-gericht__hinzufuegen")!.click();
 
-        expect(beiSchnellHinzufuegen).toHaveBeenCalledWith(g);
+        // Neue Signatur: der auslösende Button reicht als zweites Argument mit
+        // (der Aufrufer in index.ts macht daraus den Flieger).
+        expect(beiSchnellHinzufuegen).toHaveBeenCalledWith(g, expect.any(HTMLElement));
         expect(beiAuswahl).not.toHaveBeenCalled();
     });
 
@@ -335,6 +337,17 @@ describe("Kategorie-Leiste", () => {
         expect(reiter[0].classList.contains("is-active")).toBe(true);
         expect(reiter[1].classList.contains("is-active")).toBe(false);
         expect(ziel.querySelector(".ox-kategorie-hamburger")).toBeNull();
+    });
+
+    it("die Reiter-Leiste hat einen gleitenden Strich bei mindestens zwei Kategorien", () => {
+        const ziel = document.createElement("div");
+        const zweiKategorien = [
+            kategorie({ id: 1, name: "Vorspeisen", items: [gericht({ id: 1 })] }),
+            kategorie({ id: 2, name: "Hauptgerichte", items: [gericht({ id: 2 })] })
+        ];
+        zeichneSpeisekarte(zweiKategorien, ziel, () => {}, () => {}, true, false);
+
+        expect(ziel.querySelector(".ox-kategorie-strich")).not.toBeNull();
     });
 
     it("wechselt is-active beim Klick auf einen anderen Reiter", () => {

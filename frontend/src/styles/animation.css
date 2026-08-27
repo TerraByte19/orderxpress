@@ -40,6 +40,10 @@
 }
 .ox-anim-stagger.is-in { opacity: 1; transform: none; }
 
+/* Kurzer Zaehler-"Pop" (Warenkorb-Leiste). Klasse wird per JS neu gesetzt
+   (index.ts aktualisiereWarenkorbLeiste - remove/reflow/add). */
+.ox-anim-pop { animation: ox-pop .4s var(--ox-ease-spring); }
+
 /* Flieger-Klon (animation.ts fliegeZu) */
 .ox-flieger {
     position: fixed;

@@ -58,7 +58,7 @@ export function zeichneSpeisekarte(
     kategorien: Kategorie[],
     ziel: HTMLElement,
     beiAuswahl: (gericht: Gericht) => void,
-    beiSchnellHinzufuegen: (gericht: Gericht) => void,
+    beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean,
     hamburger = false
 ): void {
@@ -95,7 +95,7 @@ export function zeichneSpeisekarte(
 function baueGerichtKarte(
     gericht: Gericht,
     beiAuswahl: (gericht: Gericht) => void,
-    beiSchnellHinzufuegen: (gericht: Gericht) => void,
+    beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean
 ): HTMLElement {
     const oeffnenKnopf = knopf("ox-gericht__oeffnen", undefined,
@@ -118,7 +118,7 @@ function baueGerichtKarte(
     // Verschachtelung kuenftig aendert.
     hinzufuegenKnopf.addEventListener("click", (ereignis) => {
         ereignis.stopPropagation();
-        beiSchnellHinzufuegen(gericht);
+        beiSchnellHinzufuegen(gericht, hinzufuegenKnopf);
     });
     fuss.append(el("span", "ox-preis", preis(gericht.price)), el("span", "ox-spacer"), hinzufuegenKnopf);
 
@@ -145,15 +145,34 @@ function baueKategorieLeiste(kategorien: Kategorie[], ziel: HTMLElement, hamburg
     if (!hamburger) {
         const leiste = el("nav", "ox-kategorie-leiste");
         leiste.setAttribute("aria-label", "Kategorien");
+
+        // Gleitender Strich unter dem aktiven Reiter (Optik: guest-motion.css).
+        // jsdom liefert offsetWidth/offsetLeft als 0 - der Test prueft nur die
+        // Existenz des Elements, nicht die Position.
+        const strich = el("span", "ox-kategorie-strich");
+        const setzeStrich = (reiter: HTMLElement): void => {
+            strich.style.width = `${reiter.offsetWidth}px`;
+            strich.style.transform = `translateX(${reiter.offsetLeft}px)`;
+        };
+
         kategorien.forEach((kategorie, index) => {
             const reiter = knopf("ox-kategorie-reiter" + (index === 0 ? " is-active" : ""), kategorie.name);
             reiter.addEventListener("click", () => {
                 leiste.querySelectorAll(".ox-kategorie-reiter").forEach((r) => r.classList.remove("is-active"));
                 reiter.classList.add("is-active");
+                setzeStrich(reiter);
                 springe(kategorie.id);
             });
             leiste.appendChild(reiter);
         });
+
+        leiste.appendChild(strich);
+        // initial (nach Layout) auf den ersten Reiter
+        requestAnimationFrame(() => {
+            const ersterReiter = leiste.querySelector<HTMLElement>(".ox-kategorie-reiter");
+            if (ersterReiter) setzeStrich(ersterReiter);
+        });
+
         return leiste;
     }
 
@@ -220,7 +239,7 @@ function holeOderErstelleOverlay(): HTMLDivElement {
  *  den Warenkorb nicht, meldet nur einmalig ueber beiHinzufuegen zurueck. */
 export function oeffneDetail(
     gericht: Gericht,
-    beiHinzufuegen: (gericht: Gericht, menge: number, hinweis: string) => void,
+    beiHinzufuegen: (gericht: Gericht, menge: number, hinweis: string, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean
 ): void {
     const overlay = holeOderErstelleOverlay();
@@ -266,7 +285,7 @@ export function oeffneDetail(
     const hinzufuegenKnopf = knopf("ox-btn ox-detail__hinzufuegen", "In den Warenkorb");
     hinzufuegenKnopf.disabled = !bestellenErlaubt;
     hinzufuegenKnopf.addEventListener("click", () => {
-        beiHinzufuegen(gericht, menge, hinweisFeld.value.trim());
+        beiHinzufuegen(gericht, menge, hinweisFeld.value.trim(), hinzufuegenKnopf);
         versteckeOverlay(overlay);
     });
 

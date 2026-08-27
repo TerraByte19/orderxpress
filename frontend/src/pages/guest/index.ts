@@ -49,12 +49,13 @@ import {
     starteStatusAbfrage
 } from "./session";
 import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte } from "./menu";
+import { fliegeZu, staffelEin } from "./animation";
 import { Warenkorb, bestelle } from "./cart";
 import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
-import { ladeTheme, wendeThemeAn } from "./laden-design";
+import { ladeTheme, leseModi, wendeThemeAn } from "./laden-design";
 import {
     aktualisiereFreigabeKnoepfe,
     aktualisiereNameAnzeige,
@@ -78,6 +79,12 @@ let restaurantName = "";
 let genehmigt = false;
 let kategorien: Kategorie[] = [];
 let aktuelleAnsicht: Ansicht = "view-wait";
+
+/* Laden-Stile fuer die Bewegungen: Flieger als "+1" oder rundes Foto,
+ * Bestell-Bestaetigung als Stempel oder Haken. Standard bis das Theme geladen
+ * ist; danach aus leseModi() gesetzt (siehe ladeThemeUndSpeisekarte). */
+let flyModus: "PLUS" | "PHOTO" = "PLUS";
+let confirmModus: "STAMP" | "CHECK" = "CHECK";
 
 const warenkorb = new Warenkorb();
 let aktuelleAuswahl: Auswahl | null = null;
@@ -257,10 +264,22 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;
     }
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
+    const modi = themeErgebnis.status === "fulfilled" ? leseModi(themeErgebnis.value) : null;
+    if (modi) {
+        flyModus = modi.fly;
+        confirmModus = modi.confirm;
+        // confirmModus (STAMP/CHECK) steuert die Bestell-Bestaetigung; ein
+        // Folge-Schritt wertet das aus. Bis dahin am <body> hinterlegt (wie
+        // theme.ts es mit data-theme haelt), damit der Wert nicht verfaellt.
+        document.body.dataset.confirmModus = confirmModus;
+    }
 
     kategorien = menuErgebnis.status === "fulfilled" ? menuErgebnis.value : [];
     const ziel = document.getElementById("menu-container");
-    if (ziel) zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, genehmigt, hamburgerModus);
+    if (ziel) {
+        zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, genehmigt, hamburgerModus);
+        staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
+    }
     if (menuErgebnis.status === "rejected") {
         toast("Speisekarte konnte nicht geladen werden.", true);
     }
@@ -280,14 +299,16 @@ function beiGerichtAusgewaehlt(gericht: Gericht): void {
 /** "+"-Knopf in der Preiszeile der Karte: EIN Tipp statt drei - legt sofort
  *  mit Menge 1 und leerem Hinweis in den Warenkorb, ohne das Detail-Overlay
  *  zu oeffnen. Eigener Rueckruf an zeichneSpeisekarte (siehe menu.ts). */
-function beiSchnellHinzufuegen(gericht: Gericht): void {
-    beiHinzufuegen(gericht, 1, "");
+function beiSchnellHinzufuegen(gericht: Gericht, quelle: HTMLElement): void {
+    beiHinzufuegen(gericht, 1, "", quelle);
 }
 
-function beiHinzufuegen(gericht: Gericht, menge: number, hinweis: string): void {
+function beiHinzufuegen(gericht: Gericht, menge: number, hinweis: string, quelle: HTMLElement): void {
     warenkorb.hinzufuegen(gericht, menge, hinweis);
     warenkorb.sichere(guestToken);
     aktualisiereWarenkorbLeiste();
+    const zaehler = document.getElementById("cartbar-info");
+    if (zaehler) fliegeZu(quelle, zaehler, { modus: flyModus, bildUrl: gericht.imageUrl });
     toast(`${menge}× ${gericht.name} hinzugefügt`);
 }
 
@@ -353,7 +374,14 @@ function aktualisiereWarenkorbLeiste(): void {
     leiste.hidden = !sichtbar;
     if (sichtbar) {
         const info = document.getElementById("cartbar-info");
-        if (info) info.textContent = `${anzahl} Artikel · ${preis(warenkorb.summe())}`;
+        if (info) {
+            info.textContent = `${anzahl} Artikel · ${preis(warenkorb.summe())}`;
+            // Kurzer "Pop" bei jeder Aenderung - Klasse entfernen, Reflow
+            // erzwingen, neu setzen (sonst startet die Animation nicht neu).
+            info.classList.remove("ox-anim-pop");
+            void info.offsetWidth;
+            info.classList.add("ox-anim-pop");
+        }
     }
 }
 
