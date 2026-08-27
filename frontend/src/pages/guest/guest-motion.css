@@ -33,3 +33,62 @@
 .ox-gericht__hinzufuegen:active {
     transform: scale(.82) rotate(90deg);
 }
+
+/* ---------- Kassenbon-Warenkorb (bon.ts schmueckeBon) ----------
+   Die #cart-lines-Zeilen tippen sich nacheinander ein (gestaffeltes
+   animation-delay aus bon.ts); die Karte bekommt Perforierung + Mono-Schrift.
+   Keyframes (ox-zeile-rein) liegen global in styles/animation.css. Die
+   #000/#fff der mask sind Alpha-Schablonen, keine Palettenfarben. */
+.ox-bon {
+    font-family: var(--ox-font-mono);
+    -webkit-mask:
+        linear-gradient(#000 0 0) top / 100% calc(100% - 10px) no-repeat,
+        radial-gradient(circle 6px at 10px bottom, transparent 98%, #000) bottom left / 20px 12px repeat-x;
+            mask:
+        linear-gradient(#000 0 0) top / 100% calc(100% - 10px) no-repeat,
+        radial-gradient(circle 6px at 10px bottom, transparent 98%, #000) bottom left / 20px 12px repeat-x;
+}
+.ox-bon-zeile {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: ox-zeile-rein var(--ox-dur) var(--ox-ease-out) forwards;
+}
+
+/* Bestaetigungs-Overlay (bon.ts bestaetigeBestellung) - rein dekorativ,
+   die massgebliche Rueckmeldung ist der Ansichtswechsel + Toast. */
+.ox-bestaetigung {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 80;
+    pointer-events: none;
+}
+.ox-stempel {
+    font-family: var(--ox-font-mono);
+    font-weight: 600;
+    font-size: var(--ox-text-3xl);
+    letter-spacing: .1em;
+    color: var(--ox-danger);
+    border: 4px solid var(--ox-danger);
+    border-radius: var(--ox-radius-md);
+    padding: var(--ox-space-2) var(--ox-space-5);
+    animation: ox-stempeln var(--ox-dur-slow) var(--ox-ease-out) forwards;
+}
+.ox-haken { width: 96px; height: 96px; }
+.ox-haken__kreis {
+    stroke: var(--ox-success);
+    stroke-dasharray: 151;
+    stroke-dashoffset: 151;
+    animation: ox-haken-zeichnen var(--ox-dur) var(--ox-ease-out) forwards;
+}
+.ox-haken__pfad {
+    stroke: var(--ox-success);
+    stroke-dasharray: 44;
+    stroke-dashoffset: 44;
+    animation: ox-haken-zeichnen var(--ox-dur-fast) var(--ox-dur) var(--ox-ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ox-bon-zeile { opacity: 1; transform: none; animation: none; }
+}

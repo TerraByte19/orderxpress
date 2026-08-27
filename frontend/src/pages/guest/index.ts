@@ -50,6 +50,7 @@ import {
 } from "./session";
 import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte } from "./menu";
 import { fliegeZu, staffelEin } from "./animation";
+import { bestaetigeBestellung, fliegeBonWeg, schmueckeBon } from "./bon";
 import { Warenkorb, bestelle } from "./cart";
 import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
@@ -268,10 +269,6 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
     if (modi) {
         flyModus = modi.fly;
         confirmModus = modi.confirm;
-        // confirmModus (STAMP/CHECK) steuert die Bestell-Bestaetigung; erst
-        // Task 6 liest die Modul-Variable aus. Bis dahin nur geparkt - der
-        // No-op-Read haelt tsc (noUnusedLocals) zufrieden, ohne globalen Zustand.
-        void confirmModus;
     }
 
     kategorien = menuErgebnis.status === "fulfilled" ? menuErgebnis.value : [];
@@ -327,6 +324,10 @@ function zeichneWarenkorb(): void {
     }
     const summeFeld = document.getElementById("cart-total");
     if (summeFeld) summeFeld.textContent = "Summe: " + preis(warenkorb.summe());
+
+    // Kassenbon-Optik: Perforierung an die Karte, gestaffeltes Zeilen-Tippen (bon.ts).
+    const karte = document.querySelector<HTMLElement>("#view-cart .ox-card");
+    if (karte && ziel) schmueckeBon(karte, Array.from(ziel.children) as HTMLElement[]);
 }
 
 /** Stepper wie im Detail-Overlay (menu.ts), aber mit Gerichtname im
@@ -390,6 +391,9 @@ async function sendeBestellung(): Promise<void> {
     if (knopf) knopf.disabled = true;
     try {
         await bestelle(guestToken, warenkorb);
+        await bestaetigeBestellung(confirmModus);
+        const karte = document.querySelector<HTMLElement>("#view-cart .ox-card");
+        if (karte) await fliegeBonWeg(karte);
         aktualisiereWarenkorbLeiste();
         await aktualisiereBestellungen();
         zeigeAnsicht("view-orders");
