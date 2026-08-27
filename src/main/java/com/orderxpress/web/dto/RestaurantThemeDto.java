@@ -11,5 +11,9 @@ public record RestaurantThemeDto(Long id,
                                  boolean categoriesAsHamburger,
                                  boolean kitchenDisplayEnabled,
                                  String logoUrl,
-                                 String backgroundUrl) {
+                                 String backgroundUrl,
+                                 String styleShape,
+                                 String displayFont,
+                                 String cartFlyStyle,
+                                 String orderConfirmStyle) {
 }

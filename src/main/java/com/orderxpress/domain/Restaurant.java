@@ -60,6 +60,22 @@ public class Restaurant {
     @Column(name = "kitchen_display_enabled")
     private Boolean kitchenDisplayEnabled = Boolean.TRUE;
 
+    /** Form der Gaeste-Seite: "SQUARE" (eckig) oder "SOFT" (weiche Radien). null/leer = SQUARE. */
+    @Column(name = "style_shape", length = 20)
+    private String styleShape;
+
+    /** Ueberschrift-/Gerichtnamen-Schrift: BRICOLAGE | FRAUNCES | SPACE_GROTESK | INSTRUMENT_SERIF. null/leer = BRICOLAGE. */
+    @Column(name = "display_font", length = 30)
+    private String displayFont;
+
+    /** Was beim Hinzufuegen zum Warenkorb-Zaehler fliegt: "PLUS" oder "PHOTO". null/leer = PLUS. */
+    @Column(name = "cart_fly_style", length = 20)
+    private String cartFlyStyle;
+
+    /** Bestaetigung nach dem Bestellen: "STAMP" (Stempel) oder "CHECK" (Haken). null/leer = CHECK. */
+    @Column(name = "order_confirm_style", length = 20)
+    private String orderConfirmStyle;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -158,5 +174,41 @@ public class Restaurant {
 
     public void setKitchenDisplayEnabled(boolean kitchenDisplayEnabled) {
         this.kitchenDisplayEnabled = kitchenDisplayEnabled;
+    }
+
+    private static String orDefault(String wert, String fallback) {
+        return (wert == null || wert.isBlank()) ? fallback : wert;
+    }
+
+    public String getStyleShape() {
+        return orDefault(styleShape, "SQUARE");
+    }
+
+    public void setStyleShape(String v) {
+        this.styleShape = v;
+    }
+
+    public String getDisplayFont() {
+        return orDefault(displayFont, "BRICOLAGE");
+    }
+
+    public void setDisplayFont(String v) {
+        this.displayFont = v;
+    }
+
+    public String getCartFlyStyle() {
+        return orDefault(cartFlyStyle, "PLUS");
+    }
+
+    public void setCartFlyStyle(String v) {
+        this.cartFlyStyle = v;
+    }
+
+    public String getOrderConfirmStyle() {
+        return orDefault(orderConfirmStyle, "CHECK");
+    }
+
+    public void setOrderConfirmStyle(String v) {
+        this.orderConfirmStyle = v;
     }
 }

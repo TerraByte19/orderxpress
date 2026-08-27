@@ -89,6 +89,10 @@ public class RestaurantAdminService {
         restaurant.setBackgroundColor(request.backgroundColor());
         restaurant.setCategoriesAsHamburger(request.hamburgerOrDefault());
         restaurant.setKitchenDisplayEnabled(request.kitchenEnabledOrDefault());
+        restaurant.setStyleShape(request.styleShapeOrDefault());
+        restaurant.setDisplayFont(request.displayFontOrDefault());
+        restaurant.setCartFlyStyle(request.cartFlyStyleOrDefault());
+        restaurant.setOrderConfirmStyle(request.orderConfirmStyleOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -204,7 +208,11 @@ public class RestaurantAdminService {
                 restaurant.isCategoriesAsHamburger(),
                 restaurant.isKitchenDisplayEnabled(),
                 kinds.contains(AssetKind.LOGO) ? base + "/logo" : null,
-                kinds.contains(AssetKind.BACKGROUND) ? base + "/background" : null);
+                kinds.contains(AssetKind.BACKGROUND) ? base + "/background" : null,
+                restaurant.getStyleShape(),
+                restaurant.getDisplayFont(),
+                restaurant.getCartFlyStyle(),
+                restaurant.getOrderConfirmStyle());
     }
 
     private void validateUpload(MultipartFile file) {
