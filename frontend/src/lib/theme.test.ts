@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { luminanz, kontrast, textfarbeAuf, setzeLadenDesign } from "./theme";
 
 describe("luminanz", () => {
@@ -153,5 +153,26 @@ describe("setzeLadenDesign", () => {
                 expect(kontrast(gedaempft, hintergrund)).toBeGreaterThanOrEqual(4.5);
             }
         });
+    });
+});
+
+describe("setzeLadenDesign Form/Schrift", () => {
+    afterEach(() => {
+        document.documentElement.removeAttribute("data-shape");
+        document.documentElement.removeAttribute("data-font");
+    });
+
+    it("SOFT/FRAUNCES setzen die Attribute", () => {
+        setzeLadenDesign({ shape: "SOFT", font: "FRAUNCES" });
+        expect(document.documentElement.getAttribute("data-shape")).toBe("soft");
+        expect(document.documentElement.getAttribute("data-font")).toBe("fraunces");
+    });
+
+    it("SQUARE/BRICOLAGE bzw. Unbekanntes entfernen die Attribute (Standard)", () => {
+        document.documentElement.setAttribute("data-shape", "soft");
+        document.documentElement.setAttribute("data-font", "space");
+        setzeLadenDesign({ shape: "SQUARE", font: "BRICOLAGE" });
+        expect(document.documentElement.hasAttribute("data-shape")).toBe(false);
+        expect(document.documentElement.hasAttribute("data-font")).toBe(false);
     });
 });

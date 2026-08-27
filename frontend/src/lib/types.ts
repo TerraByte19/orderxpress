@@ -49,6 +49,10 @@ export interface LadenTheme {
     kitchenDisplayEnabled: boolean;
     logoUrl: string | null;
     backgroundUrl: string | null;
+    styleShape: string;
+    displayFont: string;
+    cartFlyStyle: string;
+    orderConfirmStyle: string;
 }
 
 /** OrderResponse.OrderLineDto */

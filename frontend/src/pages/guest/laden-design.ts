@@ -22,7 +22,12 @@ export function ladeTheme(restaurantId: number): Promise<LadenTheme> {
 }
 
 export function wendeThemeAn(theme: LadenTheme): void {
-    setzeLadenDesign({ accentColor: theme.accentColor, backgroundColor: theme.backgroundColor });
+    setzeLadenDesign({
+        accentColor: theme.accentColor,
+        backgroundColor: theme.backgroundColor,
+        shape: theme.styleShape,
+        font: theme.displayFont
+    });
 
     if (theme.name) {
         document.title = `${theme.name} – Bestellen`;
@@ -50,4 +55,13 @@ export function wendeThemeAn(theme: LadenTheme): void {
         document.body.classList.remove("ox-bg-bild");
         document.body.style.backgroundImage = "";
     }
+}
+
+/** Flieger-/Bestaetigungs-Modus aus dem Theme, auf die im Frontend genutzten
+ *  Literale eingegrenzt (Fallback = Standard). */
+export function leseModi(theme: LadenTheme): { fly: "PLUS" | "PHOTO"; confirm: "STAMP" | "CHECK" } {
+    return {
+        fly: theme.cartFlyStyle === "PHOTO" ? "PHOTO" : "PLUS",
+        confirm: theme.orderConfirmStyle === "STAMP" ? "STAMP" : "CHECK"
+    };
 }

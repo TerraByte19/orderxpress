@@ -96,11 +96,20 @@ export interface LadenDesign {
     accentColor?: string | null;
     backgroundColor?: string | null;
     dunkel?: boolean;
+    shape?: string | null;   // "SQUARE" | "SOFT"
+    font?: string | null;    // "BRICOLAGE" | "FRAUNCES" | "SPACE_GROTESK" | "INSTRUMENT_SERIF"
 }
 
 /** Schreibt das Design des Ladens als Variablen auf <html>. */
 export function setzeLadenDesign(design: LadenDesign): void {
     const wurzel = document.documentElement;
+
+    const FORM: Record<string, string> = { SOFT: "soft" };
+    const SCHRIFT: Record<string, string> = {
+        FRAUNCES: "fraunces", SPACE_GROTESK: "space", INSTRUMENT_SERIF: "iserif"
+    };
+    setzeOderEntferne(wurzel, "data-shape", design.shape ? FORM[design.shape] : undefined);
+    setzeOderEntferne(wurzel, "data-font", design.font ? SCHRIFT[design.font] : undefined);
 
     if (design.dunkel) {
         wurzel.setAttribute("data-theme", "dark");
@@ -124,4 +133,11 @@ export function setzeLadenDesign(design: LadenDesign): void {
         wurzel.style.setProperty("--ox-text", textfarbe);
         wurzel.style.setProperty("--ox-text-muted", gedaempfterText(textfarbe, design.backgroundColor));
     }
+}
+
+/** Setzt das Attribut auf `wert` oder entfernt es (Standard). Unbekannte
+ *  Backend-Werte kommen als undefined an -> Attribut weg -> Standard-Optik. */
+function setzeOderEntferne(el: HTMLElement, attribut: string, wert: string | undefined): void {
+    if (wert) el.setAttribute(attribut, wert);
+    else el.removeAttribute(attribut);
 }
