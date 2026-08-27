@@ -268,10 +268,10 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
     if (modi) {
         flyModus = modi.fly;
         confirmModus = modi.confirm;
-        // confirmModus (STAMP/CHECK) steuert die Bestell-Bestaetigung; ein
-        // Folge-Schritt wertet das aus. Bis dahin am <body> hinterlegt (wie
-        // theme.ts es mit data-theme haelt), damit der Wert nicht verfaellt.
-        document.body.dataset.confirmModus = confirmModus;
+        // confirmModus (STAMP/CHECK) steuert die Bestell-Bestaetigung; erst
+        // Task 6 liest die Modul-Variable aus. Bis dahin nur geparkt - der
+        // No-op-Read haelt tsc (noUnusedLocals) zufrieden, ohne globalen Zustand.
+        void confirmModus;
     }
 
     kategorien = menuErgebnis.status === "fulfilled" ? menuErgebnis.value : [];
