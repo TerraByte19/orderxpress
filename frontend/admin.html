@@ -61,6 +61,17 @@
             <h2>Design deiner G&auml;ste-Seite</h2>
             <p class="muted">Passe Farben, Logo und Hintergrund an - so sieht deine Seite einzigartig aus.</p>
             <div class="mini-form">
+                <div class="full">
+                    <label style="margin-bottom:4px">Vorlage</label>
+                    <p class="muted" style="margin:0 0 6px">Eine Vorlage f&uuml;llt alle Felder unten - danach bei Bedarf einzeln anpassen, dann speichern.</p>
+                    <div class="row">
+                        <button class="small" onclick="Admin.applyVorlage('bistro')">Bistro</button>
+                        <button class="small" onclick="Admin.applyVorlage('kasse')">Kasse</button>
+                        <button class="small" onclick="Admin.applyVorlage('nacht')">Nacht</button>
+                        <button class="small" onclick="Admin.applyVorlage('frisch')">Frisch</button>
+                        <button class="small" onclick="Admin.applyVorlage('klassik')">Klassik</button>
+                    </div>
+                </div>
                 <div>
                     <label>Akzentfarbe (Buttons)</label>
                     <input type="color" id="design-accent" value="#2563eb">
@@ -78,6 +89,11 @@
                     <label for="design-kitchen" style="margin:0">K&uuml;chen-Bildschirm verwenden
                         <span class="muted">(aus = nur gedruckter Bon)</span></label>
                 </div>
+                <div class="full check">
+                    <input type="checkbox" id="design-dark">
+                    <label for="design-dark" style="margin:0">Dunkle Haut verwenden
+                        <span class="muted">(hell/dunkel; Vorlage &bdquo;Nacht&ldquo; nutzt dunkel)</span></label>
+                </div>
                 <div>
                     <label for="design-shape">Form</label>
                     <select id="design-shape">
@@ -92,6 +108,9 @@
                         <option value="FRAUNCES">Fraunces</option>
                         <option value="SPACE_GROTESK">Space Grotesk</option>
                         <option value="INSTRUMENT_SERIF">Instrument Serif</option>
+                        <option value="MANROPE">Manrope</option>
+                        <option value="SORA">Sora</option>
+                        <option value="DM_SERIF">DM Serif Display</option>
                     </select>
                 </div>
                 <div>

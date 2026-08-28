@@ -492,6 +492,34 @@ const Admin = {
 
     /* ================= Design ================= */
 
+    /* Feste Design-Vorlagen (nur Frontend). applyVorlage() fuellt die Felder,
+       gespeichert wird ueber den normalen "Speichern"-Knopf. */
+    VORLAGEN: {
+        bistro:  { accentColor: "#b3502e", backgroundColor: "#f7f4ef", darkMode: false,
+                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP" },
+        kasse:   { accentColor: "#1f3d34", backgroundColor: "#f6f6f4", darkMode: false,
+                   styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP" },
+        nacht:   { accentColor: "#c9a227", backgroundColor: "#15181a", darkMode: true,
+                   styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK" },
+        frisch:  { accentColor: "#0f9d8f", backgroundColor: "#ffffff", darkMode: false,
+                   styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK" },
+        klassik: { accentColor: "#1a1a1a", backgroundColor: "#faf9f6", darkMode: false,
+                   styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK" }
+    },
+
+    applyVorlage(name) {
+        const v = this.VORLAGEN[name];
+        if (!v) return;
+        document.getElementById("design-accent").value = v.accentColor;
+        document.getElementById("design-bg").value = v.backgroundColor;
+        document.getElementById("design-dark").checked = v.darkMode;
+        document.getElementById("design-shape").value = v.styleShape;
+        document.getElementById("design-font").value = v.displayFont;
+        document.getElementById("design-fly").value = v.cartFlyStyle;
+        document.getElementById("design-confirm").value = v.orderConfirmStyle;
+        OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
+    },
+
     async loadDesign() {
         try {
             const t = await OX.api("/api/admin/design");
@@ -503,6 +531,7 @@ const Admin = {
             document.getElementById("design-font").value = t.displayFont || "BRICOLAGE";
             document.getElementById("design-fly").value = t.cartFlyStyle || "PLUS";
             document.getElementById("design-confirm").value = t.orderConfirmStyle || "CHECK";
+            document.getElementById("design-dark").checked = t.darkMode === true;
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -526,7 +555,8 @@ const Admin = {
                     styleShape: document.getElementById("design-shape").value,
                     displayFont: document.getElementById("design-font").value,
                     cartFlyStyle: document.getElementById("design-fly").value,
-                    orderConfirmStyle: document.getElementById("design-confirm").value
+                    orderConfirmStyle: document.getElementById("design-confirm").value,
+                    darkMode: document.getElementById("design-dark").checked
                 })
             });
             OX.toast("Design gespeichert");
