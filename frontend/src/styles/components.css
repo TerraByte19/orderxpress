@@ -124,7 +124,15 @@
 .ox-big {
     font-size: var(--ox-text-2xl);
     font-family: var(--ox-font-display);
-    font-variation-settings: "opsz" 90, "SOFT" 0, "WONK" 1;
+    /* Optischen Schnitt nach der gerenderten Groesse waehlen lassen - kein
+       fester opsz-Wert, der jede Display-Schrift (Standard: Bricolage) auf
+       Plakat-Formen zwingt. */
+    font-optical-sizing: auto;
+}
+/* Nur Fraunces bringt SOFT/WONK mit (WONK = der Charakter); opsz bleibt weg,
+   damit font-optical-sizing weiter automatisch greift. */
+:root[data-font="fraunces"] .ox-big {
+    font-variation-settings: "SOFT" 0, "WONK" 1;
 }
 
 /* --- Tischmarke: das Erkennungszeichen ---

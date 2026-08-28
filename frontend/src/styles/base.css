@@ -20,12 +20,25 @@ h1, h2, h3 {
     font-weight: 600;
     line-height: 1.25;
     margin: 0;
-    /* Fraunces: leicht optisch gross setzen, WONK an - das ist der Charakter */
-    font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 1;
+    /* Jede Display-Schrift waehlt den optischen Schnitt nach der gerenderten
+       Groesse selbst - 17-34px sind Fliesstext-, keine Plakat-Groessen.
+       Kein fester opsz-Wert (der zwaenge die Standard-Schrift Bricolage in
+       Display-Formen fuer 60-90px). */
+    font-optical-sizing: auto;
 }
 h1 { font-size: var(--ox-text-xl); }
 h2 { font-size: var(--ox-text-lg); }
 h3 { font-size: var(--ox-text-base); }
+
+/* Fraunces bringt zusaetzlich SOFT/WONK mit - WONK ist der Charakter dieser
+   Schrift (leicht schraege, "wonky" Serifen), groessenunabhaengig. opsz
+   bleibt bewusst weg, damit font-optical-sizing weiter automatisch greift.
+   Andere Display-Schriften kennen die Achsen nicht. */
+:root[data-font="fraunces"] h1,
+:root[data-font="fraunces"] h2,
+:root[data-font="fraunces"] h3 {
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+}
 
 /* Alle Zahlen in Mono und tabellarisch - dadurch fluchten Preisspalten */
 .ox-num, .ox-preis, .ox-zeit {

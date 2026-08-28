@@ -69,7 +69,16 @@
 .ox-gericht__name {
     font-family: var(--ox-font-display);
     font-size: var(--ox-text-lg);
-    font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 1;
+    /* Optischen Schnitt die Schrift nach der gerenderten Groesse (16px)
+       selbst waehlen lassen - kein fester opsz-Wert, der sonst jede
+       Display-Schrift (Standard: Bricolage) auf Plakat-Formen zwingt. */
+    font-optical-sizing: auto;
+}
+/* Nur Fraunces bringt SOFT/WONK mit - WONK ist der Charakter dieser Schrift
+   (leicht schraege Serifen), groessenunabhaengig; opsz bleibt weg, damit
+   font-optical-sizing weiter automatisch greift. */
+:root[data-font="fraunces"] .ox-gericht__name {
+    font-variation-settings: "SOFT" 0, "WONK" 1;
 }
 
 /* Preiszeile unterhalb des Knopfs - eigenstaendiges Element (kein
@@ -108,10 +117,12 @@
     border-bottom: 2px solid transparent;
     white-space: nowrap;
 }
-/* Akzentfarbe NUR hier und am Hinzufuegen-Knopf - sonst nirgends auf der Seite. */
+/* Akzentfarbe NUR hier und am Hinzufuegen-Knopf - sonst nirgends auf der Seite.
+   Die untere Linie des aktiven Reiters zeichnet der gleitende
+   .ox-kategorie-strich (guest-motion.css); die transparente
+   border-bottom-Basis oben bleibt nur fuer die Layout-Stabilitaet. */
 .ox-kategorie-reiter.is-active {
     color: var(--ox-accent);
-    border-bottom-color: var(--ox-accent);
 }
 
 /* Hamburger-Weg: der Laden kann das ueber categoriesAsHamburger im Theme

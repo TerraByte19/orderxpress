@@ -50,7 +50,7 @@ import {
 } from "./session";
 import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte } from "./menu";
 import { fliegeZu, mitAnsichtsWechsel, staffelEin } from "./animation";
-import { bestaetigeBestellung, fliegeBonWeg, schmueckeBon } from "./bon";
+import { bestaetigeBestellung, fliegeBonWeg, schmueckeBon, setzeBonZurueck } from "./bon";
 import { Warenkorb, bestelle } from "./cart";
 import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
@@ -313,6 +313,11 @@ function beiHinzufuegen(gericht: Gericht, menge: number, hinweis: string, quelle
 /* ---------- Warenkorb-Ansicht (cart.ts liefert nur Daten, keine Anzeige) ---------- */
 
 function zeigeWarenkorbAnsicht(): void {
+    // Einen zuvor "weggeflogenen" Bon zuruecksetzen, solange #view-cart noch
+    // ausgeblendet ist - sonst gleitet die Karte beim Wechsel sichtbar zurueck
+    // ins Bild (siehe bon.ts fliegeBonWeg/setzeBonZurueck).
+    const karte = document.querySelector<HTMLElement>("#view-cart .ox-card");
+    if (karte) setzeBonZurueck(karte);
     zeichneWarenkorb();
     zeigeAnsicht("view-cart");
 }

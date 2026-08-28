@@ -3,7 +3,10 @@ package com.orderxpress.web.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-/** Design-Einstellungen eines Ladens speichern (Farben + Hamburger-Menue). */
+/** Design-Einstellungen eines Ladens speichern: Farben, Hamburger-Menue,
+ *  Kuechen-Bildschirm sowie die vier Stil-Achsen Form (styleShape), Schrift
+ *  (displayFont), Warenkorb-Flieger (cartFlyStyle) und Bestell-Bestaetigung
+ *  (orderConfirmStyle). */
 public record DesignRequest(
         @NotBlank @Pattern(regexp = "#[0-9a-fA-F]{6}",
                 message = "Farbe muss ein Hex-Wert wie #2563eb sein.") String accentColor,

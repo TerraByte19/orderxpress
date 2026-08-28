@@ -53,6 +53,14 @@
     transform: translateY(6px);
     animation: ox-zeile-rein var(--ox-dur) var(--ox-ease-out) forwards;
 }
+/* Re-Render einer schon offenen Bon-Karte (Mengen-Stepper baut #cart-lines
+   neu auf): Mono/Abstand wie oben, aber das Eintippen NICHT erneut abspielen
+   - das laeuft nur einmal beim ersten Oeffnen der Warenkorb-Ansicht. */
+.ox-bon-zeile--still {
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
 
 /* Bestaetigungs-Overlay (bon.ts bestaetigeBestellung) - rein dekorativ,
    die massgebliche Rueckmeldung ist der Ansichtswechsel + Toast. */
@@ -162,5 +170,7 @@
     .ox-puls::after { animation: none; opacity: 0; }
     .ox-tischmarke--wartet,
     .ox-tischmarke--frei { animation: none; }
+    /* Zwei Klassen, damit die Regel .ox-chip--warn .ox-chip__punkt schlaegt. */
+    .ox-chip--warn .ox-chip__punkt { animation: none; }
     .ox-overlay__box--sheet { transition: none; transform: none; }
 }
