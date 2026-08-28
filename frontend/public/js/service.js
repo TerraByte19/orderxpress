@@ -55,6 +55,7 @@ const Service = {
         }
         if (event === "waiter-called" && data) {
             OX.toast("Tisch " + data.tableNumber + " ruft den Kellner!");
+            OX.callAlert.flash();   // sofortiger Blitz, Banner/Ton folgen aus loadCalls()
         }
         this.refresh();
     },
@@ -73,6 +74,7 @@ const Service = {
         let calls;
         try { calls = await OX.api("/api/calls"); }
         catch (e) { return; }
+        OX.callAlert.update(calls);   // Dauer-Banner + Klingelton + Blitz bei neuen Rufen
         const card = document.getElementById("calls-card");
         const box = document.getElementById("calls-list");
         if (!calls.length) { card.style.display = "none"; box.innerHTML = ""; return; }

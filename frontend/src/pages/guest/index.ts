@@ -245,6 +245,8 @@ function beendeMitFehler(titel: string, text: string): void {
     liveDaten.stoppe();
     genehmigt = false;
     warenkorb.leeren();
+    const ordersKnopf = document.getElementById("btn-orders");
+    if (ordersKnopf) ordersKnopf.hidden = true;
     zeigeFehler(titel, text);
 }
 
@@ -419,7 +421,11 @@ async function aktualisiereBestellungen(): Promise<void> {
     const ziel = document.getElementById("orders-container");
     if (!ziel) return;
     try {
-        zeichneBestellungen(await holeMeineBestellungen(guestToken), ziel);
+        const bestellungen = await holeMeineBestellungen(guestToken);
+        zeichneBestellungen(bestellungen, ziel);
+        // "Bestellungen"-Knopf in der Namensleiste zeigen, sobald es welche gibt.
+        const knopf = document.getElementById("btn-orders");
+        if (knopf && bestellungen.length > 0) knopf.hidden = false;
     } catch {
         // naechster Takt versucht es erneut, solange view-orders sichtbar bleibt
     }
@@ -556,6 +562,10 @@ function verdraheStatischeEreignisse(): void {
     });
 
     document.getElementById("btn-call")?.addEventListener("click", () => { void rufeKellnerAn(); });
+    document.getElementById("btn-orders")?.addEventListener("click", () => {
+        void aktualisiereBestellungen();
+        zeigeAnsicht("view-orders");
+    });
     document.getElementById("btn-bill")?.addEventListener("click", zeigeRechnungsAnsicht);
     document.getElementById("btn-bill-back")?.addEventListener("click", () => zeigeAnsicht("view-menu"));
     document.getElementById("btn-bill-clear")?.addEventListener("click", () => aktuelleAuswahl?.leeren());

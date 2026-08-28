@@ -38,8 +38,9 @@
         height: 0;
     }
     #name-bar #btn-call,
+    #name-bar #btn-orders,
     #name-bar #btn-bill {
-        flex: 1;
+        flex: 1 1 40%;
     }
 }
 

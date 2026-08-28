@@ -3,6 +3,108 @@ const OX = {
 
     euro: new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }),
 
+    /* ---------- Kellner-Ruf: Alarm-Schicht fuer Service/Kellner ----------
+       Damit ein Ruf nicht uebersehen wird: Dauer-Banner ganz oben +
+       Klingelton (wiederholt bis erledigt, abschaltbar) + kurzer Bildschirm-
+       Blitz bei jedem NEUEN Ruf. update(calls) wird aus loadCalls() gefuettert
+       (auch mit leerer Liste, damit Banner/Ton wieder verschwinden),
+       flash() zusaetzlich sofort aus dem SSE-Handler (waiter-called). */
+    callAlert: {
+        _bekannt: new Set(),
+        _interval: null,
+        _actx: null,
+        _letzte: [],
+
+        tonAn() {
+            try { return localStorage.getItem("ox-ruf-ton") !== "0"; } catch (e) { return true; }
+        },
+        setTonAn(an) {
+            try { localStorage.setItem("ox-ruf-ton", an ? "1" : "0"); } catch (e) { /* ignore */ }
+            this._render(this._letzte);
+        },
+
+        update(calls) {
+            this._letzte = calls || [];
+            for (const c of this._letzte) {
+                if (!this._bekannt.has(c.id)) { this._bekannt.add(c.id); this.flash(); }
+            }
+            const ids = new Set(this._letzte.map(function (c) { return c.id; }));
+            for (const id of Array.from(this._bekannt)) {
+                if (!ids.has(id)) this._bekannt.delete(id);
+            }
+            this._render(this._letzte);
+        },
+
+        flash() {
+            let f = document.getElementById("ox-ruf-blitz");
+            if (!f) {
+                f = document.createElement("div");
+                f.id = "ox-ruf-blitz";
+                document.body.appendChild(f);
+            }
+            f.classList.remove("an");
+            void f.offsetWidth;
+            f.classList.add("an");
+        },
+
+        _render(calls) {
+            let bar = document.getElementById("ox-ruf-bar");
+            if (!calls.length) {
+                if (bar) bar.remove();
+                this._tonStop();
+                return;
+            }
+            if (!bar) {
+                bar = document.createElement("div");
+                bar.id = "ox-ruf-bar";
+                document.body.appendChild(bar);
+            }
+            const tische = calls.map(function (c) { return "Tisch " + c.tableNumber; }).join(", ");
+            bar.innerHTML =
+                "<span class='ox-ruf-bar__txt'>&#128276; " + this._esc(tische) +
+                " ruft" + (calls.length > 1 ? " (" + calls.length + ")" : "") + "</span>" +
+                "<button type='button' class='ox-ruf-bar__ton'>" +
+                (this.tonAn() ? "Ton aus" : "Ton an") + "</button>";
+            const self = this;
+            bar.querySelector(".ox-ruf-bar__ton").onclick = function () { self.setTonAn(!self.tonAn()); };
+            if (this.tonAn()) this._tonStart(); else this._tonStop();
+        },
+
+        _tonStart() {
+            if (this._interval) return;
+            this._piep();
+            const self = this;
+            this._interval = setInterval(function () { self._piep(); }, 4000);
+        },
+        _tonStop() {
+            if (this._interval) { clearInterval(this._interval); this._interval = null; }
+        },
+        _piep() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                this._actx = this._actx || new Ctx();
+                if (this._actx.state === "suspended") this._actx.resume();
+                const o = this._actx.createOscillator();
+                const g = this._actx.createGain();
+                o.type = "sine";
+                o.frequency.value = 880;
+                o.connect(g); g.connect(this._actx.destination);
+                const t = this._actx.currentTime;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.linearRampToValueAtTime(0.25, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+                o.start(t);
+                o.stop(t + 0.36);
+            } catch (e) { /* Ton nicht moeglich (Autoplay o.ae.) */ }
+        },
+        _esc(s) {
+            const d = document.createElement("div");
+            d.textContent = s;
+            return d.innerHTML;
+        }
+    },
+
     preis(v) { return this.euro.format(v); },
 
     zeit(iso) {

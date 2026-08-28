@@ -25,7 +25,7 @@ const Waiter = {
         this.pollTimer = setInterval(() => this.load(), 15000);
         this.sse = OX.connectSse("/api/waiter/events",
             (event, data) => {
-                if (event === "waiter-called" && data) OX.toast("Tisch " + data.tableNumber + " ruft!");
+                if (event === "waiter-called" && data) { OX.toast("Tisch " + data.tableNumber + " ruft!"); OX.callAlert.flash(); }
                 this.load();
             },
             (online) => document.getElementById("live-dot").classList.toggle("on", online));
@@ -47,6 +47,7 @@ const Waiter = {
         let calls;
         try { calls = await OX.api("/api/calls"); }
         catch (e) { return; }
+        OX.callAlert.update(calls);   // Dauer-Banner + Klingelton + Blitz bei neuen Rufen
         const box = document.getElementById("calls");
         if (!calls.length) { box.innerHTML = ""; return; }
         box.innerHTML = "";
