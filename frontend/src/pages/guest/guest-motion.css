@@ -3,7 +3,29 @@
  * Getrennt von guest.css, damit beide Dateien unter ~250 Zeilen bleiben.
  * Keyframes selbst liegen global in styles/animation.css.
  * Alle Effekte respektieren prefers-reduced-motion (base.css setzt global
- * alle transition-/animation-Dauern auf ~0). */
+ * alle transition-/animation-Dauern auf ~0).
+ *
+ * Enthaelt ausserdem ein paar reine Layout-Bloecke der Gaeste-Seite, die aus
+ * Platzgruenden (guest.css ~250 Zeilen) hier liegen - z. B. die Namensleiste. */
+
+/* ---------- Namensleiste: Handy-Anordnung ----------
+   #name-bar nutzt .ox-row (flex-wrap). Am Handy soll "Du bist: <Name>
+   [Namen aendern]" in Zeile 1 stehen und die Aktions-Knoepfe (Kellner rufen /
+   Rechnung teilen) gleichmaessig in Zeile 2 - statt ungleich umzubrechen.
+   Der .ox-spacer wird dafuer zum vollbreiten Zeilenumbruch. */
+#name-bar {
+    row-gap: var(--ox-space-2);
+}
+@media (max-width: 560px) {
+    #name-bar .ox-spacer {
+        flex-basis: 100%;
+        height: 0;
+    }
+    #name-bar #btn-call,
+    #name-bar #btn-bill {
+        flex: 1;
+    }
+}
 
 /* ---------- Gleitender Kategorie-Strich (menu.ts baueKategorieLeiste) ----------
    Die Leiste traegt bereits border-bottom; der Strich sitzt absolut auf
