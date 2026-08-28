@@ -142,10 +142,25 @@
     color: var(--ox-success);
 }
 
+/* ---------- Detail-Overlay als Sheet (menu.ts oeffneDetail) ----------
+   Die Box sitzt am unteren Rand und slidet beim Oeffnen von unten herein.
+   menu.ts setzt zuerst display:flex und im naechsten Frame .is-open, damit
+   die Transition von translateY(100%) aus sichtbar laeuft. */
+.ox-overlay__box--sheet {
+    align-self: end;
+    width: 100%;
+    max-width: 640px;
+    border-radius: var(--ox-radius-lg) var(--ox-radius-lg) 0 0;
+    transform: translateY(100%);
+    transition: transform var(--ox-dur-slow) var(--ox-ease-spring);
+}
+.ox-overlay.is-open .ox-overlay__box--sheet { transform: none; }
+
 @media (prefers-reduced-motion: reduce) {
     .ox-bon-zeile { opacity: 1; transform: none; animation: none; }
     .ox-puls::before,
     .ox-puls::after { animation: none; opacity: 0; }
     .ox-tischmarke--wartet,
     .ox-tischmarke--frei { animation: none; }
+    .ox-overlay__box--sheet { transition: none; transform: none; }
 }

@@ -49,7 +49,7 @@ import {
     starteStatusAbfrage
 } from "./session";
 import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte } from "./menu";
-import { fliegeZu, staffelEin } from "./animation";
+import { fliegeZu, mitAnsichtsWechsel, staffelEin } from "./animation";
 import { bestaetigeBestellung, fliegeBonWeg, schmueckeBon } from "./bon";
 import { Warenkorb, bestelle } from "./cart";
 import type { WarenkorbZeile } from "./cart";
@@ -119,7 +119,7 @@ function knopf(klasse: string, text: string, ariaLabel?: string): HTMLButtonElem
 
 function zeigeAnsicht(id: Ansicht): void {
     aktuelleAnsicht = id;
-    zeigeAnsichtInhalt(id, restaurantName);
+    mitAnsichtsWechsel(() => zeigeAnsichtInhalt(id, restaurantName));
     aktualisiereWarenkorbLeiste();
 }
 

@@ -499,6 +499,10 @@ const Admin = {
             document.getElementById("design-bg").value = t.backgroundColor || "#f4f5f7";
             document.getElementById("design-hamburger").checked = !!t.categoriesAsHamburger;
             document.getElementById("design-kitchen").checked = t.kitchenDisplayEnabled !== false;
+            document.getElementById("design-shape").value = t.styleShape || "SQUARE";
+            document.getElementById("design-font").value = t.displayFont || "BRICOLAGE";
+            document.getElementById("design-fly").value = t.cartFlyStyle || "PLUS";
+            document.getElementById("design-confirm").value = t.orderConfirmStyle || "CHECK";
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -518,7 +522,11 @@ const Admin = {
                     accentColor: document.getElementById("design-accent").value,
                     backgroundColor: document.getElementById("design-bg").value,
                     categoriesAsHamburger: document.getElementById("design-hamburger").checked,
-                    kitchenDisplayEnabled: document.getElementById("design-kitchen").checked
+                    kitchenDisplayEnabled: document.getElementById("design-kitchen").checked,
+                    styleShape: document.getElementById("design-shape").value,
+                    displayFont: document.getElementById("design-font").value,
+                    cartFlyStyle: document.getElementById("design-fly").value,
+                    orderConfirmStyle: document.getElementById("design-confirm").value
                 })
             });
             OX.toast("Design gespeichert");

@@ -71,6 +71,12 @@ function kategorie(ueberschreibungen: Partial<Kategorie> = {}): Kategorie {
     };
 }
 
+/** Wartet einen Animationsframe ab. oeffneDetail setzt .is-open bewusst erst
+ *  im naechsten requestAnimationFrame, damit die Slide-up-Transition des
+ *  Sheets von ihrem Ausgangszustand (translateY(100%)) aus sichtbar laeuft. */
+const naechsterFrame = (): Promise<void> =>
+    new Promise((aufloesen) => requestAnimationFrame(() => aufloesen()));
+
 beforeEach(() => {
     apiMock.mockReset();
 });
@@ -405,7 +411,7 @@ describe("Kategorie-Leiste", () => {
 });
 
 describe("oeffneDetail - Inhalt", () => {
-    it("zeigt Name, Preis und Beschreibung eines Gerichts und oeffnet das Overlay", () => {
+    it("zeigt Name, Preis und Beschreibung eines Gerichts und oeffnet das Overlay", async () => {
         const g = gericht({ name: "Lasagne", price: 11.9, description: "Hausgemacht" });
         oeffneDetail(g, () => {}, true);
 
@@ -413,6 +419,7 @@ describe("oeffneDetail - Inhalt", () => {
         expect(document.querySelector(".ox-detail-overlay h2")!.textContent).toBe("Lasagne");
         expect(document.querySelector(".ox-detail-overlay .ox-preis")!.textContent).toBe(preis(11.9));
         expect(overlay.textContent).toContain("Hausgemacht");
+        await naechsterFrame();
         expect(overlay.classList.contains("is-open")).toBe(true);
     });
 
@@ -499,10 +506,11 @@ describe("oeffneDetail - Mengen-Stepper", () => {
 });
 
 describe("oeffneDetail - In den Warenkorb", () => {
-    it("ruft beiHinzufuegen mit Gericht, Menge und getrimmtem Hinweis auf und schliesst danach", () => {
+    it("ruft beiHinzufuegen mit Gericht, Menge und getrimmtem Hinweis auf und schliesst danach", async () => {
         const g = gericht({ id: 5, name: "Calzone" });
         const aufrufe: Array<[Gericht, number, string]> = [];
         oeffneDetail(g, (gr, menge, hinweis) => aufrufe.push([gr, menge, hinweis]), true);
+        await naechsterFrame();
 
         document.querySelector<HTMLButtonElement>('[aria-label="Menge erhöhen"]')!.click();
         document.querySelector<HTMLButtonElement>('[aria-label="Menge erhöhen"]')!.click();
@@ -527,11 +535,12 @@ describe("oeffneDetail - In den Warenkorb", () => {
 });
 
 describe("oeffneDetail - Schliessen", () => {
-    it("Schliessen-Knopf schliesst das Overlay OHNE beiHinzufuegen aufzurufen", () => {
+    it("Schliessen-Knopf schliesst das Overlay OHNE beiHinzufuegen aufzurufen", async () => {
         const beiHinzufuegen = vi.fn();
         oeffneDetail(gericht(), beiHinzufuegen, true);
 
         const overlay = document.querySelector(".ox-detail-overlay")!;
+        await naechsterFrame();
         expect(overlay.classList.contains("is-open")).toBe(true);
 
         document.querySelector<HTMLButtonElement>(".ox-detail__schliessen")!.click();
@@ -540,37 +549,41 @@ describe("oeffneDetail - Schliessen", () => {
         expect(beiHinzufuegen).not.toHaveBeenCalled();
     });
 
-    it("ein Klick auf den abgedunkelten Hintergrund schliesst das Overlay", () => {
+    it("ein Klick auf den abgedunkelten Hintergrund schliesst das Overlay", async () => {
         oeffneDetail(gericht(), () => {}, true);
         const overlay = document.querySelector<HTMLElement>(".ox-detail-overlay")!;
+        await naechsterFrame();
 
         overlay.click(); // Klick landet direkt auf dem Scrim, nicht auf einem Kind
 
         expect(overlay.classList.contains("is-open")).toBe(false);
     });
 
-    it("ein Klick auf den Inhalt (die Box) schliesst das Overlay NICHT", () => {
+    it("ein Klick auf den Inhalt (die Box) schliesst das Overlay NICHT", async () => {
         oeffneDetail(gericht(), () => {}, true);
         const overlay = document.querySelector<HTMLElement>(".ox-detail-overlay")!;
         const box = document.querySelector<HTMLElement>(".ox-overlay__box")!;
+        await naechsterFrame();
 
         box.click();
 
         expect(overlay.classList.contains("is-open")).toBe(true);
     });
 
-    it("die Escape-Taste schliesst ein offenes Overlay", () => {
+    it("die Escape-Taste schliesst ein offenes Overlay", async () => {
         oeffneDetail(gericht(), () => {}, true);
         const overlay = document.querySelector<HTMLElement>(".ox-detail-overlay")!;
+        await naechsterFrame();
 
         document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 
         expect(overlay.classList.contains("is-open")).toBe(false);
     });
 
-    it("andere Tasten schliessen das Overlay NICHT", () => {
+    it("andere Tasten schliessen das Overlay NICHT", async () => {
         oeffneDetail(gericht(), () => {}, true);
         const overlay = document.querySelector<HTMLElement>(".ox-detail-overlay")!;
+        await naechsterFrame();
 
         document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 

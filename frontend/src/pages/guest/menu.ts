@@ -202,6 +202,10 @@ function baueKategorieLeiste(kategorien: Kategorie[], ziel: HTMLElement, hamburg
 
 function versteckeOverlay(overlay: HTMLElement): void {
     overlay.classList.remove("is-open");
+    // Das Slide-up setzt beim Oeffnen inline display:flex (damit der naechste
+    // Frame die Transition starten kann) - hier wieder zuruecknehmen, sonst
+    // bliebe der abgedunkelte Hintergrund nach dem Schliessen stehen.
+    overlay.style.display = "";
 }
 
 // Einmalig registriert: sucht das GERADE offene Overlay zum Zeitpunkt des
@@ -223,7 +227,7 @@ function holeOderErstelleOverlay(): HTMLDivElement {
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-label", "Gericht-Details");
-    overlay.appendChild(el("div", "ox-overlay__box"));
+    overlay.appendChild(el("div", "ox-overlay__box ox-overlay__box--sheet"));
 
     // Klick auf die abgedunkelte Flaeche schliesst, Klick auf die Box nicht.
     overlay.addEventListener("click", (ereignis) => {
@@ -293,7 +297,12 @@ export function oeffneDetail(
     knopfZeile.append(schliessenKnopf, el("span", "ox-spacer"), hinzufuegenKnopf);
     box.appendChild(knopfZeile);
 
-    overlay.classList.add("is-open");
+    // Erst rendern (display:flex), dann im naechsten Frame is-open setzen -
+    // so hat das .ox-overlay__box--sheet einen Ausgangszustand
+    // (transform: translateY(100%)), von dem aus die CSS-Transition
+    // sichtbar nach oben slidet.
+    overlay.style.display = "flex";
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
 }
 
 /* ---------- Bestellen sperren/entsperren ---------- */
