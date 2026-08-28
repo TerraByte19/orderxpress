@@ -175,4 +175,9 @@ describe("setzeLadenDesign Form/Schrift", () => {
         expect(document.documentElement.hasAttribute("data-shape")).toBe(false);
         expect(document.documentElement.hasAttribute("data-font")).toBe(false);
     });
+
+    it("MANROPE setzt data-font=manrope", () => {
+        setzeLadenDesign({ font: "MANROPE" });
+        expect(document.documentElement.getAttribute("data-font")).toBe("manrope");
+    });
 });

@@ -8,10 +8,11 @@
  *
  * DAS ist die Stelle, an der die Plan-1-Kontrast-Rechnung zum ersten Mal
  * greift: Knopf-Textfarbe wird aus der Akzentfarbe berechnet (nicht mehr
- * immer weiss), Text-Textfarbe aus dem Laden-Hintergrund. "dunkel" wird
- * bewusst NICHT gesetzt - das Feld gibt es im Backend noch nicht, die Seite
- * bleibt bis dahin hell (theme.ts: ohne design.dunkel wird nur das
- * data-theme-Attribut entfernt, nichts erzwungen). */
+ * immer weiss), Text-Textfarbe aus dem Laden-Hintergrund. "dunkel" kommt
+ * jetzt aus theme.darkMode (Backend-Feld seit 28.08.2026): setzeLadenDesign
+ * setzt data-theme="dark" bzw. entfernt es. Der Laden-Hintergrund-Hex bleibt
+ * fuehrend fuer --ox-text (Luminanz-Rechnung), die dunkle Haut tauscht
+ * zusaetzlich Flaechen/Rahmen/Signalfarben. */
 
 import { api } from "../../lib/api";
 import { setzeLadenDesign } from "../../lib/theme";
@@ -26,7 +27,8 @@ export function wendeThemeAn(theme: LadenTheme): void {
         accentColor: theme.accentColor,
         backgroundColor: theme.backgroundColor,
         shape: theme.styleShape,
-        font: theme.displayFont
+        font: theme.displayFont,
+        dunkel: theme.darkMode
     });
 
     if (theme.name) {

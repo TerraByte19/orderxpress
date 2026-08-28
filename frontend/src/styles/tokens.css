@@ -122,3 +122,6 @@
 :root[data-font="fraunces"]  { --ox-font-display: "Fraunces Variable", Georgia, "Times New Roman", serif; }
 :root[data-font="space"]     { --ox-font-display: "Space Grotesk Variable", system-ui, sans-serif; }
 :root[data-font="iserif"]    { --ox-font-display: "Instrument Serif", Georgia, serif; }
+:root[data-font="manrope"]   { --ox-font-display: "Manrope Variable", system-ui, sans-serif; }
+:root[data-font="sora"]      { --ox-font-display: "Sora Variable", system-ui, sans-serif; }
+:root[data-font="dmserif"]   { --ox-font-display: "DM Serif Display", Georgia, "Times New Roman", serif; }

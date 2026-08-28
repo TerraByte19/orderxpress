@@ -97,7 +97,7 @@ export interface LadenDesign {
     backgroundColor?: string | null;
     dunkel?: boolean;
     shape?: string | null;   // "SQUARE" | "SOFT"
-    font?: string | null;    // "BRICOLAGE" | "FRAUNCES" | "SPACE_GROTESK" | "INSTRUMENT_SERIF"
+    font?: string | null;    // BRICOLAGE | FRAUNCES | SPACE_GROTESK | INSTRUMENT_SERIF | MANROPE | SORA | DM_SERIF
 }
 
 /** Schreibt das Design des Ladens als Variablen auf <html>. */
@@ -106,7 +106,8 @@ export function setzeLadenDesign(design: LadenDesign): void {
 
     const FORM: Record<string, string> = { SOFT: "soft" };
     const SCHRIFT: Record<string, string> = {
-        FRAUNCES: "fraunces", SPACE_GROTESK: "space", INSTRUMENT_SERIF: "iserif"
+        FRAUNCES: "fraunces", SPACE_GROTESK: "space", INSTRUMENT_SERIF: "iserif",
+        MANROPE: "manrope", SORA: "sora", DM_SERIF: "dmserif"
     };
     setzeOderEntferne(wurzel, "data-shape", design.shape ? FORM[design.shape] : undefined);
     setzeOderEntferne(wurzel, "data-font", design.font ? SCHRIFT[design.font] : undefined);
