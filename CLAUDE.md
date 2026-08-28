@@ -145,6 +145,12 @@ Bezeichner Englisch, Kommentare/Fehlermeldungen Deutsch (ASCII-Umschreibung ue/o
 - **Admin:** vier `<select>` (`design-shape`/`-font`/`-fly`/`-confirm`) in der bestehenden Design-Karte der **alten** `admin.html` + `frontend/public/js/admin.js` (`loadDesign`/`saveDesign`), gespeichert über das vorhandene `PUT /api/admin/design`.
 - Spec: `docs/superpowers/specs/2026-08-27-…-design.md`, Plan: `docs/superpowers/plans/2026-08-27-…`. Umgesetzt per Subagent-Driven Development (9 Tasks, Reviews je Task + Abschluss-Review).
 
+**Neu (28.08.2026, Teil 2): Design-Vorlagen, mehr Schriften, Hell/Dunkel.**
+- **Fünf Design-Vorlagen** (Bistro, Kasse, Nacht, Frisch, Klassik) — feste Kombis in `Admin.VORLAGEN` / `Admin.applyVorlage(name)` in `frontend/public/js/admin.js`, **nur Frontend, kein Server-Zustand**. Ein Klick auf einen Vorlagen-Knopf in der Design-Karte füllt Akzentfarbe, Hintergrundfarbe, Hell/Dunkel, Form, Schrift, Flieger, Bestätigung; danach normal „Speichern".
+- **Drei zusätzliche Schriften** → 7 gesamt: `MANROPE`, `SORA`, `DM_SERIF`. `@fontsource`-Pakete (`@fontsource-variable/manrope`, `@fontsource-variable/sora`, `@fontsource/dm-serif-display`) in `fonts.ts`, `:root[data-font="manrope|sora|dmserif"]`-Blöcke in `tokens.css`, `SCHRIFT`-Map in `theme.ts`, `@Pattern` in `DesignRequest` erweitert.
+- **Hell/Dunkel pro Laden:** neues **nullable** `Restaurant.darkMode` (Spalte `dark_mode`, `null` = hell, **kein DB-Reset**) — `isDarkMode()`, `DesignRequest.darkModeOrDefault()`, `RestaurantThemeDto.darkMode` (letztes Feld), `updateDesign`/`buildTheme`. Gäste-Seite: `LadenTheme.darkMode`, `laden-design.ts` reicht `dunkel: theme.darkMode` an `setzeLadenDesign` (setzt `data-theme="dark"`). Schalter „Dunkle Haut verwenden" in der Design-Karte. `theme.ts` leitet `--ox-text` weiter per Luminanz aus dem Hintergrund-Hex ab, die dunkle Haut tauscht zusätzlich Flächen/Rahmen/Signalfarben — darum setzen die Vorlagen (auch „Nacht": `#15181a`) immer einen expliziten Hintergrund-Hex.
+- Spec: `docs/superpowers/specs/2026-08-28-design-vorlagen-und-mehr-schriften-design.md`, Plan: `docs/superpowers/plans/2026-08-28-…`. Umgesetzt inline (4 Tasks). Backend 127 Tests, Frontend 229 Tests grün.
+
 **Offen / nächste Schritte:**
 1. Vor echtem Einsatz: Passwörter ändern, H2-Konsole + Swagger sperren, HTTPS, `public-base-url` setzen.
 2. Später: PostgreSQL + Flyway (statt `ddl-auto: update`), echten Bondrucker testen (`printer.mode: network` + IP), evtl. Bezahlung.
