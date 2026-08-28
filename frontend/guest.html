@@ -31,8 +31,9 @@
          der Tisch auf Freigabe wartet (siehe Aufgabe 3/8). -->
     <div id="name-bar" class="ox-row" hidden>
         <span class="ox-muted">Du bist:</span>
-        <strong id="my-name"></strong>
-        <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-change-name">Namen ändern</button>
+        <!-- Der Name selbst ist der Knopf: antippen oeffnet die
+             Namensaenderung (kein separater Knopf mehr). Anfangs "Gast N". -->
+        <button type="button" id="my-name" class="ox-name-tap"></button>
         <span class="ox-spacer"></span>
         <button type="button" class="ox-btn ox-btn--klein" id="btn-call" hidden>Kellner rufen</button>
         <button type="button" class="ox-btn ox-btn--geist ox-btn--klein" id="btn-bill" hidden>Rechnung teilen</button>

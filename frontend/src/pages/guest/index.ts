@@ -549,7 +549,7 @@ async function entscheide(joinerId: number, aktion: "approve" | "reject"): Promi
 function verdraheStatischeEreignisse(): void {
     document.getElementById("btn-retry")?.addEventListener("click", () => { void neuScannen(); });
 
-    document.getElementById("btn-change-name")?.addEventListener("click", oeffneNamensAnsicht);
+    document.getElementById("my-name")?.addEventListener("click", oeffneNamensAnsicht);
     document.getElementById("btn-name-save")?.addEventListener("click", () => { void speichereName(); });
     document.getElementById("name-input")?.addEventListener("keydown", (ereignis) => {
         if ((ereignis as KeyboardEvent).key === "Enter") void speichereName();

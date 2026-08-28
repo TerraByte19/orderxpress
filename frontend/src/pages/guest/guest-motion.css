@@ -16,6 +16,22 @@
 #name-bar {
     row-gap: var(--ox-space-2);
 }
+
+/* Der Gast-Name ist selbst der Knopf zum Umbenennen - fetter Text mit
+   gepunkteter Unterlinie als "editierbar"-Andeutung, kein eigener Knopf. */
+.ox-name-tap {
+    all: unset;
+    font-weight: 700;
+    color: var(--ox-text);
+    cursor: pointer;
+    padding: 6px 2px;
+    border-bottom: 1px dotted var(--ox-text-muted);
+    line-height: 1;
+}
+.ox-name-tap:focus-visible {
+    outline: 2px solid var(--ox-accent);
+    outline-offset: 2px;
+}
 @media (max-width: 560px) {
     #name-bar .ox-spacer {
         flex-basis: 100%;
