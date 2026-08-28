@@ -76,6 +76,13 @@ public class Restaurant {
     @Column(name = "order_confirm_style", length = 20)
     private String orderConfirmStyle;
 
+    /**
+     * true = die Gaeste-Seite nutzt die dunkle Haut (data-theme="dark"). Nullable,
+     * damit bestehende Datenbanken ohne Reset auskommen; null gilt als hell.
+     */
+    @Column(name = "dark_mode")
+    private Boolean darkMode;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -210,5 +217,14 @@ public class Restaurant {
 
     public void setOrderConfirmStyle(String v) {
         this.orderConfirmStyle = v;
+    }
+
+    /** null (alte Datensaetze) gilt als hell. */
+    public boolean isDarkMode() {
+        return darkMode != null && darkMode;
+    }
+
+    public void setDarkMode(boolean darkMode) {
+        this.darkMode = darkMode;
     }
 }

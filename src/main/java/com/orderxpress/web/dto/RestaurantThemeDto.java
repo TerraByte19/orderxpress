@@ -15,5 +15,6 @@ public record RestaurantThemeDto(Long id,
                                  String styleShape,
                                  String displayFont,
                                  String cartFlyStyle,
-                                 String orderConfirmStyle) {
+                                 String orderConfirmStyle,
+                                 boolean darkMode) {
 }

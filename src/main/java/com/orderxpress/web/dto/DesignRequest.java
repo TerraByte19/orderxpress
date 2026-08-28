@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 /** Design-Einstellungen eines Ladens speichern: Farben, Hamburger-Menue,
- *  Kuechen-Bildschirm sowie die vier Stil-Achsen Form (styleShape), Schrift
- *  (displayFont), Warenkorb-Flieger (cartFlyStyle) und Bestell-Bestaetigung
- *  (orderConfirmStyle). */
+ *  Kuechen-Bildschirm, Hell/Dunkel (darkMode) sowie die vier Stil-Achsen Form
+ *  (styleShape), Schrift (displayFont), Warenkorb-Flieger (cartFlyStyle) und
+ *  Bestell-Bestaetigung (orderConfirmStyle). */
 public record DesignRequest(
         @NotBlank @Pattern(regexp = "#[0-9a-fA-F]{6}",
                 message = "Farbe muss ein Hex-Wert wie #2563eb sein.") String accentColor,
@@ -16,12 +16,13 @@ public record DesignRequest(
         Boolean kitchenDisplayEnabled,
         @Pattern(regexp = "SQUARE|SOFT",
                 message = "Form muss SQUARE oder SOFT sein.") String styleShape,
-        @Pattern(regexp = "BRICOLAGE|FRAUNCES|SPACE_GROTESK|INSTRUMENT_SERIF",
+        @Pattern(regexp = "BRICOLAGE|FRAUNCES|SPACE_GROTESK|INSTRUMENT_SERIF|MANROPE|SORA|DM_SERIF",
                 message = "Unbekannte Schrift.") String displayFont,
         @Pattern(regexp = "PLUS|PHOTO",
                 message = "Flieger muss PLUS oder PHOTO sein.") String cartFlyStyle,
         @Pattern(regexp = "STAMP|CHECK",
-                message = "Bestaetigung muss STAMP oder CHECK sein.") String orderConfirmStyle) {
+                message = "Bestaetigung muss STAMP oder CHECK sein.") String orderConfirmStyle,
+        Boolean darkMode) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;
@@ -46,5 +47,10 @@ public record DesignRequest(
 
     public String orderConfirmStyleOrDefault() {
         return (orderConfirmStyle == null || orderConfirmStyle.isBlank()) ? "CHECK" : orderConfirmStyle;
+    }
+
+    /** Fehlt der Wert (alte Clients), gilt "hell". */
+    public boolean darkModeOrDefault() {
+        return darkMode != null && darkMode;
     }
 }
