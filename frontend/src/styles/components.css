@@ -97,6 +97,9 @@
     background: var(--ox-surface-2);
     color: var(--ox-text-muted);
     border: 1px solid var(--ox-border);
+    /* Farb-Morph, wenn ein Bestell-Chip den Status wechselt (orders.ts
+       aktualisiert denselben Knoten in place). */
+    transition: background var(--ox-dur) var(--ox-ease-out), color var(--ox-dur) var(--ox-ease-out);
 }
 .ox-chip--gut    { background: var(--ox-success); color: var(--ox-on-signal); border-color: transparent; }
 .ox-chip--warn   { background: var(--ox-warn);    color: var(--ox-on-signal); border-color: transparent; }

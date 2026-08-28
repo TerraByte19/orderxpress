@@ -270,3 +270,47 @@ describe("zeichneBestellungen - Karteninhalt je Bestellung", () => {
         expect(eintrag.textContent).toContain(rohName);
     });
 });
+
+describe("zeichneBestellungen - In-Place-Aktualisierung beim erneuten Zeichnen", () => {
+    it("aktualisiert den Chip einer bestehenden Bestellung in place (kein Neuaufbau der Karte)", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ id: 1, status: "NEW" })], ziel);
+        const karteVorher = ziel.querySelector("[data-bestellung-id='1']");
+        expect(karteVorher).not.toBeNull();
+
+        zeichneBestellungen([bestellung({ id: 1, status: "IN_PREPARATION" })], ziel);
+        const karteNachher = ziel.querySelector("[data-bestellung-id='1']");
+
+        // Dieselbe DOM-Node - der CSS-transition auf .ox-chip kann nur greifen,
+        // wenn der Chip (und seine Karte) nicht ersetzt, sondern umgefaerbt wird.
+        expect(karteNachher).toBe(karteVorher);
+        const chip = karteNachher!.querySelector<HTMLElement>(".ox-chip")!;
+        expect(chip.textContent).toContain("In der Küche");
+        expect(chip.classList.contains("ox-chip--warn")).toBe(true);
+        // IN_PREPARATION bekommt den blinkenden Punkt als erstes Kind.
+        expect(chip.querySelector(".ox-chip__punkt")).not.toBeNull();
+    });
+
+    it("entfernt beim erneuten Zeichnen die Karten nicht mehr gelieferter Bestellungen", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ id: 1 }), bestellung({ id: 2 })], ziel);
+        expect(ziel.querySelectorAll("[data-bestellung-id]")).toHaveLength(2);
+
+        zeichneBestellungen([bestellung({ id: 2 })], ziel);
+        const uebrig = Array.from(ziel.querySelectorAll<HTMLElement>("[data-bestellung-id]"));
+        expect(uebrig).toHaveLength(1);
+        expect(uebrig[0].dataset.bestellungId).toBe("2");
+    });
+
+    it("wechselt der Status weg von IN_PREPARATION, verschwindet der Punkt wieder", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ id: 1, status: "IN_PREPARATION" })], ziel);
+        expect(ziel.querySelector(".ox-chip__punkt")).not.toBeNull();
+
+        zeichneBestellungen([bestellung({ id: 1, status: "READY" })], ziel);
+        const chip = ziel.querySelector<HTMLElement>(".ox-chip")!;
+        expect(chip.querySelector(".ox-chip__punkt")).toBeNull();
+        expect(chip.textContent).toBe("Fertig");
+        expect(chip.classList.contains("ox-chip--gut")).toBe(true);
+    });
+});

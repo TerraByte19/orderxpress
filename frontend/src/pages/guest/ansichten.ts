@@ -50,11 +50,23 @@ export function fuelleFehlerAnsicht(titel: string, text: string): void {
     if (banner) banner.hidden = true;
 }
 
-export function aktualisiereTischmarke(tischNummer: number): void {
+/** Tischmarke im Kopf. `wartet` steuert den Zustand: solange der Tisch auf
+ *  Freigabe wartet, atmet die Marke (`.ox-tischmarke--wartet`); beim Uebergang
+ *  wartet -> frei kommt einmalig `.ox-tischmarke--frei` (Schnapp-Animation)
+ *  dazu. Der Marken-Knoten wird EINMAL ueber tischmarke() aus lib/ui.ts
+ *  gebaut (fuehrende Null steckt dort - hier NICHT dupliziert) und danach nur
+ *  noch um Klassen ergaenzt. */
+export function aktualisiereTischmarke(tischNummer: number, wartet: boolean): void {
     const badge = document.getElementById("table-badge");
     if (!badge) return;
-    badge.textContent = "";
-    badge.appendChild(tischmarke(tischNummer));
+    let marke = badge.querySelector<HTMLElement>(".ox-tischmarke");
+    if (!marke) {
+        badge.textContent = "";
+        marke = tischmarke(tischNummer);
+        badge.appendChild(marke);
+    }
+    marke.classList.toggle("ox-tischmarke--wartet", wartet);
+    if (!wartet) marke.classList.add("ox-tischmarke--frei");
 }
 
 /** "Kellner rufen"/"Rechnung teilen" sind erst nach Freigabe sinnvoll -

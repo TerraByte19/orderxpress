@@ -89,6 +89,63 @@
     animation: ox-haken-zeichnen var(--ox-dur-fast) var(--ox-dur) var(--ox-ease-out) forwards;
 }
 
+/* ---------- Bestell-Status-Chip: blinkender Punkt (orders.ts fuelleChip) ----------
+   Der Punkt sitzt als erstes Kind im Chip, wenn der Status IN_PREPARATION ist.
+   Er blinkt nur in der Warn-Variante - dem einzigen Status mit Punkt. */
+.ox-chip__punkt {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.ox-chip--warn .ox-chip__punkt {
+    animation: ox-blinken 1s ease-in-out infinite;
+}
+
+/* ---------- Warte-Puls (guest.html #view-wait) ----------
+   Ruhiger, sich ausbreitender Ring waehrend der Tisch auf Freigabe wartet.
+   Der Kern ist ein voller Kreis in der Akzentfarbe, die beiden Pseudo-
+   Elemente sind Ringe, die versetzt nach aussen laufen (Keyframe ox-welle). */
+.ox-puls {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--ox-space-5);
+    border-radius: 50%;
+    background: var(--ox-accent);
+    position: relative;
+}
+.ox-puls::before,
+.ox-puls::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--ox-accent);
+    animation: ox-welle 2s var(--ox-ease-out) infinite;
+}
+.ox-puls::after {
+    animation-delay: 1s;
+}
+
+/* ---------- Tischmarke-Zustaende (ansichten.ts aktualisiereTischmarke) ----------
+   Atmet, solange der Tisch wartet; schnappt einmalig ein und wird gruen,
+   sobald er frei ist. Basisoptik der Marke steht in components.css. */
+.ox-tischmarke--wartet {
+    animation: ox-atmen 2s var(--ox-ease-out) infinite;
+}
+.ox-tischmarke--frei {
+    animation: ox-schnapp 0.5s var(--ox-ease-spring);
+    border-color: var(--ox-success);
+    color: var(--ox-success);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ox-bon-zeile { opacity: 1; transform: none; animation: none; }
+    .ox-puls::before,
+    .ox-puls::after { animation: none; opacity: 0; }
+    .ox-tischmarke--wartet,
+    .ox-tischmarke--frei { animation: none; }
 }

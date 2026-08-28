@@ -54,23 +54,54 @@ export function statusKlasse(status: BestellStatus): string {
     return STATUS_KLASSE[status];
 }
 
-/** Zeichnet alle Bestellungen in `ziel` (wird vorher geleert). Sortiert
- *  IMMER selbst neueste zuerst - verlaesst sich nicht auf die Reihenfolge
- *  des Aufrufers oder des Backends. Stornierte Bestellungen werden einzeln
- *  angezeigt (mit erkennbarem Chip), zaehlen aber nicht in die
- *  Gesamtsumme oben - sie wurden nicht geliefert und nicht berechnet. */
+/** Zeichnet alle Bestellungen in `ziel`. Sortiert IMMER selbst neueste
+ *  zuerst - verlaesst sich nicht auf die Reihenfolge des Aufrufers oder des
+ *  Backends. Stornierte Bestellungen werden einzeln angezeigt (mit
+ *  erkennbarem Chip), zaehlen aber nicht in die Gesamtsumme oben - sie
+ *  wurden nicht geliefert und nicht berechnet.
+ *
+ *  Bei erneutem Aufruf (die Statusabfrage taktet alle 3 s, siehe index.ts)
+ *  wird eine BESTEHENDE Karte in place aktualisiert - Chip-Klasse/-Text und
+ *  Positionen - statt neu gebaut. Nur so kann der CSS-`transition` auf
+ *  `.ox-chip` (components.css) den Farb-Morph zeigen, wenn der Status
+ *  fortschreitet. Neue Karten entstehen wie bisher; Karten zu nicht mehr
+ *  gelieferten Bestellungen werden entfernt. Jede Karte traegt dafuer
+ *  `data-bestellung-id`. */
 export function zeichneBestellungen(bestellungen: Bestellung[], ziel: HTMLElement): void {
-    ziel.textContent = "";
+    const sortiert = [...bestellungen].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 
-    if (bestellungen.length === 0) {
+    if (sortiert.length === 0) {
+        ziel.textContent = "";
         ziel.appendChild(el("p", "ox-muted", "Noch keine Bestellungen."));
         return;
     }
 
-    const sortiert = [...bestellungen].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    // Gesamtzeile immer neu bauen (billig, kein Zustand) und an Ort und
+    // Stelle ersetzen bzw. voranstellen.
+    const vorhandeneGesamt = ziel.querySelector(".ox-bestellungen__gesamt");
+    const neueGesamt = baueGesamtzeile(sortiert);
+    if (vorhandeneGesamt) vorhandeneGesamt.replaceWith(neueGesamt);
+    else ziel.prepend(neueGesamt);
 
-    ziel.appendChild(baueGesamtzeile(sortiert));
-    for (const bestellung of sortiert) ziel.appendChild(baueBestellKarte(bestellung));
+    for (const bestellung of sortiert) {
+        const vorhanden = ziel.querySelector<HTMLElement>(`[data-bestellung-id="${bestellung.id}"]`);
+        if (vorhanden) aktualisiereBestellKarte(vorhanden, bestellung);
+        else ziel.appendChild(baueBestellKarte(bestellung));
+    }
+
+    // Reihenfolge (neueste zuerst) auch beim Re-Render halten: bestehende
+    // Karten werden nur VERSCHOBEN (appendChild bewegt den Knoten), nicht
+    // neu gebaut - Knoten-Identitaet und CSS-Uebergang bleiben erhalten.
+    for (const bestellung of sortiert) {
+        const karte = ziel.querySelector<HTMLElement>(`[data-bestellung-id="${bestellung.id}"]`);
+        if (karte) ziel.appendChild(karte);
+    }
+
+    // Karten entfernter Bestellungen (selten) raeumen.
+    const ids = new Set(sortiert.map((b) => String(b.id)));
+    ziel.querySelectorAll<HTMLElement>("[data-bestellung-id]").forEach((karte) => {
+        if (!ids.has(karte.dataset.bestellungId ?? "")) karte.remove();
+    });
 }
 
 function baueGesamtzeile(bestellungen: Bestellung[]): HTMLElement {
@@ -89,20 +120,58 @@ function baueGesamtzeile(bestellungen: Bestellung[]): HTMLElement {
 
 /** Kopf mit Nummer/Status/Uhrzeit/Summe, darunter die Positionen - siehe
  *  Dateikopf und Aufgabenstellung ("Uhrzeit ueber .ox-zeit, Summe ueber
- *  .ox-preis, darunter die Positionen"). */
+ *  .ox-preis, darunter die Positionen"). Die Karte traegt `data-bestellung-id`,
+ *  damit ein spaeterer Aufruf sie wiederfindet und in place aktualisiert. */
 function baueBestellKarte(bestellung: Bestellung): HTMLElement {
     const karte = el("article", "ox-card");
+    karte.dataset.bestellungId = String(bestellung.id);
 
     const kopf = el("div", "ox-row");
     kopf.append(
         el("strong", undefined, `Bestellung #${bestellung.id}`),
-        el("span", statusKlasse(bestellung.status), statusText(bestellung.status)),
+        baueChip(bestellung.status),
         el("span", "ox-spacer"),
         el("span", "ox-zeit", zeit(bestellung.createdAt)),
         el("strong", "ox-preis", preis(bestellung.totalAmount))
     );
     karte.appendChild(kopf);
+    karte.appendChild(bauePositionen(bestellung));
 
+    return karte;
+}
+
+/** Aktualisiert eine bereits gezeichnete Karte in place: derselbe Chip-Knoten
+ *  wechselt Klasse und Text (CSS-`transition` macht daraus einen Farb-Morph),
+ *  die Positionsliste wird ersetzt. Nummer/Uhrzeit/Summe aendern sich fuer
+ *  eine bestehende Bestellung nicht und bleiben unangetastet. */
+function aktualisiereBestellKarte(karte: HTMLElement, bestellung: Bestellung): void {
+    const chip = karte.querySelector<HTMLElement>(".ox-chip");
+    if (chip) fuelleChip(chip, bestellung.status);
+
+    const alteListe = karte.querySelector(".ox-list");
+    if (alteListe) alteListe.replaceWith(bauePositionen(bestellung));
+}
+
+/** Neuer Chip als eigenes Element mit stabiler Basisklasse `.ox-chip`. */
+function baueChip(status: BestellStatus): HTMLElement {
+    const chip = el("span");
+    fuelleChip(chip, status);
+    return chip;
+}
+
+/** Belegt einen Chip (neu oder bestehend) mit Klasse und Text zum Status.
+ *  Fuer IN_PREPARATION kommt ein leerer `<span class="ox-chip__punkt">` als
+ *  erstes Kind hinzu (blinkt per CSS, guest-motion.css) - er traegt keinen
+ *  Text, `textContent` des Chips bleibt also der reine Statustext. */
+function fuelleChip(chip: HTMLElement, status: BestellStatus): void {
+    chip.className = statusKlasse(status);
+    chip.textContent = statusText(status);
+    if (status === "IN_PREPARATION") {
+        chip.insertBefore(el("span", "ox-chip__punkt"), chip.firstChild);
+    }
+}
+
+function bauePositionen(bestellung: Bestellung): HTMLElement {
     const positionen = el("ul", "ox-list");
     for (const position of bestellung.items) {
         const eintrag = el("li");
@@ -110,7 +179,5 @@ function baueBestellKarte(bestellung: Bestellung): HTMLElement {
         if (position.note) eintrag.appendChild(el("span", "ox-muted", ` (${position.note})`));
         positionen.appendChild(eintrag);
     }
-    karte.appendChild(positionen);
-
-    return karte;
+    return positionen;
 }

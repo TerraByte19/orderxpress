@@ -209,7 +209,6 @@ function wendeStatusAn(status: GastStatusAntwort, istErsterAufruf: boolean): boo
     restaurantId = status.restaurantId;
     if (status.restaurantName) restaurantName = status.restaurantName;
     aktualisiereNameAnzeige(meinName);
-    aktualisiereTischmarke(tischNummer);
 
     if (status.guestStatus === "REJECTED") {
         beendeMitFehler("Nicht freigegeben", istGastgeber
@@ -231,6 +230,8 @@ function wendeStatusAn(status: GastStatusAntwort, istErsterAufruf: boolean): boo
     setzeBestellenErlaubt(genehmigt);
     zeigeWartehinweis(!genehmigt, istGastgeber);
     aktualisiereFreigabeKnoepfe(genehmigt);
+    // Tischmarke atmet, solange nicht freigegeben - schnappt beim Uebergang ein.
+    aktualisiereTischmarke(tischNummer, !genehmigt);
     if (genehmigt && !warGenehmigt && !istErsterAufruf) {
         toast("Der Tisch wurde freigegeben – du kannst jetzt bestellen!");
     }
