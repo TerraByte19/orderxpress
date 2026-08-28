@@ -74,7 +74,7 @@ const Service = {
         let calls;
         try { calls = await OX.api("/api/calls"); }
         catch (e) { return; }
-        OX.callAlert.update(calls);   // Dauer-Banner + Klingelton + Blitz bei neuen Rufen
+        OX.callAlert.update(calls, (id) => this.callDone(id));  // Dauer-Banner (je Ruf "Erledigt") + Blitz
         const card = document.getElementById("calls-card");
         const box = document.getElementById("calls-list");
         if (!calls.length) { card.style.display = "none"; box.innerHTML = ""; return; }

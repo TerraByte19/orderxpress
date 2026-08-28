@@ -47,7 +47,7 @@ const Waiter = {
         let calls;
         try { calls = await OX.api("/api/calls"); }
         catch (e) { return; }
-        OX.callAlert.update(calls);   // Dauer-Banner + Klingelton + Blitz bei neuen Rufen
+        OX.callAlert.update(calls, (id) => this.callDone(id));  // Dauer-Banner (je Ruf "Erledigt") + Blitz
         const box = document.getElementById("calls");
         if (!calls.length) { box.innerHTML = ""; return; }
         box.innerHTML = "";

@@ -364,21 +364,38 @@ input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; 
 #qr-hint { color: #fff; margin: 12px 0; }
 #qr-close { color: #fff; border-color: #888; }
 
-/* ---------- Kellner-Ruf: Alarm-Schicht (Service/Kellner, OX.callAlert) ---------- */
+/* ---------- Kellner-Ruf: Alarm-Schicht (Service/Kellner, OX.callAlert) ----------
+   Rotes Dauer-Banner ganz oben: Kopfzeile (Anzahl + Ton-Schalter), darunter
+   je offener Ruf eine Zeile mit "Erledigt". */
 #ox-ruf-bar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 16px;
     background: #b3261e; color: #fff;
-    font-weight: 700; font-size: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+    font-size: 15px;
 }
-#ox-ruf-bar .ox-ruf-bar__txt { flex: 1; }
+#ox-ruf-bar .ox-ruf-bar__kopf {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px 6px;
+    font-weight: 700; font-size: 16px;
+}
+#ox-ruf-bar .ox-ruf-bar__kopf > span { flex: 1; }
 #ox-ruf-bar .ox-ruf-bar__ton {
     background: rgba(255, 255, 255, .18); color: #fff;
     border: 1px solid rgba(255, 255, 255, .55); border-radius: 8px;
-    padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+    padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
+#ox-ruf-bar .ox-ruf-bar__zeile {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px;
+    border-top: 1px solid rgba(255, 255, 255, .25);
+}
+#ox-ruf-bar .ox-ruf-bar__zeile > span { flex: 1; }
+#ox-ruf-bar .ox-ruf-bar__ok {
+    background: #fff; color: #b3261e;
+    border: 0; border-radius: 8px;
+    padding: 8px 16px; font: inherit; font-weight: 700; cursor: pointer;
+}
+#ox-ruf-bar .ox-ruf-bar__ok:disabled { opacity: .5; }
 
 /* Kurzer roter Bildschirm-Blitz bei jedem neuen Ruf */
 #ox-ruf-blitz {

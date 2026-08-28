@@ -4,27 +4,31 @@ const OX = {
     euro: new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }),
 
     /* ---------- Kellner-Ruf: Alarm-Schicht fuer Service/Kellner ----------
-       Damit ein Ruf nicht uebersehen wird: Dauer-Banner ganz oben +
-       Klingelton (wiederholt bis erledigt, abschaltbar) + kurzer Bildschirm-
-       Blitz bei jedem NEUEN Ruf. update(calls) wird aus loadCalls() gefuettert
-       (auch mit leerer Liste, damit Banner/Ton wieder verschwinden),
-       flash() zusaetzlich sofort aus dem SSE-Handler (waiter-called). */
+       Damit ein Ruf nicht uebersehen wird: Dauer-Banner ganz oben (je Ruf eine
+       Zeile mit "Erledigt") + kurzer roter Bildschirm-Blitz bei jedem NEUEN Ruf.
+       Klingelton ist standardmaessig AUS - im Banner an-/abschaltbar, Zustand
+       gemerkt. update(calls, onDone) wird aus loadCalls() gefuettert (auch mit
+       leerer Liste, damit das Banner verschwindet); onDone(id) haakt einen Ruf
+       ab (Seite reicht ihre callDone-Funktion durch). flash() zusaetzlich
+       sofort aus dem SSE-Handler (waiter-called). */
     callAlert: {
         _bekannt: new Set(),
         _interval: null,
         _actx: null,
         _letzte: [],
+        _onDone: null,
 
         tonAn() {
-            try { return localStorage.getItem("ox-ruf-ton") !== "0"; } catch (e) { return true; }
+            try { return localStorage.getItem("ox-ruf-ton") === "1"; } catch (e) { return false; }
         },
         setTonAn(an) {
             try { localStorage.setItem("ox-ruf-ton", an ? "1" : "0"); } catch (e) { /* ignore */ }
             this._render(this._letzte);
         },
 
-        update(calls) {
+        update(calls, onDone) {
             this._letzte = calls || [];
+            if (onDone) this._onDone = onDone;
             for (const c of this._letzte) {
                 if (!this._bekannt.has(c.id)) { this._bekannt.add(c.id); this.flash(); }
             }
@@ -59,14 +63,41 @@ const OX = {
                 bar.id = "ox-ruf-bar";
                 document.body.appendChild(bar);
             }
-            const tische = calls.map(function (c) { return "Tisch " + c.tableNumber; }).join(", ");
-            bar.innerHTML =
-                "<span class='ox-ruf-bar__txt'>&#128276; " + this._esc(tische) +
-                " ruft" + (calls.length > 1 ? " (" + calls.length + ")" : "") + "</span>" +
-                "<button type='button' class='ox-ruf-bar__ton'>" +
-                (this.tonAn() ? "Ton aus" : "Ton an") + "</button>";
             const self = this;
-            bar.querySelector(".ox-ruf-bar__ton").onclick = function () { self.setTonAn(!self.tonAn()); };
+            bar.innerHTML = "";
+
+            const kopf = document.createElement("div");
+            kopf.className = "ox-ruf-bar__kopf";
+            kopf.innerHTML = "<span>&#128276; " + calls.length +
+                (calls.length === 1 ? " Ruf" : " Rufe") + "</span>";
+            const tonBtn = document.createElement("button");
+            tonBtn.type = "button";
+            tonBtn.className = "ox-ruf-bar__ton";
+            tonBtn.textContent = this.tonAn() ? "Ton aus" : "Ton an";
+            tonBtn.onclick = function () { self.setTonAn(!self.tonAn()); };
+            kopf.appendChild(tonBtn);
+            bar.appendChild(kopf);
+
+            for (const c of calls) {
+                const zeile = document.createElement("div");
+                zeile.className = "ox-ruf-bar__zeile";
+                const txt = document.createElement("span");
+                txt.textContent = "Tisch " + c.tableNumber +
+                    (c.guestName ? " · " + c.guestName : "") +
+                    " · " + OX.zeit(c.createdAt);
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "ox-ruf-bar__ok";
+                btn.textContent = "Erledigt";
+                btn.onclick = function () {
+                    btn.disabled = true;
+                    if (self._onDone) Promise.resolve(self._onDone(c.id)).catch(function () { btn.disabled = false; });
+                };
+                zeile.appendChild(txt);
+                zeile.appendChild(btn);
+                bar.appendChild(zeile);
+            }
+
             if (this.tonAn()) this._tonStart(); else this._tonStop();
         },
 
