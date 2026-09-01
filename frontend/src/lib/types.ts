@@ -148,3 +148,25 @@ export interface BeitrittsAnfrage {
     name: string;
     createdAt: string;
 }
+
+/** CategoryDto (Admin-Sicht) */
+export interface AdminKategorie {
+    id: number;
+    name: string;
+    sortOrder: number;
+    active: boolean;
+}
+
+/** MenuItemAdminDto */
+export interface AdminGericht {
+    id: number;
+    categoryId: number;
+    categoryName: string;
+    name: string;
+    description: string | null;
+    details: string | null;
+    price: number;
+    available: boolean;
+    sortOrder: number;
+    imageUrl: string | null;
+}
