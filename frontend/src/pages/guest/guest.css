@@ -15,6 +15,7 @@
    wird hier auf 0 gesetzt, die Polsterung tragen .ox-gericht__oeffnen und
    .ox-gericht__fuss. overflow:hidden schneidet auf den Kartenradius zu. */
 .ox-gericht {
+    position: relative;
     padding: 0;
     overflow: hidden;
 }
