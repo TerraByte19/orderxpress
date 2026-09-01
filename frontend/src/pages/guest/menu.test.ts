@@ -590,3 +590,43 @@ describe("oeffneDetail - Schliessen", () => {
         expect(overlay.classList.contains("is-open")).toBe(true);
     });
 });
+
+describe("zeichneSpeisekarte - Editor-Erweiterungen", () => {
+    it("setzt dataset.gerichtId auf jeder Karte", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie()], ziel, () => {}, () => {}, true);
+        const karte = ziel.querySelector<HTMLElement>(".ox-gericht");
+        expect(karte?.dataset.gerichtId).toBe("1");
+    });
+
+    it("markiert ein Gericht als ausverkauft, wenn istVerfuegbar false liefert", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte(
+            [kategorie()], ziel, () => {}, () => {}, true, false,
+            () => false
+        );
+        const karte = ziel.querySelector<HTMLElement>(".ox-gericht");
+        expect(karte?.classList.contains("ox-gericht--ausverkauft")).toBe(true);
+        expect(karte?.querySelector(".ox-badge")?.textContent).toBe("Ausverkauft");
+    });
+
+    it("laesst Gerichte ohne istVerfuegbar-Parameter unveraendert (Gast-Verhalten)", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie()], ziel, () => {}, () => {}, true);
+        const karte = ziel.querySelector<HTMLElement>(".ox-gericht");
+        expect(karte?.classList.contains("ox-gericht--ausverkauft")).toBe(false);
+        expect(karte?.querySelector(".ox-badge")).toBeNull();
+    });
+
+    it("zeigt eine leere Kategorie nur mit zeigeLeereKategorien=true", () => {
+        const leer = kategorie({ id: 2, name: "Getraenke", items: [] });
+
+        const ohneFlag = document.createElement("div");
+        zeichneSpeisekarte([leer], ohneFlag, () => {}, () => {}, true);
+        expect(ohneFlag.querySelector("#cat-2")).toBeNull();
+
+        const mitFlag = document.createElement("div");
+        zeichneSpeisekarte([leer], mitFlag, () => {}, () => {}, true, false, undefined, true);
+        expect(mitFlag.querySelector("#cat-2")).not.toBeNull();
+    });
+});

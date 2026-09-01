@@ -244,3 +244,21 @@
     border-top: 1px solid var(--ox-border);
     padding: var(--ox-space-3) var(--ox-space-4);
 }
+
+/* ---------- Editor-Erweiterungen: Verfuegbarkeit, leere Kategorien ---------- */
+
+.ox-gericht--ausverkauft {
+    opacity: .55;
+}
+
+.ox-badge {
+    position: absolute;
+    top: var(--ox-space-2);
+    left: var(--ox-space-2);
+    font-size: var(--ox-text-xs);
+    padding: .15em .6em;
+    border-radius: var(--ox-radius-sm);
+    background: var(--ox-surface);
+    border: 1px solid var(--ox-border);
+    color: var(--ox-text-muted);
+}

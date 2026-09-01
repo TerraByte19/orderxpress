@@ -60,24 +60,30 @@ export function zeichneSpeisekarte(
     beiAuswahl: (gericht: Gericht) => void,
     beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean,
-    hamburger = false
+    hamburger = false,
+    istVerfuegbar?: (gerichtId: number) => boolean,
+    zeigeLeereKategorien = false
 ): void {
     ziel.textContent = "";
 
-    // Kategorie ohne Gerichte: weder Reiter noch Ueberschrift.
-    const mitInhalt = kategorien.filter((kategorie) => kategorie.items.length > 0);
+    const sichtbareKategorien = zeigeLeereKategorien
+        ? kategorien
+        : kategorien.filter((kategorie) => kategorie.items.length > 0);
 
-    const leiste = baueKategorieLeiste(mitInhalt, ziel, hamburger);
+    const leiste = baueKategorieLeiste(sichtbareKategorien, ziel, hamburger);
     if (leiste) ziel.appendChild(leiste);
 
-    for (const kategorie of mitInhalt) {
+    for (const kategorie of sichtbareKategorien) {
         const abschnitt = el("section", "ox-kategorie-abschnitt");
         abschnitt.id = `cat-${kategorie.id}`;
         abschnitt.appendChild(el("h2", undefined, kategorie.name));
 
         const grid = el("div", "ox-grid");
         for (const gericht of kategorie.items) {
-            grid.appendChild(baueGerichtKarte(gericht, beiAuswahl, beiSchnellHinzufuegen, bestellenErlaubt));
+            grid.appendChild(baueGerichtKarte(
+                gericht, beiAuswahl, beiSchnellHinzufuegen, bestellenErlaubt,
+                istVerfuegbar ? istVerfuegbar(gericht.id) : true
+            ));
         }
         abschnitt.appendChild(grid);
         ziel.appendChild(abschnitt);
@@ -96,7 +102,8 @@ function baueGerichtKarte(
     gericht: Gericht,
     beiAuswahl: (gericht: Gericht) => void,
     beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
-    bestellenErlaubt: boolean
+    bestellenErlaubt: boolean,
+    verfuegbar = true
 ): HTMLElement {
     const oeffnenKnopf = knopf("ox-gericht__oeffnen", undefined,
         `${gericht.name}, ${preis(gericht.price)} – Details öffnen`);
@@ -122,8 +129,10 @@ function baueGerichtKarte(
     });
     fuss.append(el("span", "ox-preis", preis(gericht.price)), el("span", "ox-spacer"), hinzufuegenKnopf);
 
-    const karte = el("article", "ox-card ox-gericht");
+    const karte = el("article", "ox-card ox-gericht" + (verfuegbar ? "" : " ox-gericht--ausverkauft"));
+    karte.dataset.gerichtId = String(gericht.id);
     karte.append(oeffnenKnopf, fuss);
+    if (!verfuegbar) karte.appendChild(el("span", "ox-badge", "Ausverkauft"));
     return karte;
 }
 
