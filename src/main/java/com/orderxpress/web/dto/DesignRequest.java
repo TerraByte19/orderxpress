@@ -22,7 +22,9 @@ public record DesignRequest(
                 message = "Flieger muss PLUS oder PHOTO sein.") String cartFlyStyle,
         @Pattern(regexp = "STAMP|CHECK",
                 message = "Bestaetigung muss STAMP oder CHECK sein.") String orderConfirmStyle,
-        Boolean darkMode) {
+        Boolean darkMode,
+        @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG",
+                message = "Unbekannter Vorhang-Stil.") String introStyle) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;
@@ -52,5 +54,9 @@ public record DesignRequest(
     /** Fehlt der Wert (alte Clients), gilt "hell". */
     public boolean darkModeOrDefault() {
         return darkMode != null && darkMode;
+    }
+
+    public String introStyleOrDefault() {
+        return (introStyle == null || introStyle.isBlank()) ? "HOCHKLAPPEN" : introStyle;
     }
 }

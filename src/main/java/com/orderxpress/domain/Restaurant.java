@@ -76,6 +76,11 @@ public class Restaurant {
     @Column(name = "order_confirm_style", length = 20)
     private String orderConfirmStyle;
 
+    /** Vorhang-Animation beim ersten Oeffnen der Speisekarte: HOCHKLAPPEN |
+     *  FADE | MITTE | VORHANG. null/leer = HOCHKLAPPEN. */
+    @Column(name = "intro_style", length = 20)
+    private String introStyle;
+
     /**
      * true = die Gaeste-Seite nutzt die dunkle Haut (data-theme="dark"). Nullable,
      * damit bestehende Datenbanken ohne Reset auskommen; null gilt als hell.
@@ -209,6 +214,14 @@ public class Restaurant {
 
     public void setCartFlyStyle(String v) {
         this.cartFlyStyle = v;
+    }
+
+    public String getIntroStyle() {
+        return orDefault(introStyle, "HOCHKLAPPEN");
+    }
+
+    public void setIntroStyle(String v) {
+        this.introStyle = v;
     }
 
     public String getOrderConfirmStyle() {

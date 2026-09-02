@@ -496,15 +496,15 @@ const Admin = {
        gespeichert wird ueber den normalen "Speichern"-Knopf. */
     VORLAGEN: {
         bistro:  { accentColor: "#b3502e", backgroundColor: "#f7f4ef", darkMode: false,
-                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP" },
+                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "VORHANG" },
         kasse:   { accentColor: "#1f3d34", backgroundColor: "#f6f6f4", darkMode: false,
-                   styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP" },
+                   styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP", introStyle: "HOCHKLAPPEN" },
         nacht:   { accentColor: "#c9a227", backgroundColor: "#15181a", darkMode: true,
-                   styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK" },
+                   styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "FADE" },
         frisch:  { accentColor: "#0f9d8f", backgroundColor: "#ffffff", darkMode: false,
-                   styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK" },
+                   styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "MITTE" },
         klassik: { accentColor: "#1a1a1a", backgroundColor: "#faf9f6", darkMode: false,
-                   styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK" }
+                   styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN" }
     },
 
     applyVorlage(name) {
@@ -517,6 +517,7 @@ const Admin = {
         document.getElementById("design-font").value = v.displayFont;
         document.getElementById("design-fly").value = v.cartFlyStyle;
         document.getElementById("design-confirm").value = v.orderConfirmStyle;
+        document.getElementById("design-intro").value = v.introStyle;
         OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
     },
 
@@ -532,6 +533,7 @@ const Admin = {
             document.getElementById("design-fly").value = t.cartFlyStyle || "PLUS";
             document.getElementById("design-confirm").value = t.orderConfirmStyle || "CHECK";
             document.getElementById("design-dark").checked = t.darkMode === true;
+            document.getElementById("design-intro").value = t.introStyle || "HOCHKLAPPEN";
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -556,7 +558,8 @@ const Admin = {
                     displayFont: document.getElementById("design-font").value,
                     cartFlyStyle: document.getElementById("design-fly").value,
                     orderConfirmStyle: document.getElementById("design-confirm").value,
-                    darkMode: document.getElementById("design-dark").checked
+                    darkMode: document.getElementById("design-dark").checked,
+                    introStyle: document.getElementById("design-intro").value
                 })
             });
             OX.toast("Design gespeichert");

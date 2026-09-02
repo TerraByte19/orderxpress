@@ -57,6 +57,7 @@ import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
 import { ladeTheme, leseModi, wendeThemeAn } from "./laden-design";
+import { zeigeVorhang } from "./vorhang";
 import {
     aktualisiereFreigabeKnoepfe,
     aktualisiereNameAnzeige,
@@ -266,6 +267,10 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         // Rueckfall wie zuvor in wendeThemeAn: nur uebernehmen, wenn die
         // Statusabfrage noch keinen restaurantName geliefert hat (siehe laden-design.ts, Dateikopf).
         if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;
+        // Spielt nur einmal pro Gast (localStorage-Flag in vorhang.ts) - bei
+        // spaeteren Aufrufen von ladeThemeUndSpeisekarte (gibt es hier nicht,
+        // aber zur Sicherheit) waere das ein no-op.
+        zeigeVorhang(themeErgebnis.value.introStyle, guestToken);
     }
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
     const modi = themeErgebnis.status === "fulfilled" ? leseModi(themeErgebnis.value) : null;

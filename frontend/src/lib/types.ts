@@ -54,6 +54,7 @@ export interface LadenTheme {
     cartFlyStyle: string;
     orderConfirmStyle: string;
     darkMode: boolean;
+    introStyle: string;
 }
 
 /** OrderResponse.OrderLineDto */

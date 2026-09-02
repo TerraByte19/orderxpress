@@ -94,6 +94,7 @@ public class RestaurantAdminService {
         restaurant.setCartFlyStyle(request.cartFlyStyleOrDefault());
         restaurant.setOrderConfirmStyle(request.orderConfirmStyleOrDefault());
         restaurant.setDarkMode(request.darkModeOrDefault());
+        restaurant.setIntroStyle(request.introStyleOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -214,7 +215,8 @@ public class RestaurantAdminService {
                 restaurant.getDisplayFont(),
                 restaurant.getCartFlyStyle(),
                 restaurant.getOrderConfirmStyle(),
-                restaurant.isDarkMode());
+                restaurant.isDarkMode(),
+                restaurant.getIntroStyle());
     }
 
     private void validateUpload(MultipartFile file) {
