@@ -78,4 +78,47 @@ describe("dekoriereSpeisekarte", () => {
         kachel.click();
         expect(aufrufe.beiKategorieNeu).toHaveBeenCalled();
     });
+
+    it("zeigt bei zwei Kategorien Verschiebe-Pfeile korrekt an und ruft beiKategorieVerschieben auf", () => {
+        const zweiKategorien = [
+            kategorie({ id: 1, name: "Pizza" }),
+            kategorie({ id: 2, name: "Pasta", items: [gericht({ id: 3, name: "Lasagne" })] })
+        ];
+        zeichneSpeisekarte(zweiKategorien, ziel, () => {}, () => {}, true);
+        const aufrufe = standardAufrufe();
+        const katMap = new Map([
+            [1, { id: 1, name: "Pizza", sortOrder: 1, active: true }],
+            [2, { id: 2, name: "Pasta", sortOrder: 2, active: true }]
+        ]);
+        dekoriereSpeisekarte(ziel, katMap, aufrufe);
+
+        const kategorieKoepfe = Array.from(ziel.querySelectorAll(".ox-kategorie-kopf"));
+        expect(kategorieKoepfe[0].querySelector('[aria-label="Nach oben verschieben"]')).toBeNull();
+        expect(kategorieKoepfe[0].querySelector('[aria-label="Nach unten verschieben"]')).not.toBeNull();
+        expect(kategorieKoepfe[1].querySelector('[aria-label="Nach oben verschieben"]')).not.toBeNull();
+        expect(kategorieKoepfe[1].querySelector('[aria-label="Nach unten verschieben"]')).toBeNull();
+
+        (kategorieKoepfe[0].querySelector('[aria-label="Nach unten verschieben"]') as HTMLButtonElement).click();
+        expect(aufrufe.beiKategorieVerschieben).toHaveBeenCalledWith(1, 1);
+    });
+
+    it("zeigt ein Inaktiv-Badge bei inaktiven Kategorien und versteckt es bei aktiven", () => {
+        const zweiKategorien = [
+            kategorie({ id: 1, name: "Pizza" }),
+            kategorie({ id: 2, name: "Pasta", items: [gericht({ id: 3, name: "Lasagne" })] })
+        ];
+        zeichneSpeisekarte(zweiKategorien, ziel, () => {}, () => {}, true);
+        const aufrufe = standardAufrufe();
+        const katMap = new Map([
+            [1, { id: 1, name: "Pizza", sortOrder: 1, active: true }],
+            [2, { id: 2, name: "Pasta", sortOrder: 2, active: false }]
+        ]);
+        dekoriereSpeisekarte(ziel, katMap, aufrufe);
+
+        const kategorieKoepfe = Array.from(ziel.querySelectorAll(".ox-kategorie-kopf"));
+        expect(kategorieKoepfe[0].querySelector(".ox-badge")).toBeNull();
+        const badge = kategorieKoepfe[1].querySelector<HTMLElement>(".ox-badge");
+        expect(badge).not.toBeNull();
+        expect(badge?.textContent).toBe("Inaktiv");
+    });
 });

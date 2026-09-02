@@ -19,7 +19,7 @@ export function dekoriereSpeisekarte(ziel: HTMLElement, kategorieInfo: Map<numbe
 
     abschnitte.forEach((abschnitt, index) => {
         const kategorieId = Number(abschnitt.id.replace("cat-", ""));
-        dekoriereKategorieKopf(abschnitt, kategorieId, index === 0, index === abschnitte.length - 1, aufrufe);
+        dekoriereKategorieKopf(abschnitt, kategorieId, index === 0, index === abschnitte.length - 1, kategorieInfo, aufrufe);
         dekoriereKarten(abschnitt, aufrufe.beiGerichtVerschieben);
 
         const grid = abschnitt.querySelector(".ox-grid");
@@ -36,6 +36,7 @@ function dekoriereKategorieKopf(
     kategorieId: number,
     istErste: boolean,
     istLetzte: boolean,
+    kategorieInfo: Map<number, AdminKategorie>,
     aufrufe: DekorationsAufrufe
 ): void {
     const kopf = abschnitt.querySelector("h2");
@@ -44,6 +45,9 @@ function dekoriereKategorieKopf(
     const zeile = el("div", "ox-row ox-kategorie-kopf");
     kopf.replaceWith(zeile);
     zeile.appendChild(kopf);
+    if (kategorieInfo.get(kategorieId)?.active === false) {
+        zeile.appendChild(el("span", "ox-badge", "Inaktiv"));
+    }
     zeile.appendChild(el("span", "ox-spacer"));
     zeile.appendChild(baueVerschiebeKnoepfe(istErste, istLetzte, (richtung) => aufrufe.beiKategorieVerschieben(kategorieId, richtung)));
 
