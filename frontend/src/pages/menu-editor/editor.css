@@ -1,0 +1,26 @@
+/* Nur Editor-eigene Elemente - die Karten-/Kategorie-Optik selbst kommt
+   unveraendert aus guest/guest.css (siehe menu-editor/index.ts, Imports). */
+
+.ox-kategorie-kopf {
+    align-items: center;
+}
+
+.ox-editor-pfeile {
+    margin-top: var(--ox-space-2);
+}
+
+.ox-gericht--neu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--ox-touch);
+    border: 2px dashed var(--ox-border);
+    background: transparent;
+    color: var(--ox-text-muted);
+    font-size: var(--ox-text-lg);
+    cursor: pointer;
+}
+
+.ox-editor-kategorie-neu {
+    margin-top: var(--ox-space-4);
+}
