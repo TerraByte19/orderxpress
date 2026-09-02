@@ -77,6 +77,34 @@ export function wendeThemeAn(theme: LadenTheme): void {
     }
     const heroName = document.getElementById("hero-name");
     if (heroName) heroName.textContent = theme.name || "";
+
+    baueHeroLinks(theme);
+}
+
+/** Nur gesetzte Social-Links (Instagram/Facebook/Webseite) werden angezeigt -
+ *  der Container bleibt hidden, wenn keiner gesetzt ist (kein leerer
+ *  Platzhalter-Streifen im Hero). */
+function baueHeroLinks(theme: LadenTheme): void {
+    const container = document.getElementById("hero-links");
+    if (!container) return;
+    container.textContent = "";
+
+    const eintraege: Array<[string, string | null]> = [
+        ["Instagram", theme.instagramUrl],
+        ["Facebook", theme.facebookUrl],
+        ["Webseite", theme.websiteUrl]
+    ];
+    for (const [beschriftung, url] of eintraege) {
+        if (!url) continue;
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.className = "ox-hero__link";
+        a.textContent = beschriftung;
+        container.appendChild(a);
+    }
+    container.hidden = container.childElementCount === 0;
 }
 
 /** Flieger-/Bestaetigungs-Modus aus dem Theme, auf die im Frontend genutzten

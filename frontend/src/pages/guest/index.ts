@@ -270,7 +270,7 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         // Spielt nur einmal pro Gast (localStorage-Flag in vorhang.ts) - bei
         // spaeteren Aufrufen von ladeThemeUndSpeisekarte (gibt es hier nicht,
         // aber zur Sicherheit) waere das ein no-op.
-        zeigeVorhang(themeErgebnis.value.introStyle, guestToken);
+        zeigeVorhang(themeErgebnis.value, guestToken);
     }
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
     const modi = themeErgebnis.status === "fulfilled" ? leseModi(themeErgebnis.value) : null;

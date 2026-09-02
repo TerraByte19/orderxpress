@@ -2,6 +2,7 @@ package com.orderxpress.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 /** Design-Einstellungen eines Ladens speichern: Farben, Hamburger-Menue,
  *  Kuechen-Bildschirm, Hell/Dunkel (darkMode) sowie die vier Stil-Achsen Form
@@ -24,7 +25,11 @@ public record DesignRequest(
                 message = "Bestaetigung muss STAMP oder CHECK sein.") String orderConfirmStyle,
         Boolean darkMode,
         @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG",
-                message = "Unbekannter Vorhang-Stil.") String introStyle) {
+                message = "Unbekannter Vorhang-Stil.") String introStyle,
+        @Size(max = 80, message = "Vorhang-Text darf hoechstens 80 Zeichen haben.") String introText,
+        @Size(max = 200, message = "Link ist zu lang.") String instagramUrl,
+        @Size(max = 200, message = "Link ist zu lang.") String facebookUrl,
+        @Size(max = 200, message = "Link ist zu lang.") String websiteUrl) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;

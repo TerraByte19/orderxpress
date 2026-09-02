@@ -17,5 +17,9 @@ public record RestaurantThemeDto(Long id,
                                  String cartFlyStyle,
                                  String orderConfirmStyle,
                                  boolean darkMode,
-                                 String introStyle) {
+                                 String introStyle,
+                                 String introText,
+                                 String instagramUrl,
+                                 String facebookUrl,
+                                 String websiteUrl) {
 }

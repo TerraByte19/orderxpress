@@ -55,6 +55,10 @@ export interface LadenTheme {
     orderConfirmStyle: string;
     darkMode: boolean;
     introStyle: string;
+    introText: string | null;
+    instagramUrl: string | null;
+    facebookUrl: string | null;
+    websiteUrl: string | null;
 }
 
 /** OrderResponse.OrderLineDto */

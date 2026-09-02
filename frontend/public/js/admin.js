@@ -534,6 +534,10 @@ const Admin = {
             document.getElementById("design-confirm").value = t.orderConfirmStyle || "CHECK";
             document.getElementById("design-dark").checked = t.darkMode === true;
             document.getElementById("design-intro").value = t.introStyle || "HOCHKLAPPEN";
+            document.getElementById("design-intro-text").value = t.introText || "";
+            document.getElementById("design-instagram").value = t.instagramUrl || "";
+            document.getElementById("design-facebook").value = t.facebookUrl || "";
+            document.getElementById("design-website").value = t.websiteUrl || "";
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -559,7 +563,11 @@ const Admin = {
                     cartFlyStyle: document.getElementById("design-fly").value,
                     orderConfirmStyle: document.getElementById("design-confirm").value,
                     darkMode: document.getElementById("design-dark").checked,
-                    introStyle: document.getElementById("design-intro").value
+                    introStyle: document.getElementById("design-intro").value,
+                    introText: document.getElementById("design-intro-text").value.trim() || null,
+                    instagramUrl: document.getElementById("design-instagram").value.trim() || null,
+                    facebookUrl: document.getElementById("design-facebook").value.trim() || null,
+                    websiteUrl: document.getElementById("design-website").value.trim() || null
                 })
             });
             OX.toast("Design gespeichert");

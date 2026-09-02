@@ -2,14 +2,27 @@
  * introStyle: HOCHKLAPPEN | FADE | MITTE | VORHANG, siehe Restaurant/
  * DesignRequest). Spielt nur EINMAL pro Gast - localStorage-Flag, gleiches
  * Muster wie ox-named-<guestToken> in session.ts - nicht bei jedem Neuladen
- * derselben Person. Respektiert bewegungAus() wie der Rest der Bewegungen. */
+ * derselben Person. Respektiert bewegungAus() wie der Rest der Bewegungen.
+ *
+ * Optional: Logo (theme.logoUrl, kein neuer Upload-Platz - das bestehende
+ * Design-Logo wird wiederverwendet) + kurzer Text (theme.introText) blenden
+ * sich zentriert waehrend des Vorhangs ein. Nur dann haelt der Vorhang kurz
+ * (HALT_MIT_MARKE_MS) an, bevor er aufgeht - sonst laeuft er direkt durch
+ * wie zuvor, keine Verhaltensaenderung ohne gesetzte Marke. */
 
 import { bewegungAus } from "./animation";
 
 const SCHLUESSEL_PREFIX = "ox-intro-";
 const DAUER_MS = 900;
+const HALT_MIT_MARKE_MS = 550;
 const GUELTIGE_STILE = new Set(["HOCHKLAPPEN", "FADE", "MITTE", "VORHANG"]);
 const ZWEI_HAELFTEN = new Set(["MITTE", "VORHANG"]);
+
+export interface VorhangTheme {
+    introStyle: string;
+    introText?: string | null;
+    logoUrl?: string | null;
+}
 
 function schonGezeigt(guestToken: string): boolean {
     try {
@@ -27,12 +40,14 @@ function merkeGezeigt(guestToken: string): void {
 
 /** Baut den Vorhang, haengt ihn an document.body und entfernt ihn nach der
  *  Animation wieder selbst - der Aufrufer muss sich um nichts kuemmern. */
-export function zeigeVorhang(stil: string, guestToken: string): void {
+export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
     if (!guestToken || schonGezeigt(guestToken)) return;
     merkeGezeigt(guestToken);
     if (bewegungAus()) return;
 
-    const stilSicher = GUELTIGE_STILE.has(stil) ? stil : "HOCHKLAPPEN";
+    const stilSicher = GUELTIGE_STILE.has(theme.introStyle) ? theme.introStyle : "HOCHKLAPPEN";
+    const text = (theme.introText || "").trim();
+    const hatMarke = Boolean(text || theme.logoUrl);
 
     const vorhang = document.createElement("div");
     vorhang.className = `ox-vorhang ox-vorhang--${stilSicher.toLowerCase()}`;
@@ -55,10 +70,36 @@ export function zeigeVorhang(stil: string, guestToken: string): void {
         vorhang.appendChild(feld);
     }
 
+    if (hatMarke) {
+        const marke = document.createElement("div");
+        marke.className = "ox-vorhang__marke";
+        if (theme.logoUrl) {
+            const logo = document.createElement("img");
+            logo.className = "ox-vorhang__marke-logo";
+            logo.src = theme.logoUrl;
+            logo.alt = "";
+            marke.appendChild(logo);
+        }
+        if (text) {
+            const beschriftung = document.createElement("span");
+            beschriftung.className = "ox-vorhang__marke-text";
+            beschriftung.textContent = text;
+            marke.appendChild(beschriftung);
+        }
+        vorhang.appendChild(marke);
+    }
+
     document.body.appendChild(vorhang);
-    // Erst rendern (Ausgangszustand), dann im naechsten Frame die "los"-Klasse -
-    // sonst startet die Transition/Animation nicht sichtbar von ihrem Anfang aus
-    // (gleiches Muster wie das Detail-Overlay in menu.ts).
-    requestAnimationFrame(() => vorhang.classList.add("ox-vorhang--los"));
-    window.setTimeout(() => vorhang.remove(), DAUER_MS);
+
+    const haltMs = hatMarke ? HALT_MIT_MARKE_MS : 0;
+    // Erst rendern (Ausgangszustand), dann im naechsten Frame die Marke einblenden
+    // (falls vorhanden) - sonst startet die Transition nicht sichtbar von ihrem
+    // Anfang aus (gleiches Muster wie das Detail-Overlay in menu.ts). Die
+    // "los"-Klasse fuer Vorhang-Bewegung + Marke-Ausblenden kommt erst nach dem
+    // Halt, damit ohne Marke (haltMs=0) exakt das bisherige Verhalten bleibt.
+    requestAnimationFrame(() => {
+        if (hatMarke) vorhang.classList.add("ox-vorhang--marke-ein");
+    });
+    window.setTimeout(() => vorhang.classList.add("ox-vorhang--los"), haltMs);
+    window.setTimeout(() => vorhang.remove(), haltMs + DAUER_MS);
 }

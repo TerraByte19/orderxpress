@@ -95,6 +95,10 @@ public class RestaurantAdminService {
         restaurant.setOrderConfirmStyle(request.orderConfirmStyleOrDefault());
         restaurant.setDarkMode(request.darkModeOrDefault());
         restaurant.setIntroStyle(request.introStyleOrDefault());
+        restaurant.setIntroText(request.introText());
+        restaurant.setInstagramUrl(request.instagramUrl());
+        restaurant.setFacebookUrl(request.facebookUrl());
+        restaurant.setWebsiteUrl(request.websiteUrl());
         return buildTheme(restaurant);
     }
 
@@ -216,7 +220,11 @@ public class RestaurantAdminService {
                 restaurant.getCartFlyStyle(),
                 restaurant.getOrderConfirmStyle(),
                 restaurant.isDarkMode(),
-                restaurant.getIntroStyle());
+                restaurant.getIntroStyle(),
+                restaurant.getIntroText(),
+                restaurant.getInstagramUrl(),
+                restaurant.getFacebookUrl(),
+                restaurant.getWebsiteUrl());
     }
 
     private void validateUpload(MultipartFile file) {

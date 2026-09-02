@@ -65,6 +65,32 @@
     font-size: var(--ox-text-2xl);
 }
 
+/* Nur gesetzte Links (Instagram/Facebook/Webseite) erscheinen ueberhaupt -
+   laden-design.ts baut nur vorhandene ein und blendet den Container sonst
+   aus (hidden), kein leerer Platzhalter-Streifen. */
+.ox-hero__links {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ox-space-2);
+    margin-top: var(--ox-space-2);
+}
+.ox-hero__link {
+    font-size: var(--ox-text-xs);
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    padding: var(--ox-space-1) var(--ox-space-3);
+    border-radius: var(--ox-radius-pill);
+    border: 1px solid currentColor;
+    opacity: .85;
+}
+.ox-hero__link:hover,
+.ox-hero__link:focus-visible {
+    opacity: 1;
+}
+
 /* ---------- Foto-Karte ---------- */
 
 /* Baut auf .ox-card auf (Flaeche, Haarlinien-Rahmen, Radius) - das Padding

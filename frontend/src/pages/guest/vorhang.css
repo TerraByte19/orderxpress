@@ -90,12 +90,54 @@
     z-index: 1;
 }
 
+/* ---------- Marke: Logo + Willkommenstext, zentriert waehrend des Halts ----------
+   Nur vorhanden, wenn vorhang.ts sie anhaengt (Logo und/oder Text gesetzt).
+   Farbe kommt aus --ox-accent-text (derselbe vorausberechnete Kontrast-Wert
+   wie ueberall im Design-System), nicht hart Weiss - liest sich also auch
+   auf einer hellen Akzentfarbe. */
+.ox-vorhang__marke {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ox-space-3);
+    padding: 0 var(--ox-space-5);
+    opacity: 0;
+    color: var(--ox-accent-text);
+    transition: opacity 220ms var(--ox-ease-out);
+    pointer-events: none;
+}
+.ox-vorhang--marke-ein .ox-vorhang__marke {
+    opacity: 1;
+}
+.ox-vorhang--los .ox-vorhang__marke {
+    opacity: 0;
+    transition-duration: 160ms;
+}
+.ox-vorhang__marke-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--ox-radius-pill);
+    object-fit: cover;
+    box-shadow: var(--ox-shadow-2);
+}
+.ox-vorhang__marke-text {
+    font-family: var(--ox-font-display);
+    font-weight: 600;
+    font-size: var(--ox-text-2xl);
+    text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
     /* vorhang.ts spielt bei bewegungAus() ohnehin gar nicht erst - diese Regel
        ist nur ein zweites Netz, falls doch einmal ein .ox-vorhang im DOM landet. */
     .ox-vorhang__feld,
     .ox-vorhang--vorhang .ox-vorhang__feld--links,
-    .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
+    .ox-vorhang--vorhang .ox-vorhang__feld--rechts,
+    .ox-vorhang__marke {
         transition: none;
         animation: none;
     }

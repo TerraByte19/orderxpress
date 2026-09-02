@@ -81,6 +81,24 @@ public class Restaurant {
     @Column(name = "intro_style", length = 20)
     private String introStyle;
 
+    /** Kurzer Willkommenstext, der waehrend des Vorhangs kurz eingeblendet
+     *  wird (zusammen mit dem Logo, falls vorhanden). null/leer = keiner -
+     *  dann laeuft der Vorhang ohne Halt/Einblendung durch. */
+    @Column(name = "intro_text", length = 80)
+    private String introText;
+
+    /** Social-Links fuer die Gaeste-Seite - alle optional, nur gesetzte
+     *  werden angezeigt. Volle URL erwartet (https://...), keine Validierung
+     *  ueber ein festes Format hinaus (siehe DesignRequest). */
+    @Column(name = "instagram_url", length = 200)
+    private String instagramUrl;
+
+    @Column(name = "facebook_url", length = 200)
+    private String facebookUrl;
+
+    @Column(name = "website_url", length = 200)
+    private String websiteUrl;
+
     /**
      * true = die Gaeste-Seite nutzt die dunkle Haut (data-theme="dark"). Nullable,
      * damit bestehende Datenbanken ohne Reset auskommen; null gilt als hell.
@@ -222,6 +240,39 @@ public class Restaurant {
 
     public void setIntroStyle(String v) {
         this.introStyle = v;
+    }
+
+    /** null statt "" (kein orDefault - leer bedeutet hier "keiner", nicht "Standardwert"). */
+    public String getIntroText() {
+        return (introText == null || introText.isBlank()) ? null : introText;
+    }
+
+    public void setIntroText(String v) {
+        this.introText = v;
+    }
+
+    public String getInstagramUrl() {
+        return (instagramUrl == null || instagramUrl.isBlank()) ? null : instagramUrl;
+    }
+
+    public void setInstagramUrl(String v) {
+        this.instagramUrl = v;
+    }
+
+    public String getFacebookUrl() {
+        return (facebookUrl == null || facebookUrl.isBlank()) ? null : facebookUrl;
+    }
+
+    public void setFacebookUrl(String v) {
+        this.facebookUrl = v;
+    }
+
+    public String getWebsiteUrl() {
+        return (websiteUrl == null || websiteUrl.isBlank()) ? null : websiteUrl;
+    }
+
+    public void setWebsiteUrl(String v) {
+        this.websiteUrl = v;
     }
 
     public String getOrderConfirmStyle() {
