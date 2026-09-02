@@ -43,43 +43,39 @@
     transform: translateX(100%);
 }
 
-/* ---------- Buehnenvorhang: dichte Falten + rafft sich beim Ziehen zusammen ----------
-   Ein echter Buehnenvorhang wird beim Aufziehen SCHMALER (er rafft sich am
-   Rand), nicht breiter - anders als ein simples Wegschieben. Zwei Hintergrund-
-   Ebenen: oben eine Buehnenlicht-Verlauf (hell oben, dunkel unten), darunter
-   dichte Falten per repeating-linear-gradient (5 Toene statt 3, leicht
-   diagonal fuer eine organischere Drapierung als exakt senkrechte Streifen).
-   Die Keyframes (styles/animation.css) rafft die Haelfte erst schmal
-   zusammen, bevor sie in voller Breite ausserhalb der Buehne verschwindet -
-   sonst bliebe ein zusammengeraffter Rest sichtbar und wuerde die Karte
-   verdecken. Vorhangstange (.ox-vorhang__stange) haengt zusaetzlich in
-   vorhang.ts ein und bleibt oben stehen. */
+/* ---------- Buehnenvorhang: echte Falten (eingebettetes SVG) + schwenkt raus ----------
+   Falten-Textur als eingebettetes SVG (data-URI, kein externer Host) statt
+   CSS-Streifen: ein linearGradient mit sechs Farbstufen ergibt runde,
+   weiche Falten statt harter Kanten. Die Textur ist per opacity halb-
+   durchsichtig, darunter bleibt weiterhin var(--ox-accent) sichtbar - die
+   Laden-Farbe faerbt den Stoff, statt eine feste "Samt"-Farbe zu erzwingen.
+   Bewegung: kein reines Wegschieben, sondern ein Schwenk (translate + rotate
+   + scale, Ursprung an der oberen INNEREN Ecke) - die Haelfte dreht sich
+   diagonal aus dem Bild, aehnlich wie ein tatsaechlich weggezogener,
+   schwingender Vorhang. Vorhangstange (.ox-vorhang__stange, aus vorhang.ts)
+   bleibt oben stehen und rahmt die Buehne. */
 .ox-vorhang--vorhang .ox-vorhang__feld--links,
 .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
+    background-color: var(--ox-accent);
     background-image:
-        linear-gradient(180deg, rgba(255, 255, 255, .10), transparent 30%, rgba(0, 0, 0, .22) 100%),
-        repeating-linear-gradient(
-            98deg,
-            rgba(0, 0, 0, .24) 0px,
-            rgba(255, 255, 255, .12) 4px,
-            rgba(0, 0, 0, .06) 9px,
-            rgba(255, 255, 255, .18) 13px,
-            rgba(0, 0, 0, .24) 18px
-        );
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='4'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.38'/%3E%3Cstop offset='.16' stop-color='%23fff' stop-opacity='.22'/%3E%3Cstop offset='.38' stop-color='%23000' stop-opacity='.12'/%3E%3Cstop offset='.6' stop-color='%23fff' stop-opacity='.3'/%3E%3Cstop offset='.82' stop-color='%23000' stop-opacity='.16'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='4' fill='url(%23f)'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
+    background-repeat: repeat-x, no-repeat;
+    background-size: 26px 100%, 100% 100%;
 }
 .ox-vorhang--vorhang .ox-vorhang__feld--links {
-    transform-origin: left center;
+    transform-origin: top right;
     box-shadow: 10px 0 28px rgba(0, 0, 0, .35);
 }
 .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
-    transform-origin: right center;
+    transform-origin: top left;
     box-shadow: -10px 0 28px rgba(0, 0, 0, .35);
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--links {
-    animation: ox-vorhang-raffen-links 850ms var(--ox-ease-out) forwards;
+    animation: ox-vorhang-schwenk-links 750ms var(--ox-ease-out) forwards;
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation: ox-vorhang-raffen-rechts 850ms var(--ox-ease-out) forwards;
+    animation: ox-vorhang-schwenk-rechts 750ms var(--ox-ease-out) forwards;
 }
 
 /* Vorhangstange: bleibt stehen, rahmt die Buehne oben - nur beim Buehnenvorhang-Stil. */
