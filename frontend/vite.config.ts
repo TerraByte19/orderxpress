@@ -7,7 +7,7 @@ const hier = dirname(fileURLToPath(import.meta.url));
 /** Jede Seite ist ein eigener Einstiegspunkt (Multi-Page-Betrieb). */
 const seiten = [
   "index", "guest", "admin", "kitchen", "service",
-  "waiter", "stats", "platform", "device"
+  "waiter", "stats", "platform", "device", "menu-editor"
 ];
 
 export default defineConfig({
