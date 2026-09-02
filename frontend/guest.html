@@ -69,6 +69,14 @@
          (siehe menu.ts, zeichneSpeisekarte/baueKategorieLeiste) - separate
          Platzhalter dafuer waeren funktionslos. -->
     <div id="view-menu" hidden>
+        <!-- Hero-Band: Laden-Foto (bestehendes backgroundUrl-Asset, siehe laden-design.ts)
+             oder ohne Foto einfach die Akzentfarbe als Flaeche. Nur hier auf der
+             Menue-Ansicht, NICHT im .ox-topbar (der bleibt schmal+sticky fuer
+             Warenkorb/Tischmarke waehrend des ganzen Bestellvorgangs). -->
+        <div id="menu-hero" class="ox-hero">
+            <img id="hero-logo" class="ox-hero__logo" alt="" hidden>
+            <h2 id="hero-name" class="ox-hero__name"></h2>
+        </div>
         <div id="menu-container"></div>
     </div>
 

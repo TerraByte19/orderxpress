@@ -50,13 +50,33 @@ export function wendeThemeAn(theme: LadenTheme): void {
         }
     }
 
-    if (theme.backgroundUrl) {
-        document.body.classList.add("ox-bg-bild");
-        document.body.style.backgroundImage = `url("${theme.backgroundUrl}${zeitstempel}")`;
-    } else {
-        document.body.classList.remove("ox-bg-bild");
-        document.body.style.backgroundImage = "";
+    // Hero-Band auf der Menue-Ansicht: dasselbe Hintergrundbild-Asset, das
+    // frueher die ganze Seite hinterlegt hat, sitzt jetzt NUR hier als
+    // Foto-Streifen (siehe guest.css, .ox-hero) - kein zweiter Upload-Platz,
+    // kein Vollseiten-Hintergrund mehr (bewusste Vereinfachung, siehe
+    // Design-Gespraech: klareres Lesen der Karte beim Scrollen).
+    const hero = document.getElementById("menu-hero");
+    if (hero) {
+        if (theme.backgroundUrl) {
+            hero.style.backgroundImage = `url("${theme.backgroundUrl}${zeitstempel}")`;
+            hero.classList.add("ox-hero--bild");
+        } else {
+            hero.style.backgroundImage = "";
+            hero.classList.remove("ox-hero--bild");
+        }
     }
+    const heroLogo = document.getElementById("hero-logo") as HTMLImageElement | null;
+    if (heroLogo) {
+        if (theme.logoUrl) {
+            heroLogo.src = theme.logoUrl + zeitstempel;
+            heroLogo.hidden = false;
+        } else {
+            heroLogo.removeAttribute("src");
+            heroLogo.hidden = true;
+        }
+    }
+    const heroName = document.getElementById("hero-name");
+    if (heroName) heroName.textContent = theme.name || "";
 }
 
 /** Flieger-/Bestaetigungs-Modus aus dem Theme, auf die im Frontend genutzten

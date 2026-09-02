@@ -13,6 +13,13 @@
     <h1>Speisekarte</h1>
 </header>
 <main>
+    <!-- Gleiches Hero-Band wie guest.html - der Editor soll pixelgleich zur
+         echten Gaeste-Ansicht sein, wendeThemeAn() (laden-design.ts) fuellt
+         das hier genauso. -->
+    <div id="menu-hero" class="ox-hero">
+        <img id="hero-logo" class="ox-hero__logo" alt="" hidden>
+        <h2 id="hero-name" class="ox-hero__name"></h2>
+    </div>
     <div id="menu-container"></div>
 </main>
 <script type="module" src="/src/pages/menu-editor/index.ts"></script>

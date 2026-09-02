@@ -9,6 +9,61 @@
    Wie ueberall im Design-System: keine festen Farb-, Abstands- oder
    Groessenwerte, alles kommt aus var(--ox-...). */
 
+/* ---------- Hero-Band ---------- */
+
+/* Ohne Laden-Foto (theme.backgroundUrl) einfach die Akzentflaeche - kein
+   Sonderfall, kein Loch. .ox-hero--bild kommt erst dazu, wenn laden-design.ts
+   tatsaechlich ein Hintergrundbild gesetzt hat (siehe dort); der Scrim
+   (::after) sitzt NUR dann drueber, weil ein Foto beliebig hell sein kann -
+   auf der reinen Akzentflaeche uebernimmt --ox-accent-text (der bereits
+   errechnete Kontrast-Wert, siehe theme.ts) die Lesbarkeit. */
+.ox-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 160px;
+    margin-bottom: var(--ox-space-4);
+    padding: var(--ox-space-4);
+    border-radius: var(--ox-radius-lg);
+    overflow: hidden;
+    background-color: var(--ox-accent);
+    background-size: cover;
+    background-position: center;
+    color: var(--ox-accent-text);
+}
+
+.ox-hero--bild {
+    color: #fff;
+}
+
+.ox-hero--bild::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, .68), rgba(0, 0, 0, 0) 65%);
+}
+
+.ox-hero__logo {
+    position: relative;
+    z-index: 1;
+    width: 56px;
+    height: 56px;
+    margin-bottom: var(--ox-space-2);
+    border-radius: var(--ox-radius-pill);
+    object-fit: cover;
+    background: var(--ox-surface);
+    box-shadow: var(--ox-shadow-2);
+}
+
+.ox-hero__name {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-family: var(--ox-font-display);
+    font-size: var(--ox-text-2xl);
+}
+
 /* ---------- Foto-Karte ---------- */
 
 /* Baut auf .ox-card auf (Flaeche, Haarlinien-Rahmen, Radius) - das Padding
@@ -224,17 +279,6 @@
     max-width: 160px;
     object-fit: contain;
     border-radius: var(--ox-radius-sm);
-}
-
-/* Optionales Laden-Hintergrundbild: die URL ist Laufzeitdaten (kommt vom
-   Theme-Endpunkt, siehe index.ts/wendeThemeAn) und wird darum bewusst per
-   style.backgroundImage gesetzt, nicht hier - das ist kein Inline-Style im
-   HTML, sondern derselbe Weg wie theme.ts es fuer --ox-accent/--ox-bg tut.
-   Hier nur die Wiederholung/Anordnung, die sich nicht aendert. */
-.ox-bg-bild {
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
 }
 
 /* ---------- Warenkorb-Leiste unten (guest.html nennt sie so: "unten") ---------- */
