@@ -44,6 +44,11 @@ export function zeigeVorhang(stil: string, guestToken: string): void {
         const rechts = document.createElement("div");
         rechts.className = "ox-vorhang__feld ox-vorhang__feld--rechts";
         vorhang.append(links, rechts);
+        if (stilSicher === "VORHANG") {
+            const stange = document.createElement("div");
+            stange.className = "ox-vorhang__stange";
+            vorhang.appendChild(stange);
+        }
     } else {
         const feld = document.createElement("div");
         feld.className = "ox-vorhang__feld";

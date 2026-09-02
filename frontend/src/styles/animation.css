@@ -30,17 +30,19 @@
 @keyframes ox-haken-zeichnen { to { stroke-dashoffset: 0; } }
 @keyframes ox-blinken { 50% { opacity: .3; } }
 
-/* Buehnenvorhang (guest/vorhang.css): kurzes Bauschen, bevor die Haelfte
-   ganz wegzieht - simuliert Stoff, der gezogen statt geschoben wird. */
-@keyframes ox-vorhang-ziehen-links {
-    0%   { transform: translateX(0) scaleX(1); }
-    35%  { transform: translateX(-6%) scaleX(1.06); }
-    100% { transform: translateX(-100%) scaleX(1.06); }
+/* Buehnenvorhang (guest/vorhang.css): rafft sich beim Ziehen zusammen
+   (schmaler, wie echter Stoff, der am Rand gebauscht wird), bevor die
+   Haelfte in voller Breite ausserhalb der Buehne verschwindet - so bleibt
+   am Ende kein zusammengeraffter Rest sichtbar. */
+@keyframes ox-vorhang-raffen-links {
+    0%   { transform: translateX(0)     scaleX(1); }
+    55%  { transform: translateX(-18%)  scaleX(.62); }
+    100% { transform: translateX(-100%) scaleX(1); }
 }
-@keyframes ox-vorhang-ziehen-rechts {
-    0%   { transform: translateX(0) scaleX(1); }
-    35%  { transform: translateX(6%) scaleX(1.06); }
-    100% { transform: translateX(100%) scaleX(1.06); }
+@keyframes ox-vorhang-raffen-rechts {
+    0%   { transform: translateX(0)    scaleX(1); }
+    55%  { transform: translateX(18%)  scaleX(.62); }
+    100% { transform: translateX(100%) scaleX(1); }
 }
 
 /* Gestaffeltes Einblenden (Karten, Listen). is-in wird per JS gesetzt

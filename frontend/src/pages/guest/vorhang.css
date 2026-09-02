@@ -43,19 +43,29 @@
     transform: translateX(100%);
 }
 
-/* ---------- Buehnenvorhang: Falten-Streifen + kurzes Bauschen beim Ziehen ----------
-   repeating-linear-gradient simuliert Stoff-Falten (abwechselnd hell/dunkel);
-   die Keyframes (styles/animation.css) lassen die Haelfte kurz breiter werden
-   (scaleX-Ueberschwinger), bevor sie ganz wegzieht - fuehlt sich gezogen an,
-   nicht mechanisch geschoben. */
+/* ---------- Buehnenvorhang: dichte Falten + rafft sich beim Ziehen zusammen ----------
+   Ein echter Buehnenvorhang wird beim Aufziehen SCHMALER (er rafft sich am
+   Rand), nicht breiter - anders als ein simples Wegschieben. Zwei Hintergrund-
+   Ebenen: oben eine Buehnenlicht-Verlauf (hell oben, dunkel unten), darunter
+   dichte Falten per repeating-linear-gradient (5 Toene statt 3, leicht
+   diagonal fuer eine organischere Drapierung als exakt senkrechte Streifen).
+   Die Keyframes (styles/animation.css) rafft die Haelfte erst schmal
+   zusammen, bevor sie in voller Breite ausserhalb der Buehne verschwindet -
+   sonst bliebe ein zusammengeraffter Rest sichtbar und wuerde die Karte
+   verdecken. Vorhangstange (.ox-vorhang__stange) haengt zusaetzlich in
+   vorhang.ts ein und bleibt oben stehen. */
 .ox-vorhang--vorhang .ox-vorhang__feld--links,
 .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
-    background-image: repeating-linear-gradient(
-        90deg,
-        rgba(255, 255, 255, .16) 0 6px,
-        rgba(0, 0, 0, .12) 6px 14px,
-        rgba(255, 255, 255, .05) 14px 22px
-    );
+    background-image:
+        linear-gradient(180deg, rgba(255, 255, 255, .10), transparent 30%, rgba(0, 0, 0, .22) 100%),
+        repeating-linear-gradient(
+            98deg,
+            rgba(0, 0, 0, .24) 0px,
+            rgba(255, 255, 255, .12) 4px,
+            rgba(0, 0, 0, .06) 9px,
+            rgba(255, 255, 255, .18) 13px,
+            rgba(0, 0, 0, .24) 18px
+        );
 }
 .ox-vorhang--vorhang .ox-vorhang__feld--links {
     transform-origin: left center;
@@ -66,10 +76,22 @@
     box-shadow: -10px 0 28px rgba(0, 0, 0, .35);
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--links {
-    animation: ox-vorhang-ziehen-links 850ms var(--ox-ease-out) forwards;
+    animation: ox-vorhang-raffen-links 850ms var(--ox-ease-out) forwards;
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation: ox-vorhang-ziehen-rechts 850ms var(--ox-ease-out) forwards;
+    animation: ox-vorhang-raffen-rechts 850ms var(--ox-ease-out) forwards;
+}
+
+/* Vorhangstange: bleibt stehen, rahmt die Buehne oben - nur beim Buehnenvorhang-Stil. */
+.ox-vorhang__stange {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5%;
+    min-height: 10px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .55), rgba(0, 0, 0, .3));
+    z-index: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
