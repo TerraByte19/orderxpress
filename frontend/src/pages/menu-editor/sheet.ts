@@ -71,9 +71,10 @@ function oeffneSheet(
     verfuegbarFeld.input.checked = gericht?.available ?? true;
     box.append(nameFeld.zeile, preisFeld.zeile, beschreibungFeld.zeile, detailsFeld.zeile, verfuegbarFeld.zeile);
 
-    if (gericht) box.appendChild(baueFotoBereich(gericht));
-
     const fehlerAnzeige = el("p", "ox-muted");
+
+    if (gericht) box.appendChild(baueFotoBereich(gericht, fehlerAnzeige, () => { versteckeOverlay(overlay); beiGespeichert(); }));
+
     box.appendChild(fehlerAnzeige);
 
     const knopfZeile = el("div", "ox-row");
@@ -119,19 +120,26 @@ function oeffneSheet(
     requestAnimationFrame(() => overlay.classList.add("is-open"));
 }
 
-function baueFotoBereich(gericht: AdminGericht): HTMLElement {
+function baueFotoBereich(gericht: AdminGericht, fehlerAnzeige: HTMLElement, beiErfolg: () => void): HTMLElement {
     const bereich = el("div", "ox-row");
     const dateiFeld = document.createElement("input");
     dateiFeld.type = "file";
     dateiFeld.accept = "image/jpeg,image/png";
     dateiFeld.addEventListener("change", () => {
         const datei = dateiFeld.files?.[0];
-        if (datei) void ladeGerichtFoto(gericht.id, datei);
+        if (!datei) return;
+        ladeGerichtFoto(gericht.id, datei)
+            .then(beiErfolg)
+            .catch((fehler: unknown) => { fehlerAnzeige.textContent = (fehler as Error).message; });
     });
     bereich.appendChild(dateiFeld);
     if (gericht.imageUrl) {
         const loeschen = baueKnopf("ox-btn ox-btn--geist ox-btn--klein", "Foto löschen");
-        loeschen.addEventListener("click", () => void loescheGerichtFoto(gericht.id));
+        loeschen.addEventListener("click", () => {
+            loescheGerichtFoto(gericht.id)
+                .then(beiErfolg)
+                .catch((fehler: unknown) => { fehlerAnzeige.textContent = (fehler as Error).message; });
+        });
         bereich.appendChild(loeschen);
     }
     return bereich;

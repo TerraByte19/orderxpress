@@ -3,6 +3,7 @@
 
 .ox-kategorie-kopf {
     align-items: center;
+    position: relative;
 }
 
 .ox-editor-pfeile {

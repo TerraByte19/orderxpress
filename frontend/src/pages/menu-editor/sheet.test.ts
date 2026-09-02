@@ -8,11 +8,13 @@ vi.mock("./api", () => ({
     loescheGerichtFoto: vi.fn()
 }));
 
-import { aendereGericht, legeGerichtAn } from "./api";
+import { aendereGericht, ladeGerichtFoto, legeGerichtAn, loescheGerichtFoto } from "./api";
 import { oeffneGerichtBearbeiten, oeffneGerichtNeu } from "./sheet";
 
 const aendereMock = vi.mocked(aendereGericht);
 const legeAnMock = vi.mocked(legeGerichtAn);
+const ladeFotoMock = vi.mocked(ladeGerichtFoto);
+const loescheFotoMock = vi.mocked(loescheGerichtFoto);
 
 function gericht(ueberschreibungen: Partial<AdminGericht> = {}): AdminGericht {
     return {
@@ -60,6 +62,70 @@ describe("oeffneGerichtBearbeiten", () => {
         speichern.dispatchEvent(new MouseEvent("click", { bubbles: true }));
         await Promise.resolve();
         expect(aendereMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("Foto-Upload/-Loeschen im Bearbeiten-Sheet", () => {
+    function waehleDatei(datei: File): void {
+        const dateiFeld = document.querySelector<HTMLInputElement>(".ox-editor-overlay input[type=file]")!;
+        Object.defineProperty(dateiFeld, "files", { value: [datei], configurable: true });
+        dateiFeld.dispatchEvent(new Event("change"));
+    }
+
+    it("ruft bei erfolgreichem Foto-Upload beiGespeichert auf", async () => {
+        ladeFotoMock.mockResolvedValueOnce(undefined);
+        const beiGespeichert = vi.fn();
+        oeffneGerichtBearbeiten(gericht(), beiGespeichert);
+        await naechsterFrame();
+
+        waehleDatei(new File(["x"], "foto.jpg", { type: "image/jpeg" }));
+        await Promise.resolve(); await Promise.resolve();
+
+        expect(ladeFotoMock).toHaveBeenCalledWith(5, expect.any(File));
+        expect(beiGespeichert).toHaveBeenCalled();
+    });
+
+    it("zeigt einen Fehler bei fehlgeschlagenem Foto-Upload und ruft beiGespeichert NICHT auf", async () => {
+        ladeFotoMock.mockRejectedValueOnce(new Error("Foto konnte nicht hochgeladen werden"));
+        const beiGespeichert = vi.fn();
+        oeffneGerichtBearbeiten(gericht(), beiGespeichert);
+        await naechsterFrame();
+
+        waehleDatei(new File(["x"], "foto.jpg", { type: "image/jpeg" }));
+        await Promise.resolve(); await Promise.resolve();
+
+        const fehlerAnzeige = document.querySelector(".ox-editor-overlay .ox-muted");
+        expect(fehlerAnzeige?.textContent).toBe("Foto konnte nicht hochgeladen werden");
+        expect(beiGespeichert).not.toHaveBeenCalled();
+    });
+
+    it("ruft bei erfolgreichem Foto-Loeschen beiGespeichert auf", async () => {
+        loescheFotoMock.mockResolvedValueOnce(undefined);
+        const beiGespeichert = vi.fn();
+        oeffneGerichtBearbeiten(gericht({ imageUrl: "/api/admin/menu-items/5/image" }), beiGespeichert);
+        await naechsterFrame();
+
+        const loeschen = [...document.querySelectorAll("button")].find((b) => b.textContent === "Foto löschen")!;
+        loeschen.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        await Promise.resolve(); await Promise.resolve();
+
+        expect(loescheFotoMock).toHaveBeenCalledWith(5);
+        expect(beiGespeichert).toHaveBeenCalled();
+    });
+
+    it("zeigt einen Fehler bei fehlgeschlagenem Foto-Loeschen und ruft beiGespeichert NICHT auf", async () => {
+        loescheFotoMock.mockRejectedValueOnce(new Error("Loeschen fehlgeschlagen"));
+        const beiGespeichert = vi.fn();
+        oeffneGerichtBearbeiten(gericht({ imageUrl: "/api/admin/menu-items/5/image" }), beiGespeichert);
+        await naechsterFrame();
+
+        const loeschen = [...document.querySelectorAll("button")].find((b) => b.textContent === "Foto löschen")!;
+        loeschen.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        await Promise.resolve(); await Promise.resolve();
+
+        const fehlerAnzeige = document.querySelector(".ox-editor-overlay .ox-muted");
+        expect(fehlerAnzeige?.textContent).toBe("Loeschen fehlgeschlagen");
+        expect(beiGespeichert).not.toHaveBeenCalled();
     });
 });
 

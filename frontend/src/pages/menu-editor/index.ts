@@ -13,7 +13,7 @@ import "./editor.css";
 import { api } from "../../lib/api";
 import { hatAnmeldung } from "../../lib/auth";
 import { frage, toast } from "../../lib/ui";
-import type { AdminGericht, AdminKategorie, Me } from "../../lib/types";
+import type { AdminGericht, AdminKategorie, LadenTheme, Me } from "../../lib/types";
 import { ladeTheme, wendeThemeAn } from "../guest/laden-design";
 import { zeichneSpeisekarte } from "../guest/menu";
 import { aendereGericht, aendereKategorie, holeGerichte, holeKategorien, loescheKategorie } from "./api";
@@ -25,6 +25,7 @@ import { ermittleTausch } from "./reihenfolge";
 
 let kategorienRoh: AdminKategorie[] = [];
 let gerichteRoh: AdminGericht[] = [];
+let geladenesTheme: LadenTheme | null = null;
 
 async function start(): Promise<void> {
     if (!hatAnmeldung()) { location.href = "/admin.html"; return; }
@@ -43,7 +44,8 @@ async function start(): Promise<void> {
     }
 
     try {
-        wendeThemeAn(await ladeTheme(me.restaurantId));
+        geladenesTheme = await ladeTheme(me.restaurantId);
+        wendeThemeAn(geladenesTheme);
     } catch { /* Theme optional, Standard-Optik greift */ }
 
     await ladeUndZeichne();
@@ -70,7 +72,7 @@ function zeichneAlles(): void {
         (gericht) => oeffneGerichtBearbeiten(daten.gerichtInfo.get(gericht.id)!, () => void ladeUndZeichne()),
         () => { /* kein Warenkorb im Editor */ },
         false,
-        false,
+        geladenesTheme?.categoriesAsHamburger ?? false,
         (gerichtId) => daten.gerichtInfo.get(gerichtId)?.available ?? true,
         true
     );
