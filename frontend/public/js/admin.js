@@ -201,6 +201,11 @@ const Admin = {
             const blob = await res.blob();
             document.getElementById("qr-img").src = URL.createObjectURL(blob);
             document.getElementById("qr-title").textContent = "Tisch " + table.number;
+            // Bon-Vorschau blendet #qr-box aus statt sie zu loeschen (siehe
+            // zeigeBonVorschau) - hier wieder einblenden, falls sie zuletzt
+            // versteckt war.
+            document.getElementById("qr-box").style.display = "";
+            this.entferneBonBox();
             document.getElementById("overlay").classList.add("show");
         } catch (e) { OX.toast(e.message, true); }
     },
@@ -486,8 +491,49 @@ const Admin = {
                 "<span class='muted'>" + o.items.map(i => i.quantity + "x " + this.esc(i.name)).join(", ") + "</span>" +
                 "<strong>" + OX.preis(o.totalAmount) + "</strong>" +
                 "<span class='muted'>" + OX.zeit(o.createdAt) + "</span>";
+            div.appendChild(this.btn("Bon-Vorschau", "ghost", () => this.zeigeBonVorschau(o)));
             box.appendChild(div);
         }
+    },
+
+    /* Reine Bildschirm-Vorschau (kein echter Druck) - wie der ESC/POS-Bon
+       ungefaehr aussieht, bevor man ihn ausdruckt/nachdruckt. Nutzt Daten,
+       die die Bestellliste eh schon geladen hat - kein neuer Endpunkt. */
+    async zeigeBonVorschau(o) {
+        const me = await OX.me().catch(() => null);
+        const overlay = document.getElementById("overlay");
+
+        // Bestehende QR-Box NICHT loeschen (sonst bricht Admin.showQr fuer
+        // den Rest der Sitzung) - nur ausblenden, waehrend die Bon-Vorschau
+        // gezeigt wird. Eine vorherige Bon-Box (falls zweimal hintereinander
+        // geoeffnet) wird ersetzt statt sich anzuhaeufen.
+        document.getElementById("qr-box").style.display = "none";
+        this.entferneBonBox();
+
+        const box = document.createElement("div");
+        box.className = "box bon-box";
+
+        const zeilen = o.items.map(i =>
+            "<div class='bon-zeile'><span>" + i.quantity + "x " + this.esc(i.name) +
+            (i.note ? " <em>(" + this.esc(i.note) + ")</em>" : "") + "</span>" +
+            "<span>" + OX.preis(i.lineTotal) + "</span></div>"
+        ).join("");
+
+        box.innerHTML =
+            "<div class='bon-kopf'>" + this.esc(me?.restaurantName || "") + "</div>" +
+            "<div class='bon-sub'>NEUE BESTELLUNG</div>" +
+            "<div class='bon-sub'>Tisch " + o.tableNumber + " &middot; Best.-Nr. " + o.id + "</div>" +
+            "<div class='bon-sub'>" + OX.zeit(o.createdAt) + "</div>" +
+            "<hr>" + zeilen + "<hr>" +
+            "<div class='bon-zeile bon-summe'><span>Summe</span><span>" + OX.preis(o.totalAmount) + "</span></div>" +
+            "<p class='muted' style='margin-top:12px'>Reine Bildschirm-Vorschau, kein echter Ausdruck.</p>";
+
+        overlay.appendChild(box);
+        overlay.classList.add("show");
+    },
+
+    entferneBonBox() {
+        document.querySelector("#overlay .bon-box")?.remove();
     },
 
     /* ================= Design ================= */

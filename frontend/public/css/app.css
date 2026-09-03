@@ -201,6 +201,39 @@ ul.plain li:last-child { border-bottom: none; }
 }
 .clickable { cursor: pointer; }
 
+/* Bon-Vorschau (Admin.zeigeBonVorschau) - reine Bildschirm-Vorschau, kein
+   echter Druck. Monospace wie der tatsaechliche ESC/POS-Ausdruck. */
+#overlay .bon-box {
+    width: 280px;
+    max-width: 90vw;
+    max-height: 88vh;
+    overflow-y: auto;
+    text-align: left;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 13px;
+}
+.bon-kopf {
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.bon-sub {
+    text-align: center;
+    color: var(--muted);
+}
+.bon-zeile {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+}
+.bon-summe {
+    font-weight: 700;
+    font-size: 15px;
+}
+
 @media (max-width: 600px) {
     main { padding: 10px; padding-bottom: 90px; }
     .big { font-size: 22px; }
