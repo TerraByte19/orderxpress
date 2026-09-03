@@ -315,6 +315,10 @@
     background: var(--ox-surface);
     border-top: 1px solid var(--ox-border);
     padding: var(--ox-space-3) var(--ox-space-4);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, .06);
+}
+#cartbar-info .ox-num {
+    font-size: var(--ox-text-lg);
 }
 
 /* ---------- Editor-Erweiterungen: Verfuegbarkeit, leere Kategorien ---------- */

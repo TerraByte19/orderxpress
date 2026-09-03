@@ -389,7 +389,17 @@ function aktualisiereWarenkorbLeiste(): void {
     if (sichtbar) {
         const info = document.getElementById("cartbar-info");
         if (info) {
-            info.textContent = `${anzahl} Artikel · ${preis(warenkorb.summe())}`;
+            // Zahl und Preis als eigene Elemente statt Fliesstext - Zahl in
+            // Mono/tabular-nums (.ox-num, wie ueberall bei Stueckzahlen),
+            // Preis wie ueberall ueber .ox-preis. fliegeZu() liest weiterhin
+            // nur die Position DIESES Containers (#cartbar-info bleibt das
+            // Flugziel), Kindelemente aendern daran nichts.
+            info.textContent = "";
+            info.append(
+                el("strong", "ox-num", String(anzahl)),
+                document.createTextNode(" Artikel · "),
+                el("strong", "ox-preis", preis(warenkorb.summe()))
+            );
             // Kurzer "Pop" bei jeder Aenderung - Klasse entfernen, Reflow
             // erzwingen, neu setzen (sonst startet die Animation nicht neu).
             info.classList.remove("ox-anim-pop");

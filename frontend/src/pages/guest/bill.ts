@@ -117,7 +117,10 @@ function bauePersonenKarte(
     auswahl: Auswahl,
     kontrollkaestchen: Map<number, HTMLInputElement>
 ): HTMLElement {
-    const karte = el("article", "ox-card");
+    // .ox-bon (bereits fuer den Warenkorb-Bon da, siehe bon.ts) gibt jeder
+    // Person eine eigene perforierte "Bon"-Flaeche mit Mono-Zahlen statt
+    // einer schlichten Liste - keine neue Klasse, reine Wiederverwendung.
+    const karte = el("article", "ox-card ox-bon");
 
     const kopf = el("div", "ox-row");
     kopf.appendChild(el("strong", undefined, person.name));

@@ -152,6 +152,7 @@
     border-radius: 4px;
     padding: var(--ox-space-1) var(--ox-space-3);
     white-space: nowrap;
+    background: var(--ox-surface-2);
 }
 .ox-tischmarke--gross {
     font-size: var(--ox-text-xl);
