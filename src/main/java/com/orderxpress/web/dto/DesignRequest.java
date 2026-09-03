@@ -27,8 +27,11 @@ public record DesignRequest(
         @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG",
                 message = "Unbekannter Vorhang-Stil.") String introStyle,
         @Size(max = 80, message = "Vorhang-Text darf hoechstens 80 Zeichen haben.") String introText,
+        @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
         @Size(max = 200, message = "Link ist zu lang.") String instagramUrl,
+        @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
         @Size(max = 200, message = "Link ist zu lang.") String facebookUrl,
+        @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
         @Size(max = 200, message = "Link ist zu lang.") String websiteUrl) {
 
     public boolean hamburgerOrDefault() {
