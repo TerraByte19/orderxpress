@@ -27,6 +27,7 @@ public record DesignRequest(
         @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG",
                 message = "Unbekannter Vorhang-Stil.") String introStyle,
         @Size(max = 80, message = "Vorhang-Text darf hoechstens 80 Zeichen haben.") String introText,
+        @Pattern(regexp = "LANGSAM|NORMAL|SCHNELL", message = "Unbekanntes Vorhang-Tempo.") String introSpeed,
         @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
         @Size(max = 200, message = "Link ist zu lang.") String instagramUrl,
         @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
@@ -67,5 +68,9 @@ public record DesignRequest(
 
     public String introStyleOrDefault() {
         return (introStyle == null || introStyle.isBlank()) ? "HOCHKLAPPEN" : introStyle;
+    }
+
+    public String introSpeedOrDefault() {
+        return (introSpeed == null || introSpeed.isBlank()) ? "NORMAL" : introSpeed;
     }
 }

@@ -568,6 +568,7 @@ const Admin = {
         // "fuellt alle Felder", also auch diesen zuruecksetzen statt einen
         // vorher von Hand gesetzten Verlauf stehen zu lassen.
         document.getElementById("design-bg-gradient").checked = false;
+        document.getElementById("design-intro-speed").value = "NORMAL";
         OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
     },
 
@@ -584,6 +585,7 @@ const Admin = {
             document.getElementById("design-confirm").value = t.orderConfirmStyle || "CHECK";
             document.getElementById("design-dark").checked = t.darkMode === true;
             document.getElementById("design-intro").value = t.introStyle || "HOCHKLAPPEN";
+            document.getElementById("design-intro-speed").value = t.introSpeed || "NORMAL";
             document.getElementById("design-intro-text").value = t.introText || "";
             document.getElementById("design-instagram").value = t.instagramUrl || "";
             document.getElementById("design-facebook").value = t.facebookUrl || "";
@@ -617,6 +619,7 @@ const Admin = {
                     darkMode: document.getElementById("design-dark").checked,
                     introStyle: document.getElementById("design-intro").value,
                     introText: document.getElementById("design-intro-text").value.trim() || null,
+                    introSpeed: document.getElementById("design-intro-speed").value,
                     instagramUrl: document.getElementById("design-instagram").value.trim() || null,
                     facebookUrl: document.getElementById("design-facebook").value.trim() || null,
                     websiteUrl: document.getElementById("design-website").value.trim() || null,

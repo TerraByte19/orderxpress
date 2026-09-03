@@ -15,9 +15,14 @@
     background-color: var(--ox-accent);
 }
 
-/* ---------- Hochklappen: eine Flaeche faehrt nach oben weg ---------- */
+/* ---------- Hochklappen: eine Flaeche faehrt nach oben weg ----------
+   Dauer je Stil kommt aus --ox-vorhang-dauer (vorhang.ts setzt sie passend
+   zum gewaehlten Tempo LANGSAM/NORMAL/SCHNELL auf den Container) - der
+   ms-Wert nach dem Komma ist nur der Rueckfall, falls die Variable fehlt. */
 .ox-vorhang--hochklappen .ox-vorhang__feld {
-    transition: transform 600ms var(--ox-ease-out);
+    transition-property: transform;
+    transition-duration: var(--ox-vorhang-dauer, 600ms);
+    transition-timing-function: var(--ox-ease-out);
 }
 .ox-vorhang--hochklappen.ox-vorhang--los .ox-vorhang__feld {
     transform: translateY(-100%);
@@ -25,7 +30,9 @@
 
 /* ---------- Ausblenden ---------- */
 .ox-vorhang--fade .ox-vorhang__feld {
-    transition: opacity 550ms linear;
+    transition-property: opacity;
+    transition-duration: var(--ox-vorhang-dauer, 550ms);
+    transition-timing-function: linear;
 }
 .ox-vorhang--fade.ox-vorhang--los .ox-vorhang__feld {
     opacity: 0;
@@ -34,7 +41,9 @@
 /* ---------- Von der Mitte: zwei Haelften fahren auseinander ---------- */
 .ox-vorhang--mitte .ox-vorhang__feld--links,
 .ox-vorhang--mitte .ox-vorhang__feld--rechts {
-    transition: transform 650ms var(--ox-ease-out);
+    transition-property: transform;
+    transition-duration: var(--ox-vorhang-dauer, 650ms);
+    transition-timing-function: var(--ox-ease-out);
 }
 .ox-vorhang--mitte.ox-vorhang--los .ox-vorhang__feld--links {
     transform: translateX(-100%);
@@ -72,10 +81,16 @@
     box-shadow: -10px 0 28px rgba(0, 0, 0, .35);
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--links {
-    animation: ox-vorhang-schwenk-links 750ms var(--ox-ease-out) forwards;
+    animation-name: ox-vorhang-schwenk-links;
+    animation-duration: var(--ox-vorhang-dauer, 750ms);
+    animation-timing-function: var(--ox-ease-out);
+    animation-fill-mode: forwards;
 }
 .ox-vorhang--vorhang.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation: ox-vorhang-schwenk-rechts 750ms var(--ox-ease-out) forwards;
+    animation-name: ox-vorhang-schwenk-rechts;
+    animation-duration: var(--ox-vorhang-dauer, 750ms);
+    animation-timing-function: var(--ox-ease-out);
+    animation-fill-mode: forwards;
 }
 
 /* Vorhangstange: bleibt stehen, rahmt die Buehne oben - nur beim Buehnenvorhang-Stil. */

@@ -56,6 +56,7 @@ export interface LadenTheme {
     darkMode: boolean;
     introStyle: string;
     introText: string | null;
+    introSpeed: string | null;
     instagramUrl: string | null;
     facebookUrl: string | null;
     websiteUrl: string | null;

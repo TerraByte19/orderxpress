@@ -87,6 +87,10 @@ public class Restaurant {
     @Column(name = "intro_text", length = 80)
     private String introText;
 
+    /** Tempo der Vorhang-Animation: LANGSAM | NORMAL | SCHNELL. null/leer = NORMAL. */
+    @Column(name = "intro_speed", length = 20)
+    private String introSpeed;
+
     /** Social-Links fuer die Gaeste-Seite - alle optional, nur gesetzte
      *  werden angezeigt. Volle URL erwartet (https://...), keine Validierung
      *  ueber ein festes Format hinaus (siehe DesignRequest). */
@@ -254,6 +258,14 @@ public class Restaurant {
 
     public void setIntroText(String v) {
         this.introText = v;
+    }
+
+    public String getIntroSpeed() {
+        return orDefault(introSpeed, "NORMAL");
+    }
+
+    public void setIntroSpeed(String v) {
+        this.introSpeed = v;
     }
 
     public String getInstagramUrl() {

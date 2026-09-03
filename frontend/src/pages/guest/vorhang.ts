@@ -8,20 +8,41 @@
  * Design-Logo wird wiederverwendet) + kurzer Text (theme.introText) blenden
  * sich zentriert waehrend des Vorhangs ein. Nur dann haelt der Vorhang kurz
  * (HALT_MIT_MARKE_MS) an, bevor er aufgeht - sonst laeuft er direkt durch
- * wie zuvor, keine Verhaltensaenderung ohne gesetzte Marke. */
+ * wie zuvor, keine Verhaltensaenderung ohne gesetzte Marke.
+ *
+ * Tempo (theme.introSpeed: LANGSAM|NORMAL|SCHNELL) skaliert die in CSS
+ * hinterlegte Grund-Dauer jedes Stils (BASIS_DAUER_MS) ueber die Variable
+ * --ox-vorhang-dauer auf dem Container - die CSS-Datei (vorhang.css) kennt
+ * dieselben Grundwerte nur noch als Rueckfall, falls die Variable fehlt. */
 
 import { bewegungAus } from "./animation";
 
 const SCHLUESSEL_PREFIX = "ox-intro-";
-const DAUER_MS = 900;
 const HALT_MIT_MARKE_MS = 550;
 const GUELTIGE_STILE = new Set(["HOCHKLAPPEN", "FADE", "MITTE", "VORHANG"]);
 const ZWEI_HAELFTEN = new Set(["MITTE", "VORHANG"]);
+
+/** Muss zu den ms-Rueckfallwerten in vorhang.css passen (dort als
+ *  var(--ox-vorhang-dauer, XXXms) hinterlegt). */
+const BASIS_DAUER_MS: Record<string, number> = {
+    HOCHKLAPPEN: 600,
+    FADE: 550,
+    MITTE: 650,
+    VORHANG: 750
+};
+
+const GUELTIGE_GESCHWINDIGKEITEN = new Set(["LANGSAM", "NORMAL", "SCHNELL"]);
+const GESCHWINDIGKEIT_FAKTOR: Record<string, number> = {
+    LANGSAM: 1.6,
+    NORMAL: 1,
+    SCHNELL: 0.6
+};
 
 export interface VorhangTheme {
     introStyle: string;
     introText?: string | null;
     logoUrl?: string | null;
+    introSpeed?: string | null;
 }
 
 function schonGezeigt(guestToken: string): boolean {
@@ -49,9 +70,16 @@ export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
     const text = (theme.introText || "").trim();
     const hatMarke = Boolean(text || theme.logoUrl);
 
+    const geschwindigkeitSicher = GUELTIGE_GESCHWINDIGKEITEN.has(theme.introSpeed || "")
+        ? (theme.introSpeed as string)
+        : "NORMAL";
+    const dauerMs = Math.round(BASIS_DAUER_MS[stilSicher] * GESCHWINDIGKEIT_FAKTOR[geschwindigkeitSicher]);
+    const haltMitMarkeMs = Math.round(HALT_MIT_MARKE_MS * GESCHWINDIGKEIT_FAKTOR[geschwindigkeitSicher]);
+
     const vorhang = document.createElement("div");
     vorhang.className = `ox-vorhang ox-vorhang--${stilSicher.toLowerCase()}`;
     vorhang.setAttribute("aria-hidden", "true");
+    vorhang.style.setProperty("--ox-vorhang-dauer", `${dauerMs}ms`);
 
     if (ZWEI_HAELFTEN.has(stilSicher)) {
         const links = document.createElement("div");
@@ -91,7 +119,7 @@ export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
 
     document.body.appendChild(vorhang);
 
-    const haltMs = hatMarke ? HALT_MIT_MARKE_MS : 0;
+    const haltMs = hatMarke ? haltMitMarkeMs : 0;
     // Erst rendern (Ausgangszustand), dann im naechsten Frame die Marke einblenden
     // (falls vorhanden) - sonst startet die Transition nicht sichtbar von ihrem
     // Anfang aus (gleiches Muster wie das Detail-Overlay in menu.ts). Die
@@ -101,5 +129,5 @@ export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
         if (hatMarke) vorhang.classList.add("ox-vorhang--marke-ein");
     });
     window.setTimeout(() => vorhang.classList.add("ox-vorhang--los"), haltMs);
-    window.setTimeout(() => vorhang.remove(), haltMs + DAUER_MS);
+    window.setTimeout(() => vorhang.remove(), haltMs + dauerMs);
 }

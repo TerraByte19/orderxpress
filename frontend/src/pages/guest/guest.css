@@ -132,10 +132,21 @@
     object-fit: cover;
     background: var(--ox-surface-2);
 }
-/* Gericht ohne Foto: eine ruhige Flaeche statt eines Platzhalter-Symbols -
-   bewusste Entscheidung aus der Spec (Abschnitt 5). */
+/* Gericht ohne Foto: kleines Teller-Symbol statt leerer Flaeche (Entscheidung
+   vom 03.09.2026 - loest die vorherige "ruhige Flaeche"-Vorgabe aus der Spec
+   Abschnitt 5 bewusst ab). Als CSS-mask statt <img>, damit die Farbe aus
+   --ox-border kommt und mit hell/dunkel automatisch mitgeht. */
 .ox-gericht__bild--leer {
     background: var(--ox-surface-2);
+    position: relative;
+}
+.ox-gericht__bild--leer::after {
+    content: "";
+    position: absolute;
+    inset: 28%;
+    background-color: var(--ox-border);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23000'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23000'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .ox-gericht__inhalt {
