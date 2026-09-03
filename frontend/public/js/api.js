@@ -193,6 +193,14 @@ const OX = {
         let me;
         try { me = await this.me(); } catch (e) { return; }
 
+        // Laden-Name statt "OrderXpress" oben - jede Seite hier hat einen
+        // eigenen Laden (anders als platform.html/index.html).
+        if (me.restaurantName) {
+            const titleEl = document.getElementById("topbar-title");
+            if (titleEl) titleEl.textContent = titleEl.textContent.replace(/^OrderXpress/, me.restaurantName);
+            document.title = document.title.replace(/OrderXpress$/, me.restaurantName);
+        }
+
         const all = [
             { key: "admin", href: "/admin.html", label: "Inhaber", roles: ["OWNER"] },
             { key: "stats", href: "/stats.html", label: "Statistik", roles: ["OWNER"] },
