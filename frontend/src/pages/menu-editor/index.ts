@@ -98,7 +98,7 @@ function zeichneAlles(): void {
 }
 
 function zuGerichtEingabe(g: AdminGericht) {
-    return { categoryId: g.categoryId, name: g.name, description: g.description, details: g.details, price: g.price, available: g.available, sortOrder: g.sortOrder };
+    return { categoryId: g.categoryId, name: g.name, description: g.description, details: g.details, price: g.price, available: g.available, sortOrder: g.sortOrder, badges: g.badges };
 }
 
 async function verschiebeGericht(gerichtId: number, richtung: -1 | 1): Promise<void> {

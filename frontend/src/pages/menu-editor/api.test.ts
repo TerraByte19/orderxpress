@@ -26,19 +26,19 @@ describe("menu-editor/api", () => {
 
     it("legt ein Gericht per POST an, ohne available im Body", async () => {
         apiMock.mockResolvedValueOnce({});
-        await legeGerichtAn({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, sortOrder: 1 });
+        await legeGerichtAn({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, sortOrder: 1, badges: [] });
         expect(apiMock).toHaveBeenCalledWith("/api/admin/menu-items", {
             method: "POST",
-            body: JSON.stringify({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, sortOrder: 1 })
+            body: JSON.stringify({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, sortOrder: 1, badges: [] })
         });
     });
 
     it("aendert ein Gericht per PUT mit available im Body", async () => {
         apiMock.mockResolvedValueOnce({});
-        await aendereGericht(5, { categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, available: false, sortOrder: 1 });
+        await aendereGericht(5, { categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, available: false, sortOrder: 1, badges: [] });
         expect(apiMock).toHaveBeenCalledWith("/api/admin/menu-items/5", {
             method: "PUT",
-            body: JSON.stringify({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, available: false, sortOrder: 1 })
+            body: JSON.stringify({ categoryId: 1, name: "Pizza", description: null, details: null, price: 9.5, available: false, sortOrder: 1, badges: [] })
         });
     });
 

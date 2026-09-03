@@ -7,6 +7,7 @@
 
 import { el } from "../../lib/ui";
 import type { AdminGericht } from "../../lib/types";
+import { GERICHT_MARKEN } from "../../lib/types";
 import { aendereGericht, ladeGerichtFoto, legeGerichtAn, loescheGerichtFoto } from "./api";
 
 function versteckeOverlay(overlay: HTMLElement): void {
@@ -69,7 +70,8 @@ function oeffneSheet(
     detailsFeld.input.value = gericht?.details ?? "";
     const verfuegbarFeld = baueCheckbox("Verfügbar");
     verfuegbarFeld.input.checked = gericht?.available ?? true;
-    box.append(nameFeld.zeile, preisFeld.zeile, beschreibungFeld.zeile, detailsFeld.zeile, verfuegbarFeld.zeile);
+    const markenFeld = baueMarkenAuswahl(gericht?.badges ?? []);
+    box.append(nameFeld.zeile, preisFeld.zeile, beschreibungFeld.zeile, detailsFeld.zeile, verfuegbarFeld.zeile, markenFeld.zeile);
 
     const fehlerAnzeige = el("p", "ox-muted");
 
@@ -100,7 +102,8 @@ function oeffneSheet(
                 description: beschreibungFeld.input.value.trim() || null,
                 details: detailsFeld.input.value.trim() || null,
                 price: preisWert,
-                sortOrder: gericht?.sortOrder ?? neuePosition!
+                sortOrder: gericht?.sortOrder ?? neuePosition!,
+                badges: markenFeld.gewaehlt()
             };
             if (gericht) {
                 await aendereGericht(gericht.id, { ...gemeinsam, available: verfuegbarFeld.input.checked });
@@ -162,6 +165,28 @@ function baueTextarea(label: string): { zeile: HTMLElement; input: HTMLTextAreaE
     input.className = "ox-field";
     zeile.appendChild(input);
     return { zeile, input };
+}
+
+/** Mehrere Checkboxen (SCHARF/VEGETARISCH/...) in einer Zeile - gewaehlt()
+ *  liefert die aktuell angehakten Werte fuer das Speichern. */
+function baueMarkenAuswahl(vorhandene: string[]): { zeile: HTMLElement; gewaehlt: () => string[] } {
+    const zeile = el("div");
+    zeile.appendChild(el("label", "ox-label", "Marken"));
+    const reihe = el("div", "ox-row");
+    const kontrollkaestchen: Array<{ wert: string; input: HTMLInputElement }> = [];
+    for (const marke of GERICHT_MARKEN) {
+        const feld = document.createElement("label");
+        feld.className = "ox-row";
+        feld.style.gap = "4px";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = vorhandene.includes(marke.wert);
+        feld.append(input, document.createTextNode(marke.label));
+        reihe.appendChild(feld);
+        kontrollkaestchen.push({ wert: marke.wert, input });
+    }
+    zeile.appendChild(reihe);
+    return { zeile, gewaehlt: () => kontrollkaestchen.filter((k) => k.input.checked).map((k) => k.wert) };
 }
 
 function baueCheckbox(label: string): { zeile: HTMLElement; input: HTMLInputElement } {

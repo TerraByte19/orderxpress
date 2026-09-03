@@ -10,7 +10,7 @@ function gericht(ueberschreibungen: Partial<AdminGericht> = {}): AdminGericht {
     return {
         id: 1, categoryId: 1, categoryName: "Pizza", name: "Margherita",
         description: null, details: null, price: 9.5, available: true,
-        sortOrder: 1, imageUrl: null, ...ueberschreibungen
+        sortOrder: 1, imageUrl: null, badges: [], ...ueberschreibungen
     };
 }
 
@@ -44,6 +44,6 @@ describe("baueEditorDaten", () => {
     it("wandelt ein AdminGericht in die schlanke Gast-Form um (kein categoryId/available/sortOrder)", () => {
         const daten = baueEditorDaten([kategorie()], [gericht()]);
         const g = daten.kategorien[0].items[0];
-        expect(g).toEqual({ id: 1, name: "Margherita", description: null, details: null, price: 9.5, imageUrl: null });
+        expect(g).toEqual({ id: 1, name: "Margherita", description: null, details: null, price: 9.5, imageUrl: null, badges: [] });
     });
 });

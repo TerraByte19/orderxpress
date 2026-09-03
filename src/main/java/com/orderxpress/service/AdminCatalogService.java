@@ -4,6 +4,7 @@ import com.orderxpress.config.AppProperties;
 import com.orderxpress.config.security.CurrentUser;
 import com.orderxpress.domain.MenuCategory;
 import com.orderxpress.domain.MenuItem;
+import com.orderxpress.domain.MenuItemBadge;
 import com.orderxpress.domain.Restaurant;
 import com.orderxpress.domain.RestaurantTable;
 import com.orderxpress.domain.SessionStatus;
@@ -20,6 +21,7 @@ import com.orderxpress.web.dto.MenuItemAdminDto;
 import com.orderxpress.web.dto.MenuItemRequest;
 import com.orderxpress.web.dto.TableDto;
 import com.orderxpress.web.dto.TableRequest;
+import com.orderxpress.web.error.BadRequestException;
 import com.orderxpress.web.error.ConflictException;
 import com.orderxpress.web.error.NotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -207,6 +210,7 @@ public class AdminCatalogService {
                 request.price(), request.sortOrderOrDefault());
         item.setDetails(request.details());
         item.setAvailable(request.availableOrDefault());
+        item.setBadges(parseBadges(request.badgesOrDefault()));
         menuItemRepository.save(item);
         return MenuItemAdminDto.from(item, false);
     }
@@ -222,7 +226,22 @@ public class AdminCatalogService {
         item.setPrice(request.price());
         item.setAvailable(request.availableOrDefault());
         item.setSortOrder(request.sortOrderOrDefault());
+        item.setBadges(parseBadges(request.badgesOrDefault()));
         return MenuItemAdminDto.from(item, imageRepository.existsById(id));
+    }
+
+    /** Wandelt die vom Frontend gesendeten Badge-Namen in das Enum um - unbekannte
+     *  Werte sind ein Bedienfehler (nicht z.B. ein alter Client), daher 400. */
+    private Set<MenuItemBadge> parseBadges(Set<String> names) {
+        Set<MenuItemBadge> badges = new LinkedHashSet<>();
+        for (String name : names) {
+            try {
+                badges.add(MenuItemBadge.valueOf(name));
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Unbekannte Marke '%s'.".formatted(name));
+            }
+        }
+        return badges;
     }
 
     @Transactional

@@ -1,6 +1,10 @@
 package com.orderxpress.domain;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +15,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Ein Gericht bzw. Getraenk auf der Karte.
@@ -47,6 +53,13 @@ public class MenuItem {
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
+
+    /** Kleine Hinweis-Marken (scharf/vegetarisch/...) - eigene Tabelle, reines Hinzufuegen. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "menu_item_badges", joinColumns = @JoinColumn(name = "menu_item_id"))
+    @Column(name = "badge", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private Set<MenuItemBadge> badges = new LinkedHashSet<>();
 
     protected MenuItem() {
         // fuer JPA
@@ -118,5 +131,13 @@ public class MenuItem {
 
     public void setSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public Set<MenuItemBadge> getBadges() {
+        return badges;
+    }
+
+    public void setBadges(Set<MenuItemBadge> badges) {
+        this.badges = badges == null ? new LinkedHashSet<>() : new LinkedHashSet<>(badges);
     }
 }

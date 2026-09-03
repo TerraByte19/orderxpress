@@ -15,6 +15,20 @@ import { api } from "../../lib/api";
 import { preis } from "../../lib/format";
 import { el } from "../../lib/ui";
 import type { Gericht, Kategorie } from "../../lib/types";
+import { GERICHT_MARKEN } from "../../lib/types";
+
+const MARKEN_LABEL = new Map(GERICHT_MARKEN.map((m) => [m.wert, m.label]));
+
+/** Kleine Text-Pillen fuer die gesetzten Marken (scharf/vegetarisch/...) -
+ *  leer, wenn keine gesetzt sind (dann haengt der Aufrufer nichts an). */
+function markenLeiste(badges: string[]): HTMLElement | null {
+    if (!badges.length) return null;
+    const leiste = el("div", "ox-marken");
+    for (const wert of badges) {
+        leiste.appendChild(el("span", "ox-marke ox-marke--" + wert.toLowerCase(), MARKEN_LABEL.get(wert) ?? wert));
+    }
+    return leiste;
+}
 
 /** Traegt jeder Hinzufuegen-Knopf (Karte UND Detail-Overlay) - eine einzige
  *  Auswahl, ueber die setzeBestellenErlaubt() beide Stellen erreicht. */
@@ -113,6 +127,8 @@ function baueGerichtKarte(
     const inhalt = el("div", "ox-gericht__inhalt");
     inhalt.appendChild(el("span", "ox-gericht__name", gericht.name));
     if (gericht.description) inhalt.appendChild(el("span", "ox-muted", gericht.description));
+    const marken = markenLeiste(gericht.badges);
+    if (marken) inhalt.appendChild(marken);
     oeffnenKnopf.appendChild(inhalt);
     oeffnenKnopf.addEventListener("click", () => beiAuswahl(gericht));
 
@@ -262,6 +278,8 @@ export function oeffneDetail(
 
     if (gericht.imageUrl) box.appendChild(bildElement(gericht.imageUrl));
     box.appendChild(el("h2", undefined, gericht.name));
+    const detailMarken = markenLeiste(gericht.badges);
+    if (detailMarken) box.appendChild(detailMarken);
     box.appendChild(el("p", "ox-big ox-preis", preis(gericht.price)));
     if (gericht.description) box.appendChild(el("p", "ox-muted", gericht.description));
 

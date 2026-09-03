@@ -21,6 +21,7 @@ export interface GerichtNeuEingabe {
     details: string | null;
     price: number;
     sortOrder: number;
+    badges: string[];
 }
 
 export interface GerichtEingabe extends GerichtNeuEingabe {

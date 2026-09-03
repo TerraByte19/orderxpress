@@ -4,7 +4,7 @@ import { zeichneSpeisekarte } from "../guest/menu";
 import { dekoriereSpeisekarte } from "./dekoration";
 
 function gericht(ueberschreibungen: Partial<Gericht> = {}): Gericht {
-    return { id: 1, name: "Margherita", description: null, details: null, price: 9.5, imageUrl: null, ...ueberschreibungen };
+    return { id: 1, name: "Margherita", description: null, details: null, price: 9.5, imageUrl: null, badges: [], ...ueberschreibungen };
 }
 function kategorie(ueberschreibungen: Partial<Kategorie> = {}): Kategorie {
     return { id: 1, name: "Pizza", items: [gericht()], ...ueberschreibungen };

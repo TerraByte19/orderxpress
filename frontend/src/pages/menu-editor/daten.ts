@@ -12,7 +12,7 @@ export interface EditorDaten {
 }
 
 function zuGericht(g: AdminGericht): Gericht {
-    return { id: g.id, name: g.name, description: g.description, details: g.details, price: g.price, imageUrl: g.imageUrl };
+    return { id: g.id, name: g.name, description: g.description, details: g.details, price: g.price, imageUrl: g.imageUrl, badges: g.badges };
 }
 
 export function baueEditorDaten(kategorienRoh: AdminKategorie[], gerichteRoh: AdminGericht[]): EditorDaten {

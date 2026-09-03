@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 /** Gericht anlegen oder aendern. */
 public record MenuItemRequest(@NotNull Long categoryId,
@@ -15,7 +16,8 @@ public record MenuItemRequest(@NotNull Long categoryId,
                               @Size(max = 2000) String details,
                               @NotNull @DecimalMin("0.00") @Digits(integer = 8, fraction = 2) BigDecimal price,
                               Boolean available,
-                              Integer sortOrder) {
+                              Integer sortOrder,
+                              Set<String> badges) {
 
     public boolean availableOrDefault() {
         return available == null || available;
@@ -23,5 +25,9 @@ public record MenuItemRequest(@NotNull Long categoryId,
 
     public int sortOrderOrDefault() {
         return sortOrder == null ? 0 : sortOrder;
+    }
+
+    public Set<String> badgesOrDefault() {
+        return badges == null ? Set.of() : badges;
     }
 }

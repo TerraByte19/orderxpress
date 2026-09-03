@@ -34,6 +34,7 @@ function gericht(ueberschreibungen: Partial<Gericht> = {}): Gericht {
         details: null,
         price: 9.5,
         imageUrl: null,
+        badges: [],
         ...ueberschreibungen
     };
 }

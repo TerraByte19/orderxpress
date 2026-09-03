@@ -20,7 +20,7 @@ function gericht(ueberschreibungen: Partial<AdminGericht> = {}): AdminGericht {
     return {
         id: 5, categoryId: 1, categoryName: "Pizza", name: "Margherita",
         description: "Tomate", details: null, price: 9.5, available: true,
-        sortOrder: 1, imageUrl: null, ...ueberschreibungen
+        sortOrder: 1, imageUrl: null, badges: [], ...ueberschreibungen
     };
 }
 
