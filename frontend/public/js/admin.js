@@ -63,6 +63,7 @@ const Admin = {
         this.refreshLive();
         this.loadMenuAdmin();
         this.loadDesign();
+        this.loadGallery();
         this.loadUsers();
         this.loadDevices();
     },
@@ -404,7 +405,11 @@ const Admin = {
                     details: inputs.details.value.trim() || null,
                     price: this.parsePrice(inputs.price.value),
                     available: inputs.available.checked,
-                    sortOrder: parseInt(inputs.sortOrder.value, 10) || 0
+                    sortOrder: parseInt(inputs.sortOrder.value, 10) || 0,
+                    // Marken werden hier (noch) nicht bearbeitet - unveraendert
+                    // mitschicken, sonst gehen sie beim Speichern verloren
+                    // (gleiche Falle wie schon bei toggleAvailable/details).
+                    badges: item.badges || []
                 })
             });
             OX.toast("Gericht gespeichert");
@@ -423,7 +428,8 @@ const Admin = {
                     details: item.details,
                     price: item.price,
                     available: !item.available,
-                    sortOrder: item.sortOrder
+                    sortOrder: item.sortOrder,
+                    badges: item.badges || []
                 })
             });
             OX.toast(item.available ? "Als ausverkauft markiert" : "Wieder bestellbar");
@@ -592,6 +598,9 @@ const Admin = {
             document.getElementById("design-website").value = t.websiteUrl || "";
             document.getElementById("design-bg-gradient").checked = !!t.backgroundColor2;
             document.getElementById("design-bg2").value = t.backgroundColor2 || t.backgroundColor || "#f4f5f7";
+            document.getElementById("design-hours").value = t.openingHours || "";
+            document.getElementById("design-address").value = t.address || "";
+            document.getElementById("design-phone").value = t.phone || "";
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -625,7 +634,10 @@ const Admin = {
                     websiteUrl: document.getElementById("design-website").value.trim() || null,
                     backgroundColor2: document.getElementById("design-bg-gradient").checked
                         ? document.getElementById("design-bg2").value
-                        : null
+                        : null,
+                    openingHours: document.getElementById("design-hours").value.trim() || null,
+                    address: document.getElementById("design-address").value.trim() || null,
+                    phone: document.getElementById("design-phone").value.trim() || null
                 })
             });
             OX.toast("Design gespeichert");
@@ -659,6 +671,56 @@ const Admin = {
             OX.toast("Bild entfernt");
         } catch (e) { OX.toast(e.message, true); }
         this.loadDesign();
+    },
+
+    /* ================= Bildergalerie (Ambiente-Fotos) ================= */
+
+    async loadGallery() {
+        try {
+            const ids = await OX.api("/api/admin/gallery");
+            const box = document.getElementById("gallery-list");
+            box.innerHTML = "";
+            for (const id of ids) {
+                const wrap = document.createElement("div");
+                wrap.style.textAlign = "center";
+                const img = document.createElement("img");
+                img.src = "/api/guest/restaurants/gallery/" + id;
+                img.className = "thumb";
+                wrap.appendChild(img);
+                wrap.appendChild(document.createElement("br"));
+                wrap.appendChild(this.btn("Entfernen", "red", () => this.deleteGalleryImage(id)));
+                box.appendChild(wrap);
+            }
+            if (!ids.length) box.innerHTML = "<p class='muted'>Noch keine Fotos.</p>";
+        } catch (e) { /* Galerie ist optional */ }
+    },
+
+    async uploadGalleryImage() {
+        const input = document.getElementById("gallery-file");
+        const file = input.files[0];
+        if (!file) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/admin/gallery", {
+            method: "POST", headers: OX.authHeader(), body: formData
+        });
+        if (res.ok) {
+            OX.toast("Foto hinzugefügt");
+            input.value = "";
+        } else {
+            let detail = null;
+            try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+            OX.toast(detail || "Upload fehlgeschlagen", true);
+        }
+        this.loadGallery();
+    },
+
+    async deleteGalleryImage(id) {
+        try {
+            await OX.api("/api/admin/gallery/" + id, { method: "DELETE" });
+            OX.toast("Foto entfernt");
+        } catch (e) { OX.toast(e.message, true); }
+        this.loadGallery();
     },
 
     /* ================= Geraete (QR-Anmeldung) ================= */

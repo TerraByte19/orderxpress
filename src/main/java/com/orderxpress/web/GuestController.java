@@ -172,6 +172,22 @@ public class GuestController {
         return asset(restaurantId, AssetKind.BACKGROUND);
     }
 
+    /** Ids der Ambiente-/Stimmungsfotos eines Ladens (Bildergalerie), in Anlegereihenfolge. */
+    @GetMapping("/restaurants/{restaurantId}/gallery")
+    public List<Long> gallery(@PathVariable Long restaurantId) {
+        return restaurantAdminService.getGalleryImageIds(restaurantId);
+    }
+
+    /** Ein einzelnes Galerie-Foto. */
+    @GetMapping("/restaurants/gallery/{imageId}")
+    public ResponseEntity<byte[]> galleryImage(@PathVariable Long imageId) {
+        var image = restaurantAdminService.getGalleryImage(imageId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.getContentType()))
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)))
+                .body(image.getData());
+    }
+
     private ResponseEntity<byte[]> asset(Long restaurantId, AssetKind kind) {
         RestaurantAsset image = restaurantAdminService.getAsset(restaurantId, kind);
         return ResponseEntity.ok()

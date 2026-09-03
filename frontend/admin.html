@@ -172,6 +172,18 @@
                     <input type="url" id="design-website" maxlength="200" placeholder="https://...">
                 </div>
                 <div class="full">
+                    <label for="design-hours">&Ouml;ffnungszeiten <span class="muted">(optional, erscheint unten auf der G&auml;ste-Seite)</span></label>
+                    <textarea id="design-hours" maxlength="500" rows="3" placeholder="Mo-Fr 8-18 Uhr&#10;Sa-So 9-14 Uhr"></textarea>
+                </div>
+                <div>
+                    <label for="design-address">Adresse <span class="muted">(optional)</span></label>
+                    <input type="text" id="design-address" maxlength="200" placeholder="Musterstr. 1, 12345 Berlin">
+                </div>
+                <div>
+                    <label for="design-phone">Telefon <span class="muted">(optional, f&uuml;r Anruf/WhatsApp-Link)</span></label>
+                    <input type="text" id="design-phone" maxlength="40" placeholder="+49 30 1234567">
+                </div>
+                <div class="full">
                     <button class="green small" onclick="Admin.saveDesign()">Farben &amp; Men&uuml; speichern</button>
                 </div>
             </div>
@@ -195,6 +207,17 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="card">
+            <h2>Bildergalerie</h2>
+            <p class="muted">Ambiente-/Stimmungsfotos (Innenraum, Terrasse, ...) - erscheinen als Foto-Streifen
+                unter der Speisekarte, getrennt von den Gericht-Fotos. Bis zu 8 Bilder.</p>
+            <div class="row">
+                <input type="file" id="gallery-file" accept="image/png,image/jpeg" style="max-width:220px">
+                <button class="small" onclick="Admin.uploadGalleryImage()">Hinzuf&uuml;gen</button>
+            </div>
+            <div id="gallery-list" class="row" style="margin-top:10px;flex-wrap:wrap"></div>
         </div>
 
         <div class="card">

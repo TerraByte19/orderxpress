@@ -80,6 +80,80 @@ export function wendeThemeAn(theme: LadenTheme): void {
     if (heroName) heroName.textContent = theme.name || "";
 
     baueHeroLinks(theme);
+    baueFooter(theme);
+}
+
+/** Ids der Ambiente-Fotos eines Ladens (Bildergalerie), in Anlegereihenfolge. */
+export function ladeGalerieIds(restaurantId: number): Promise<number[]> {
+    return api<number[]>(`/api/guest/restaurants/${restaurantId}/gallery`);
+}
+
+/** Baut den Foto-Streifen unter der Speisekarte - bleibt hidden ohne Fotos.
+ *  Eigener Aufruf (nicht Teil von wendeThemeAn): menu-editor.ts nutzt
+ *  wendeThemeAn ebenfalls fuer die Hero-Pixelparitaet, braucht die Galerie
+ *  dort aber nicht - siehe index.ts (nur die Gaeste-Seite ruft dies auf). */
+export async function zeigeGalerie(restaurantId: number): Promise<void> {
+    const container = document.getElementById("menu-gallery");
+    if (!container) return;
+    let ids: number[];
+    try {
+        ids = await ladeGalerieIds(restaurantId);
+    } catch {
+        return; // Galerie ist rein dekorativ - kein Fehlerzustand noetig
+    }
+    container.textContent = "";
+    for (const id of ids) {
+        const bild = document.createElement("img");
+        bild.className = "ox-galerie__bild";
+        bild.src = `/api/guest/restaurants/gallery/${id}`;
+        bild.alt = "";
+        bild.setAttribute("loading", "lazy");
+        container.appendChild(bild);
+    }
+    container.hidden = ids.length === 0;
+}
+
+/** Oeffnungszeiten/Adresse/Telefon - jede Zeile blendet sich einzeln aus,
+ *  wenn der Laden sie nicht hinterlegt hat (kein leerer Footer-Rand ohne
+ *  jede Angabe). Route-Link baut eine Google-Maps-Suche aus der Adresse
+ *  (kein eigener Kartendienst/API-Key noetig). WhatsApp-Link nur, wenn eine
+ *  Telefonnummer gesetzt ist - Ziffern-Extraktion reicht fuer wa.me. */
+function baueFooter(theme: LadenTheme): void {
+    const footer = document.getElementById("menu-footer");
+    if (!footer) return;
+
+    const hoursRow = document.getElementById("footer-hours-row");
+    const hoursText = document.getElementById("footer-hours");
+    if (hoursRow && hoursText) {
+        hoursRow.hidden = !theme.openingHours;
+        hoursText.textContent = theme.openingHours || "";
+    }
+
+    const addressRow = document.getElementById("footer-address-row");
+    const addressText = document.getElementById("footer-address");
+    const routeLink = document.getElementById("footer-route") as HTMLAnchorElement | null;
+    if (addressRow && addressText && routeLink) {
+        addressRow.hidden = !theme.address;
+        addressText.textContent = theme.address || "";
+        routeLink.href = theme.address
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address)}`
+            : "#";
+    }
+
+    const phoneRow = document.getElementById("footer-phone-row");
+    const phoneLink = document.getElementById("footer-phone") as HTMLAnchorElement | null;
+    const whatsappLink = document.getElementById("footer-whatsapp") as HTMLAnchorElement | null;
+    if (phoneRow && phoneLink && whatsappLink) {
+        phoneRow.hidden = !theme.phone;
+        if (theme.phone) {
+            phoneLink.href = `tel:${theme.phone.replace(/\s+/g, "")}`;
+            const ziffern = theme.phone.replace(/[^0-9]/g, "");
+            whatsappLink.href = `https://wa.me/${ziffern}`;
+            whatsappLink.hidden = ziffern.length < 6;
+        }
+    }
+
+    footer.hidden = !theme.openingHours && !theme.address && !theme.phone;
 }
 
 /** Nur gesetzte Social-Links (Instagram/Facebook/Webseite) werden angezeigt -

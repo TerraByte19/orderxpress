@@ -115,6 +115,18 @@ public class Restaurant {
     @Column(name = "dark_mode")
     private Boolean darkMode;
 
+    /** Oeffnungszeiten als freier Text (mehrzeilig), z.B. "Mo-Fr 8-18 Uhr". null = keine hinterlegt. */
+    @Column(name = "opening_hours", length = 500)
+    private String openingHours;
+
+    /** Anschrift des Ladens, z.B. "Musterstr. 1, 12345 Berlin". null = keine hinterlegt. */
+    @Column(name = "address", length = 200)
+    private String address;
+
+    /** Telefonnummer fuer Anruf/WhatsApp-Link im Footer. null = keine hinterlegt. */
+    @Column(name = "phone", length = 40)
+    private String phone;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -315,5 +327,29 @@ public class Restaurant {
 
     public void setDarkMode(boolean darkMode) {
         this.darkMode = darkMode;
+    }
+
+    public String getOpeningHours() {
+        return (openingHours == null || openingHours.isBlank()) ? null : openingHours;
+    }
+
+    public void setOpeningHours(String v) {
+        this.openingHours = v;
+    }
+
+    public String getAddress() {
+        return (address == null || address.isBlank()) ? null : address;
+    }
+
+    public void setAddress(String v) {
+        this.address = v;
+    }
+
+    public String getPhone() {
+        return (phone == null || phone.isBlank()) ? null : phone;
+    }
+
+    public void setPhone(String v) {
+        this.phone = v;
     }
 }

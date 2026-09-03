@@ -61,6 +61,9 @@ export interface LadenTheme {
     facebookUrl: string | null;
     websiteUrl: string | null;
     backgroundColor2: string | null;
+    openingHours: string | null;
+    address: string | null;
+    phone: string | null;
 }
 
 /** OrderResponse.OrderLineDto */
@@ -99,6 +102,16 @@ export interface ProblemDetail {
     status?: number;
 }
 
+/** MenuItemBadge (Java-Enum) - deutsche Beschriftung + Reihenfolge fuer
+ *  Admin-Formular und Gast-Anzeige an einer Stelle. */
+export const GERICHT_MARKEN: Array<{ wert: string; label: string }> = [
+    { wert: "SCHARF", label: "Scharf" },
+    { wert: "VEGETARISCH", label: "Vegetarisch" },
+    { wert: "VEGAN", label: "Vegan" },
+    { wert: "BELIEBT", label: "Beliebt" },
+    { wert: "NEU", label: "Neu" }
+];
+
 /** MenuItemDto */
 export interface Gericht {
     id: number;
@@ -107,6 +120,7 @@ export interface Gericht {
     details: string | null;
     price: number;
     imageUrl: string | null;
+    badges: string[];
 }
 
 /** MenuCategoryDto */
@@ -176,4 +190,5 @@ export interface AdminGericht {
     available: boolean;
     sortOrder: number;
     imageUrl: string | null;
+    badges: string[];
 }

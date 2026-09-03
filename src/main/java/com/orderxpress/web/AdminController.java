@@ -286,6 +286,26 @@ public class AdminController {
         restaurantAdminService.deleteAsset(AssetKind.BACKGROUND);
     }
 
+    // ---------- Bildergalerie (Ambiente-/Stimmungsfotos) ----------
+
+    @GetMapping("/gallery")
+    public List<Long> galleryImageIds() {
+        return restaurantAdminService.getGalleryImageIds(CurrentUser.restaurantId());
+    }
+
+    /** Foto zur Galerie hinzufuegen (JPG/PNG, max. 5 MB, max. 8 Fotos - wird serverseitig verkleinert). */
+    @PostMapping(value = "/gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addGalleryImage(@RequestParam("file") MultipartFile file) {
+        restaurantAdminService.addGalleryImage(file);
+    }
+
+    @DeleteMapping("/gallery/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGalleryImage(@PathVariable Long id) {
+        restaurantAdminService.deleteGalleryImage(id);
+    }
+
     // ---------- Mitarbeiter-Logins (Kueche + Service; der Inhaber legt sie selbst an) ----------
 
     @GetMapping("/users")

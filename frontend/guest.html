@@ -79,6 +79,25 @@
             <div id="hero-links" class="ox-hero__links" hidden></div>
         </div>
         <div id="menu-container"></div>
+        <!-- Ambiente-Fotos: laden-design.ts baut sie ein, bleibt leer/hidden
+             ohne Galerie-Bilder. -->
+        <div id="menu-gallery" class="ox-galerie" hidden></div>
+        <!-- Oeffnungszeiten/Adresse/Telefon: laden-design.ts blendet einzelne
+             Zeilen aus, wenn der Laden sie nicht hinterlegt hat. -->
+        <footer id="menu-footer" class="ox-footer" hidden>
+            <div id="footer-hours-row" class="ox-footer__zeile" hidden>
+                <span>Öffnungszeiten:</span>
+                <span id="footer-hours" class="ox-footer__oeffnungszeiten"></span>
+            </div>
+            <div id="footer-address-row" class="ox-footer__zeile" hidden>
+                <span id="footer-address"></span>
+                <a id="footer-route" href="#" target="_blank" rel="noopener noreferrer">Route</a>
+            </div>
+            <div id="footer-phone-row" class="ox-footer__zeile" hidden>
+                <a id="footer-phone" href="#">Anrufen</a>
+                <a id="footer-whatsapp" href="#" target="_blank" rel="noopener noreferrer" hidden>WhatsApp</a>
+            </div>
+        </footer>
     </div>
 
     <!-- Ansicht: Warenkorb. -->

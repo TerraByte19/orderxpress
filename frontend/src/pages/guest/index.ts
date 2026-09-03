@@ -56,7 +56,7 @@ import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
-import { ladeTheme, leseModi, wendeThemeAn } from "./laden-design";
+import { ladeTheme, leseModi, wendeThemeAn, zeigeGalerie } from "./laden-design";
 import { zeigeVorhang } from "./vorhang";
 import {
     aktualisiereFreigabeKnoepfe,
@@ -272,6 +272,7 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         // aber zur Sicherheit) waere das ein no-op.
         zeigeVorhang(themeErgebnis.value, guestToken);
     }
+    void zeigeGalerie(restaurantId);
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
     const modi = themeErgebnis.status === "fulfilled" ? leseModi(themeErgebnis.value) : null;
     if (modi) {

@@ -1,5 +1,6 @@
 @import "./guest-motion.css";
 @import "./vorhang.css";
+@import "./kontakt.css";
 
 /* Gaeste-Seite: nur was components.css/base.css NICHT abdecken.
    Detail-Overlay, Preis, Mengen-Stepper, Hinweisfeld etc. brauchen keine
@@ -149,6 +150,29 @@
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23000'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* Kleine Text-Pillen fuer Marken (scharf/vegetarisch/...) - eine neutrale
+   Grundoptik fuer alle, "SCHARF"/"BELIEBT" heben sich zusaetzlich per
+   Textfarbe ab (keine eigenen Icons, passt zum Rest der ruhigen Karten-Optik). */
+.ox-marken {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+.ox-marke {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--ox-radius-pill);
+    background: var(--ox-surface-2);
+    color: var(--ox-text-muted);
+    border: 1px solid var(--ox-border);
+}
+.ox-marke--scharf { color: #b3401d; border-color: rgba(179, 64, 29, .35); }
+.ox-marke--beliebt { color: var(--ox-accent); border-color: var(--ox-accent); }
+
 .ox-gericht__inhalt {
     display: flex;
     flex-direction: column;
@@ -194,7 +218,19 @@
     overflow-x: auto;
     margin-bottom: var(--ox-space-4);
     border-bottom: 1px solid var(--ox-border);
+    /* Bleibt beim Scrollen oben stehen (wie die Sprungnav der Referenzseiten) -
+       eigene Flaeche noetig, sonst scheint der Text darunter durch. */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--ox-surface);
 }
+/* Sprung per Reiter/Panel landet nicht UNTER der sticky Leiste - Puffer in
+   Hoehe der Leiste selbst (grosszuegig geschaetzt, kein exaktes Ausmessen noetig). */
+.ox-kategorie-abschnitt {
+    scroll-margin-top: 52px;
+}
+
 .ox-kategorie-reiter {
     all: unset;
     box-sizing: border-box;

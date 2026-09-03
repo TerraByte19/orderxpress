@@ -1,0 +1,48 @@
+/* Footer (Oeffnungszeiten/Adresse/Telefon) + Bildergalerie (Ambiente-Fotos) -
+   eigene Datei, damit guest.css nicht weiter waechst (siehe dessen Kopf).
+   Beide Bereiche sind rein informativ, blenden sich per hidden aus, wenn der
+   Laden nichts hinterlegt hat (laden-design.ts baut nur Vorhandenes ein). */
+
+.ox-galerie {
+    display: flex;
+    gap: var(--ox-space-3);
+    overflow-x: auto;
+    padding: var(--ox-space-4);
+    scroll-snap-type: x proximity;
+}
+.ox-galerie__bild {
+    flex: none;
+    width: 68vw;
+    max-width: 320px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--ox-radius-md);
+    scroll-snap-align: start;
+}
+
+.ox-footer {
+    display: grid;
+    gap: var(--ox-space-2);
+    padding: var(--ox-space-6) var(--ox-space-4) var(--ox-space-7);
+    border-top: 1px solid var(--ox-border);
+    margin-top: var(--ox-space-5);
+    color: var(--ox-text-muted);
+    font-size: var(--ox-text-sm);
+}
+.ox-footer__zeile {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ox-space-2);
+}
+.ox-footer__oeffnungszeiten {
+    white-space: pre-line;
+}
+.ox-footer a {
+    color: var(--ox-text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.ox-footer a:hover,
+.ox-footer a:focus-visible {
+    color: var(--ox-accent);
+}

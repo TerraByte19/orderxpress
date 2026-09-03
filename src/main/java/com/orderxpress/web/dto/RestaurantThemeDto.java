@@ -23,5 +23,8 @@ public record RestaurantThemeDto(Long id,
                                  String facebookUrl,
                                  String websiteUrl,
                                  String backgroundColor2,
-                                 String introSpeed) {
+                                 String introSpeed,
+                                 String openingHours,
+                                 String address,
+                                 String phone) {
 }

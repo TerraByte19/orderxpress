@@ -5,9 +5,11 @@ import com.orderxpress.domain.AppUser;
 import com.orderxpress.domain.AssetKind;
 import com.orderxpress.domain.Restaurant;
 import com.orderxpress.domain.RestaurantAsset;
+import com.orderxpress.domain.RestaurantGalleryImage;
 import com.orderxpress.domain.UserRole;
 import com.orderxpress.repository.AppUserRepository;
 import com.orderxpress.repository.RestaurantAssetRepository;
+import com.orderxpress.repository.RestaurantGalleryImageRepository;
 import com.orderxpress.repository.RestaurantRepository;
 import com.orderxpress.web.dto.CreateUserRequest;
 import com.orderxpress.web.dto.DesignRequest;
@@ -49,18 +51,24 @@ public class RestaurantAdminService {
     /** Logos werden kleiner gehalten als Hintergrundbilder. */
     private static final int LOGO_MAX = 600;
     private static final int BACKGROUND_MAX = 1600;
+    /** Ambiente-Fotos sind wie das Hintergrundbild verkleinert (Stimmungsbilder, keine Detailaufnahmen). */
+    private static final int GALLERY_MAX = 1600;
+    private static final int MAX_GALLERY_IMAGES = 8;
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantAssetRepository assetRepository;
+    private final RestaurantGalleryImageRepository galleryRepository;
     private final AppUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     public RestaurantAdminService(RestaurantRepository restaurantRepository,
                                   RestaurantAssetRepository assetRepository,
+                                  RestaurantGalleryImageRepository galleryRepository,
                                   AppUserRepository userRepository,
                                   PasswordEncoder passwordEncoder) {
         this.restaurantRepository = restaurantRepository;
         this.assetRepository = assetRepository;
+        this.galleryRepository = galleryRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -101,6 +109,9 @@ public class RestaurantAdminService {
         restaurant.setFacebookUrl(request.facebookUrl());
         restaurant.setWebsiteUrl(request.websiteUrl());
         restaurant.setBackgroundColor2(request.backgroundColor2());
+        restaurant.setOpeningHours(request.openingHours());
+        restaurant.setAddress(request.address());
+        restaurant.setPhone(request.phone());
         return buildTheme(restaurant);
     }
 
@@ -138,6 +149,44 @@ public class RestaurantAdminService {
     @Transactional(readOnly = true)
     public RestaurantAsset getAsset(Long restaurantId, AssetKind kind) {
         return assetRepository.findByRestaurantIdAndKind(restaurantId, kind)
+                .orElseThrow(() -> new NotFoundException("Kein Bild vorhanden."));
+    }
+
+    // ---------- Bildergalerie (Ambiente-/Stimmungsfotos, getrennt von Gericht-Fotos) ----------
+
+    /** Ids der Galerie-Bilder in Anlegereihenfolge - ohne Login (Gast) UND fuer die eigene Verwaltung nutzbar. */
+    @Transactional(readOnly = true)
+    public List<Long> getGalleryImageIds(Long restaurantId) {
+        return galleryRepository.findIdsByRestaurantId(restaurantId);
+    }
+
+    @Transactional
+    public void addGalleryImage(MultipartFile file) {
+        Long rid = CurrentUser.restaurantId();
+        if (galleryRepository.countByRestaurantId(rid) >= MAX_GALLERY_IMAGES) {
+            throw new BadRequestException("Es sind bereits %d Fotos in der Galerie - erst eins entfernen.".formatted(MAX_GALLERY_IMAGES));
+        }
+        validateUpload(file);
+        boolean png = "image/png".equalsIgnoreCase(file.getContentType());
+        byte[] encoded;
+        try {
+            encoded = resizeAndReencode(file.getBytes(), png, GALLERY_MAX);
+        } catch (IOException e) {
+            throw new BadRequestException("Bild konnte nicht gelesen werden.");
+        }
+        galleryRepository.save(new RestaurantGalleryImage(rid, png ? "image/png" : "image/jpeg", encoded));
+    }
+
+    @Transactional
+    public void deleteGalleryImage(Long imageId) {
+        galleryRepository.findByIdAndRestaurantId(imageId, CurrentUser.restaurantId())
+                .ifPresent(galleryRepository::delete);
+    }
+
+    /** Ein Galerie-Bild ausliefern (Gaeste-Seite, ohne Login). */
+    @Transactional(readOnly = true)
+    public RestaurantGalleryImage getGalleryImage(Long imageId) {
+        return galleryRepository.findById(imageId)
                 .orElseThrow(() -> new NotFoundException("Kein Bild vorhanden."));
     }
 
@@ -228,7 +277,10 @@ public class RestaurantAdminService {
                 restaurant.getFacebookUrl(),
                 restaurant.getWebsiteUrl(),
                 restaurant.getBackgroundColor2(),
-                restaurant.getIntroSpeed());
+                restaurant.getIntroSpeed(),
+                restaurant.getOpeningHours(),
+                restaurant.getAddress(),
+                restaurant.getPhone());
     }
 
     private void validateUpload(MultipartFile file) {
