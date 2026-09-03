@@ -10,6 +10,7 @@
        Bewusst kuehles Papier, kein warmes Creme: ein warmer Grund legt einen
        Gelbstich ueber jedes Gericht-Foto, und die Karte verkauft ueber Fotos. */
     --ox-bg: #f6f6f4;
+    --ox-bg-image: none; /* optionaler Verlauf (zweite Laden-Hintergrundfarbe), siehe base.css */
     --ox-surface: #ffffff;
     --ox-surface-2: #efefec;
     --ox-border: #e2e2dd;

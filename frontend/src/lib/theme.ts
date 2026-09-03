@@ -95,6 +95,7 @@ function gedaempfterText(textfarbe: string, hintergrund: string): string {
 export interface LadenDesign {
     accentColor?: string | null;
     backgroundColor?: string | null;
+    backgroundColor2?: string | null; // optional - gesetzt = Verlauf statt Vollton
     dunkel?: boolean;
     shape?: string | null;   // "SQUARE" | "SOFT"
     font?: string | null;    // BRICOLAGE | FRAUNCES | SPACE_GROTESK | INSTRUMENT_SERIF | MANROPE | SORA | DM_SERIF
@@ -133,6 +134,17 @@ export function setzeLadenDesign(design: LadenDesign): void {
         const textfarbe = textfarbeAuf(design.backgroundColor);
         wurzel.style.setProperty("--ox-text", textfarbe);
         wurzel.style.setProperty("--ox-text-muted", gedaempfterText(textfarbe, design.backgroundColor));
+
+        // Verlauf ist rein dekorativ (--ox-bg-image) - die Kontrast-Rechnung
+        // oben bleibt bewusst allein auf backgroundColor gestuetzt (die
+        // fuehrende Farbe), nicht auf eine Mischung beider Toene. --ox-bg
+        // selbst bleibt dabei immer ein flacher Hex-Wert (siehe base.css,
+        // Grund dort erklaert).
+        if (istHexFarbe(design.backgroundColor2)) {
+            wurzel.style.setProperty("--ox-bg-image", `linear-gradient(135deg, ${design.backgroundColor}, ${design.backgroundColor2})`);
+        } else {
+            wurzel.style.removeProperty("--ox-bg-image");
+        }
     }
 }
 

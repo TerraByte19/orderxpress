@@ -26,6 +26,7 @@ export function wendeThemeAn(theme: LadenTheme): void {
     setzeLadenDesign({
         accentColor: theme.accentColor,
         backgroundColor: theme.backgroundColor,
+        backgroundColor2: theme.backgroundColor2,
         shape: theme.styleShape,
         font: theme.displayFont,
         dunkel: theme.darkMode

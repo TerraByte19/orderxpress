@@ -99,6 +99,11 @@ public class Restaurant {
     @Column(name = "website_url", length = 200)
     private String websiteUrl;
 
+    /** Zweite Hintergrundfarbe - gesetzt ergibt einen Verlauf statt Vollton
+     *  (siehe frontend theme.ts). null = kein Verlauf. */
+    @Column(name = "background_color2", length = 7)
+    private String backgroundColor2;
+
     /**
      * true = die Gaeste-Seite nutzt die dunkle Haut (data-theme="dark"). Nullable,
      * damit bestehende Datenbanken ohne Reset auskommen; null gilt als hell.
@@ -273,6 +278,14 @@ public class Restaurant {
 
     public void setWebsiteUrl(String v) {
         this.websiteUrl = v;
+    }
+
+    public String getBackgroundColor2() {
+        return (backgroundColor2 == null || backgroundColor2.isBlank()) ? null : backgroundColor2;
+    }
+
+    public void setBackgroundColor2(String v) {
+        this.backgroundColor2 = v;
     }
 
     public String getOrderConfirmStyle() {

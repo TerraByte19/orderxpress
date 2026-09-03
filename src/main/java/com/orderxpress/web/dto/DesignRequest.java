@@ -32,7 +32,8 @@ public record DesignRequest(
         @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
         @Size(max = 200, message = "Link ist zu lang.") String facebookUrl,
         @Pattern(regexp = "https?://.+", message = "Link muss mit http:// oder https:// beginnen.")
-        @Size(max = 200, message = "Link ist zu lang.") String websiteUrl) {
+        @Size(max = 200, message = "Link ist zu lang.") String websiteUrl,
+        @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "Farbe muss ein Hex-Wert wie #f4f5f7 sein.") String backgroundColor2) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;

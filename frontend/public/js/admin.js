@@ -518,6 +518,10 @@ const Admin = {
         document.getElementById("design-fly").value = v.cartFlyStyle;
         document.getElementById("design-confirm").value = v.orderConfirmStyle;
         document.getElementById("design-intro").value = v.introStyle;
+        // Keine der Vorlagen kennt bislang einen Verlauf - eine Vorlage
+        // "fuellt alle Felder", also auch diesen zuruecksetzen statt einen
+        // vorher von Hand gesetzten Verlauf stehen zu lassen.
+        document.getElementById("design-bg-gradient").checked = false;
         OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
     },
 
@@ -538,6 +542,8 @@ const Admin = {
             document.getElementById("design-instagram").value = t.instagramUrl || "";
             document.getElementById("design-facebook").value = t.facebookUrl || "";
             document.getElementById("design-website").value = t.websiteUrl || "";
+            document.getElementById("design-bg-gradient").checked = !!t.backgroundColor2;
+            document.getElementById("design-bg2").value = t.backgroundColor2 || t.backgroundColor || "#f4f5f7";
 
             const logo = document.getElementById("logo-preview");
             if (t.logoUrl) { logo.src = t.logoUrl + "?v=" + Date.now(); logo.style.display = ""; }
@@ -567,7 +573,10 @@ const Admin = {
                     introText: document.getElementById("design-intro-text").value.trim() || null,
                     instagramUrl: document.getElementById("design-instagram").value.trim() || null,
                     facebookUrl: document.getElementById("design-facebook").value.trim() || null,
-                    websiteUrl: document.getElementById("design-website").value.trim() || null
+                    websiteUrl: document.getElementById("design-website").value.trim() || null,
+                    backgroundColor2: document.getElementById("design-bg-gradient").checked
+                        ? document.getElementById("design-bg2").value
+                        : null
                 })
             });
             OX.toast("Design gespeichert");

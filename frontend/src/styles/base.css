@@ -7,7 +7,15 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
     margin: 0;
-    background: var(--ox-bg);
+    /* Getrennt statt "background: var(--ox-bg)": --ox-bg bleibt IMMER ein
+       flacher Hex-Wert, weil er anderswo auch als color: var(--ox-bg)
+       verwendet wird (siehe .ox-toast in components.css) - ein Verlauf
+       darin wuerde das kaputt machen. Der optionale Verlauf (zweite
+       Hintergrundfarbe eines Ladens) sitzt in der eigenen Variable
+       --ox-bg-image (Default "none", siehe tokens.css), die NUR hier als
+       background-image gilt. */
+    background-color: var(--ox-bg);
+    background-image: var(--ox-bg-image);
     color: var(--ox-text);
     font-family: var(--ox-font-sans);
     font-size: var(--ox-text-base);

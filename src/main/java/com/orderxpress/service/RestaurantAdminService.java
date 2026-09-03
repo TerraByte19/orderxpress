@@ -99,6 +99,7 @@ public class RestaurantAdminService {
         restaurant.setInstagramUrl(request.instagramUrl());
         restaurant.setFacebookUrl(request.facebookUrl());
         restaurant.setWebsiteUrl(request.websiteUrl());
+        restaurant.setBackgroundColor2(request.backgroundColor2());
         return buildTheme(restaurant);
     }
 
@@ -224,7 +225,8 @@ public class RestaurantAdminService {
                 restaurant.getIntroText(),
                 restaurant.getInstagramUrl(),
                 restaurant.getFacebookUrl(),
-                restaurant.getWebsiteUrl());
+                restaurant.getWebsiteUrl(),
+                restaurant.getBackgroundColor2());
     }
 
     private void validateUpload(MultipartFile file) {

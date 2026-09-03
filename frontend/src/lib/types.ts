@@ -59,6 +59,7 @@ export interface LadenTheme {
     instagramUrl: string | null;
     facebookUrl: string | null;
     websiteUrl: string | null;
+    backgroundColor2: string | null;
 }
 
 /** OrderResponse.OrderLineDto */
