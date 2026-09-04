@@ -75,10 +75,12 @@ export function fliegeZu(
     window.setTimeout(() => flieger.remove(), 480);
 }
 
-/** Ansichtswechsel mit weichem Uebergang, wo der Browser die View-Transitions-
- *  API kennt - sonst unmittelbar. */
+/** Ansichtswechsel. Frueher mit document.startViewTransition() fuer einen
+ *  weichen Uebergang - bewusst entfernt (Fehlerbericht + Nachtest): die
+ *  View-Transitions-API macht "position: sticky" nach dem ersten
+ *  Ansichtswechsel dauerhaft kaputt (die Kategorien-Leiste blieb dann beim
+ *  Scrollen nicht mehr oben stehen). Sticky ist hier wichtiger als der
+ *  kurze Ueberblend-Effekt. */
 export function mitAnsichtsWechsel(wechsel: () => void): void {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (typeof doc.startViewTransition === "function") doc.startViewTransition(wechsel);
-    else wechsel();
+    wechsel();
 }
