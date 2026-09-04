@@ -58,6 +58,33 @@
     --radius-old: var(--radius);
 }
 
+/* Hell/Dunkel folgt jetzt dem Laden (api.js, applyLadenTheme setzt
+   data-theme="dark" auf <html>) - dieselben Werte wie tokens.css' dunkle
+   Palette, nur unter den alten Variablen-Namen dieser Datei. */
+html[data-theme="dark"] {
+    --bg: #15181a;
+    --card: #1d2124;
+    --card-2: #262b2f;
+    --text: #edeeec;
+    --muted: #949a9e;
+    --line: #333a3f;
+    --green: #4caf82;
+    --red: #e5776d;
+    --amber: #e0a145;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-2: 0 10px 28px rgba(0, 0, 0, .55);
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background: var(--card);
+    color: var(--text);
+}
+html[data-theme="dark"] #overlay .box {
+    background: var(--card);
+    color: var(--text);
+}
+
 * { box-sizing: border-box; }
 
 body {

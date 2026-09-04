@@ -14,6 +14,12 @@ const Waiter = {
         if (!OX.deviceToken()) { this.showNoLogin(); return; }
         try { await OX.api("/api/waiter/tables"); }
         catch (e) { OX.clearAuth(); this.showNoLogin(); return; }
+        // Kellner-Ansicht hat keine Rollen-Leiste (buildNav) - Laden-Design
+        // trotzdem uebernehmen, wie auf allen anderen Personal-Seiten.
+        try {
+            const me = await OX.me();
+            if (me.restaurantId) OX.applyLadenTheme(await OX.api("/api/guest/theme/" + me.restaurantId));
+        } catch (e) { /* Design ist optional */ }
         this.start();
     },
 

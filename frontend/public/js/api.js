@@ -187,6 +187,80 @@ const OX = {
         return { OWNER: "Inhaber", SERVICE: "Service/Kasse", KITCHEN: "Küche", WAITER: "Kellner" }[role] || role;
     },
 
+    /* ---------- Laden-Design auch fuer die Personal-Ansichten -----------
+       Auf Wunsch: nicht nur die Gaeste-Seite, ALLE Ansichten sollen wie das
+       vom Inhaber gewaehlte Design aussehen (Farbe, Form, Schrift,
+       Hell/Dunkel) - vorher hatten die Personal-Werkzeuge eine feste
+       Marken-Farbe (#1f3d34) unabhaengig vom Laden. Nutzt denselben
+       oeffentlichen Endpunkt wie die Gaeste-Seite (/api/guest/theme/{id}) -
+       braucht keine besondere Rolle, jeder angemeldete Mitarbeiter kennt
+       schon seine eigene restaurantId aus /api/me. */
+    _fontFamilie: {
+        BRICOLAGE: "Bricolage Grotesque", FRAUNCES: "Fraunces", SPACE_GROTESK: "Space Grotesk",
+        INSTRUMENT_SERIF: "Instrument Serif", MANROPE: "Manrope", SORA: "Sora", DM_SERIF: "DM Serif Display"
+    },
+    _fontGoogleSegment: {
+        FRAUNCES: "Fraunces:wght@400;600;700",
+        SPACE_GROTESK: "Space+Grotesk:wght@400;500;700",
+        INSTRUMENT_SERIF: "Instrument+Serif:ital@0;1",
+        MANROPE: "Manrope:wght@400;600;700",
+        SORA: "Sora:wght@400;600;700",
+        DM_SERIF: "DM+Serif+Display:wght@400"
+    },
+    _geladeneFonts: new Set(["BRICOLAGE"]), // schon im <head> jeder Seite fest verlinkt
+
+    _ladeFontFalls(fontKey) {
+        if (this._geladeneFonts.has(fontKey)) return;
+        const segment = this._fontGoogleSegment[fontKey];
+        if (!segment) return;
+        this._geladeneFonts.add(fontKey);
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://fonts.googleapis.com/css2?family=" + segment + "&display=swap";
+        document.head.appendChild(link);
+    },
+
+    _hexZuRgb(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    },
+    _luminanz(hex) {
+        const [r, g, b] = this._hexZuRgb(hex).map((wert) => {
+            const anteil = wert / 255;
+            return anteil <= 0.03928 ? anteil / 12.92 : Math.pow((anteil + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    },
+    _textfarbeAuf(hex) {
+        const lh = this._luminanz(hex);
+        const kontrastSchwarz = (Math.max(lh, 0) + 0.05) / 0.05;
+        const kontrastWeiss = 1.05 / (Math.min(lh, 1) + 0.05);
+        return kontrastSchwarz >= kontrastWeiss ? "#000000" : "#ffffff";
+    },
+
+    applyLadenTheme(theme) {
+        if (!theme) return;
+        const wurzel = document.documentElement;
+        if (/^#[0-9a-fA-F]{6}$/.test(theme.accentColor || "")) {
+            wurzel.style.setProperty("--primary", theme.accentColor);
+            wurzel.style.setProperty("--primary-text", this._textfarbeAuf(theme.accentColor));
+        }
+        if (theme.styleShape === "SOFT") {
+            wurzel.style.setProperty("--radius-sm", "14px");
+            wurzel.style.setProperty("--radius", "18px");
+            wurzel.style.setProperty("--radius-lg", "26px");
+        } else {
+            wurzel.style.removeProperty("--radius-sm");
+            wurzel.style.removeProperty("--radius");
+            wurzel.style.removeProperty("--radius-lg");
+        }
+        const fontKey = this._fontFamilie[theme.displayFont] ? theme.displayFont : "BRICOLAGE";
+        this._ladeFontFalls(fontKey);
+        wurzel.style.setProperty("--font-display", '"' + this._fontFamilie[fontKey] + '", Georgia, serif');
+        if (theme.darkMode) wurzel.setAttribute("data-theme", "dark");
+        else wurzel.removeAttribute("data-theme");
+    },
+
     /* Baut oben eine Leiste zum Umschalten zwischen den Ansichten.
        Der Inhaber sieht alle drei, Service und Kueche nur ihre eigene. */
     async buildNav(active) {
@@ -199,6 +273,13 @@ const OX = {
             const titleEl = document.getElementById("topbar-title");
             if (titleEl) titleEl.textContent = titleEl.textContent.replace(/^OrderXpress/, me.restaurantName);
             document.title = document.title.replace(/OrderXpress$/, me.restaurantName);
+        }
+
+        // Laden-Design (Farbe/Form/Schrift/Hell-Dunkel) auch hier - derselbe
+        // oeffentliche Endpunkt wie die Gaeste-Seite, rein lesend.
+        if (me.restaurantId) {
+            try { this.applyLadenTheme(await this.api("/api/guest/theme/" + me.restaurantId)); }
+            catch (e) { /* Design ist optional - Standard-Optik bleibt */ }
         }
 
         const all = [
