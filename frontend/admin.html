@@ -190,21 +190,25 @@
                     <button class="green small" onclick="Admin.saveDesign()">Farben &amp; Men&uuml; speichern</button>
                 </div>
             </div>
-            <div class="row" style="margin-top:6px">
-                <div style="flex:1;min-width:200px">
-                    <label class="muted">Logo (JPG/PNG)</label>
-                    <div class="row">
+            <div class="row" style="margin-top:6px;align-items:stretch">
+                <div class="upload-card">
+                    <span class="muted">Logo (JPG/PNG)</span>
+                    <div class="upload-card__preview">
                         <img id="logo-preview" class="brand-logo" alt="" style="display:none;background:#eee">
-                        <input type="file" id="logo-file" accept="image/png,image/jpeg" style="max-width:220px">
+                    </div>
+                    <input type="file" id="logo-file" accept="image/png,image/jpeg">
+                    <div class="row">
                         <button class="small" onclick="Admin.uploadAsset('logo')">Hochladen</button>
                         <button class="small red" onclick="Admin.deleteAsset('logo')">Entfernen</button>
                     </div>
                 </div>
-                <div style="flex:1;min-width:200px">
-                    <label class="muted">Hintergrundbild (JPG/PNG)</label>
-                    <div class="row">
+                <div class="upload-card">
+                    <span class="muted">Hintergrundbild (JPG/PNG)</span>
+                    <div class="upload-card__preview">
                         <img id="bg-preview" class="thumb" alt="" style="display:none">
-                        <input type="file" id="bg-file" accept="image/png,image/jpeg" style="max-width:220px">
+                    </div>
+                    <input type="file" id="bg-file" accept="image/png,image/jpeg">
+                    <div class="row">
                         <button class="small" onclick="Admin.uploadAsset('background')">Hochladen</button>
                         <button class="small red" onclick="Admin.deleteAsset('background')">Entfernen</button>
                     </div>

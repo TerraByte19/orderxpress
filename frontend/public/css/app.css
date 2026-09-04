@@ -147,6 +147,50 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 }
 input[type="color"] { width: 48px; height: var(--touch); padding: 2px; cursor: pointer; }
 
+/* Native "Datei waehlen"-Knopf im Laden-Look statt Browser-Standard -
+   ::file-selector-button ist der einzige Teil eines file-Inputs, den man
+   gefahrlos stylen kann (der Rest bleibt nativ: Dateiname, Picker-Dialog). */
+input[type="file"] {
+    min-height: auto;
+    padding: var(--sp-1) 0;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--muted);
+}
+input[type="file"]::file-selector-button {
+    font: inherit;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-2) var(--sp-3);
+    margin-right: var(--sp-3);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--card-2); }
+
+/* ---------- Logo/Hintergrund-Upload: Vorschau-Kachel statt nacktem
+   Datei-Input (Feedback: "sieht noch roh aus") ---------- */
+.upload-card {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: var(--sp-4);
+    background: var(--card-2);
+}
+.upload-card__preview {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .badge {
     display: inline-block;
     padding: 2px var(--sp-3);
