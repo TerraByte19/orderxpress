@@ -22,8 +22,8 @@
     <!-- Login (nur Inhaber) -->
     <div id="view-login" class="card" style="display:none;max-width:380px;margin:40px auto">
         <h2>Anmelden</h2>
-        <p><input id="login-user" placeholder="Benutzername" value="inhaber"></p>
-        <p><input id="login-pass" type="password" placeholder="Passwort"></p>
+        <p><input id="login-user" placeholder="Benutzername" value="inhaber" autocomplete="username"></p>
+        <p><input id="login-pass" type="password" placeholder="Passwort" autocomplete="current-password"></p>
         <p><button style="width:100%" onclick="Stats.login()">Anmelden</button></p>
         <p class="muted">Die Statistik sieht nur der Inhaber.</p>
     </div>
