@@ -614,7 +614,7 @@ const Admin = {
 
     async saveDesign() {
         try {
-            await OX.api("/api/admin/design", {
+            const theme = await OX.api("/api/admin/design", {
                 method: "PUT",
                 body: JSON.stringify({
                     accentColor: document.getElementById("design-accent").value,
@@ -640,6 +640,10 @@ const Admin = {
                     phone: document.getElementById("design-phone").value.trim() || null
                 })
             });
+            // Eigene Seite sofort mit umfaerben, statt erst nach einem
+            // Neuladen - saveDesign() bekommt das frische Theme direkt
+            // als Antwort zurueck, kein zweiter Abruf noetig.
+            OX.applyLadenTheme(theme);
             OX.toast("Design gespeichert");
         } catch (e) { OX.toast(e.message, true); }
     },
