@@ -260,8 +260,15 @@
    statt der Reiter-Leiste. Knopf selbst nutzt .ox-btn--geist, keine neue
    Farbe noetig. */
 .ox-kategorie-hamburger {
-    position: relative;
-    margin-bottom: var(--ox-space-4);
+    /* Bleibt wie die Reiter-Leiste (.ox-kategorie-leiste) beim Scrollen
+       oben stehen - war hier vergessen, der Knopf scrollte bisher mit weg,
+       obwohl der Reiter-Weg schon sticky war (Inkonsistenz gemeldet). */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--ox-surface);
+    padding: var(--ox-space-2) 0;
+    margin-bottom: var(--ox-space-2);
 }
 .ox-kategorie-panel {
     position: absolute;
