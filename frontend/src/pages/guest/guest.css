@@ -19,6 +19,15 @@
    (::after) sitzt NUR dann drueber, weil ein Foto beliebig hell sein kann -
    auf der reinen Akzentflaeche uebernimmt --ox-accent-text (der bereits
    errechnete Kontrast-Wert, siehe theme.ts) die Lesbarkeit. */
+/* Namensleiste (Kellner rufen/Rechnung teilen) klebte bisher direkt am
+   Hero-Bild darunter - main.css setzt nur Aussenabstand der Seite, keinen
+   Abstand ZWISCHEN den Bloecken. Eigener Puffer hier statt am Hero, damit
+   die Leiste auch ohne Hero (Sitzung wartet noch) nicht am naechsten
+   Element klebt. */
+#name-bar {
+    margin-bottom: var(--ox-space-4);
+}
+
 .ox-hero {
     position: relative;
     display: flex;
