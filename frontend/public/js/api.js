@@ -245,14 +245,17 @@ const OX = {
             wurzel.style.setProperty("--primary", theme.accentColor);
             wurzel.style.setProperty("--primary-text", this._textfarbeAuf(theme.accentColor));
         }
+        // Dieselben Zahlen wie tokens.css (:root = SQUARE, [data-shape="soft"]
+        // = SOFT) - vorher fiel SQUARE nur auf den eigenen app.css-Standard
+        // zurueck (10/14/20px), der nicht exakt der Gaeste-Seite entsprach.
         if (theme.styleShape === "SOFT") {
             wurzel.style.setProperty("--radius-sm", "14px");
             wurzel.style.setProperty("--radius", "18px");
             wurzel.style.setProperty("--radius-lg", "26px");
         } else {
-            wurzel.style.removeProperty("--radius-sm");
-            wurzel.style.removeProperty("--radius");
-            wurzel.style.removeProperty("--radius-lg");
+            wurzel.style.setProperty("--radius-sm", "8px");
+            wurzel.style.setProperty("--radius", "12px");
+            wurzel.style.setProperty("--radius-lg", "18px");
         }
         const fontKey = this._fontFamilie[theme.displayFont] ? theme.displayFont : "BRICOLAGE";
         this._ladeFontFalls(fontKey);
