@@ -221,14 +221,15 @@
 /* Standardweg: klein und gesperrt - Grossbuchstaben, weite
    Buchstabenabstaende, NICHT fett (Spec Abschnitt 5). Waagerecht
    scrollbar, falls viele Kategorien nicht auf eine Zeile passen. */
+/* Pillen statt duenner Grossbuchstaben-Zeile (Feedback: "sieht haesslich
+   aus") - eigene Flaeche + etwas Luft ueber/unter den Pillen, sonst wirkt
+   die sticky-Leiste beim Ankleben am oberen Rand zu knapp. */
 .ox-kategorie-leiste {
     display: flex;
-    gap: var(--ox-space-5);
+    gap: var(--ox-space-2);
     overflow-x: auto;
-    margin-bottom: var(--ox-space-4);
-    border-bottom: 1px solid var(--ox-border);
-    /* Bleibt beim Scrollen oben stehen (wie die Sprungnav der Referenzseiten) -
-       eigene Flaeche noetig, sonst scheint der Text darunter durch. */
+    padding: var(--ox-space-3) 0 var(--ox-space-4);
+    margin-bottom: var(--ox-space-2);
     position: sticky;
     top: 0;
     z-index: 5;
@@ -237,7 +238,7 @@
 /* Sprung per Reiter/Panel landet nicht UNTER der sticky Leiste - Puffer in
    Hoehe der Leiste selbst (grosszuegig geschaetzt, kein exaktes Ausmessen noetig). */
 .ox-kategorie-abschnitt {
-    scroll-margin-top: 52px;
+    scroll-margin-top: 64px;
 }
 
 .ox-kategorie-reiter {
@@ -247,21 +248,27 @@
     display: flex;
     align-items: center;
     min-height: var(--ox-touch);
+    padding: 0 var(--ox-space-4);
     cursor: pointer;
-    font-size: var(--ox-text-xs);
-    font-weight: 400;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    font-size: var(--ox-text-sm);
+    font-weight: 500;
     color: var(--ox-text-muted);
-    border-bottom: 2px solid transparent;
+    background: var(--ox-surface-2);
+    border-radius: var(--ox-radius-pill);
     white-space: nowrap;
+    transition: background var(--ox-dur-fast) var(--ox-ease-out), color var(--ox-dur-fast) var(--ox-ease-out);
 }
-/* Akzentfarbe NUR hier und am Hinzufuegen-Knopf - sonst nirgends auf der Seite.
-   Die untere Linie des aktiven Reiters zeichnet der gleitende
-   .ox-kategorie-strich (guest-motion.css); die transparente
-   border-bottom-Basis oben bleibt nur fuer die Layout-Stabilitaet. */
+/* Akzentfarbe NUR hier und am Hinzufuegen-Knopf - sonst nirgends auf der
+   Seite. Aktive Kategorie ist jetzt eine gefuellte Pille statt einer
+   duennen Unterstreichung - der gleitende .ox-kategorie-strich aus
+   guest-motion.css entfaellt dadurch optisch (Element bleibt im DOM fuer
+   den Test, wird aber nicht mehr angezeigt). */
 .ox-kategorie-reiter.is-active {
-    color: var(--ox-accent);
+    background: var(--ox-accent);
+    color: var(--ox-accent-text);
+}
+.ox-kategorie-strich {
+    display: none;
 }
 
 /* Hamburger-Weg: der Laden kann das ueber categoriesAsHamburger im Theme
