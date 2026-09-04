@@ -221,9 +221,11 @@
 /* Standardweg: klein und gesperrt - Grossbuchstaben, weite
    Buchstabenabstaende, NICHT fett (Spec Abschnitt 5). Waagerecht
    scrollbar, falls viele Kategorien nicht auf eine Zeile passen. */
-/* Pillen statt duenner Grossbuchstaben-Zeile (Feedback: "sieht haesslich
-   aus") - eigene Flaeche + etwas Luft ueber/unter den Pillen, sonst wirkt
-   die sticky-Leiste beim Ankleben am oberen Rand zu knapp. */
+/* Sitzt jetzt standardmaessig IN der Kopfzeile (guest.html
+   #topbar-kategorien, mittig) statt frei im Seiteninhalt - die Kopfzeile
+   ist ohnehin schon sticky, kann also nie mehr beim Scrollen verschwinden.
+   .ox-kategorie-leiste bleibt trotzdem fuer den Rueckfall (menu-editor.html
+   hat keinen #topbar-kategorien-Container) mit eigenem sticky ausgestattet. */
 .ox-kategorie-leiste {
     display: flex;
     gap: var(--ox-space-2);
@@ -239,6 +241,31 @@
    Hoehe der Leiste selbst (grosszuegig geschaetzt, kein exaktes Ausmessen noetig). */
 .ox-kategorie-abschnitt {
     scroll-margin-top: 64px;
+}
+
+/* Kopfzeilen-Container (guest.html): kein eigenes sticky/Hintergrund noetig
+   (steckt schon in .ox-topbar), Reiter/Hamburger mittig statt am Rand. */
+.ox-topbar__kategorien {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--ox-space-2);
+    margin-top: calc(-1 * var(--ox-space-1));
+}
+.ox-topbar__kategorien .ox-kategorie-leiste {
+    position: static;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    max-width: 100%;
+}
+.ox-topbar__kategorien .ox-kategorie-hamburger {
+    /* Bleibt "relative" (nicht "static") - das Panel (.ox-kategorie-panel)
+       haengt sich per position:absolute daran auf, sonst springt es an
+       einen falschen Vorfahren. */
+    position: relative;
+    padding: 0;
+    margin: 0;
+    background: transparent;
 }
 
 .ox-kategorie-reiter {

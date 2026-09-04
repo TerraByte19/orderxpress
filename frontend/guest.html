@@ -19,11 +19,19 @@
 </head>
 <body>
 <header class="ox-topbar">
-    <img id="brand-logo" alt="" hidden>
-    <h1 id="page-title">Willkommen</h1>
-    <!-- Tischmarke: wird von tischmarke() aus lib/ui.ts erzeugt und hier
-         eingehaengt - nicht von Hand als Text schreiben. -->
-    <span id="table-badge"></span>
+    <div class="ox-topbar__zeile">
+        <img id="brand-logo" alt="" hidden>
+        <h1 id="page-title">Willkommen</h1>
+        <!-- Tischmarke: wird von tischmarke() aus lib/ui.ts erzeugt und hier
+             eingehaengt - nicht von Hand als Text schreiben. -->
+        <span id="table-badge"></span>
+    </div>
+    <!-- Kategorien-Sprungnav: NUR auf der Speisekarten-Ansicht sichtbar
+         (ansichten.ts blendet sie ein/aus), menu.ts haengt Reiter ODER
+         Hamburger-Knopf hier ein statt in den Seiteninhalt - so ist sie
+         Teil der ohnehin schon sticky Kopfzeile und kann beim Scrollen
+         nicht mehr verschwinden. -->
+    <div id="topbar-kategorien" class="ox-topbar__kategorien" hidden></div>
 </header>
 <main>
 

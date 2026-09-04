@@ -1,16 +1,26 @@
 /* Bausteine. Alle Werte kommen aus tokens.css. */
 
-/* --- Kopfleiste --- */
+/* --- Kopfleiste ---
+   Spalte statt Zeile: die Titel-Zeile (Logo/Titel/Tischmarke) ist die erste
+   Reihe (.ox-topbar__zeile); eine zweite Reihe (z.B. Kategorien auf der
+   Gaeste-Seite, siehe guest.css .ox-topbar__kategorien) kann als weiteres
+   Kind darunter erscheinen - existiert sie nicht, sieht die Kopfzeile
+   genau wie vorher aus (index.html/device.html/menu-editor.html nutzen nur
+   die eine Zeile). */
 .ox-topbar {
     display: flex;
-    align-items: center;
-    gap: var(--ox-space-3);
+    flex-direction: column;
     padding: var(--ox-space-3) var(--ox-space-4);
     background: var(--ox-surface);
     border-bottom: 1px solid var(--ox-border);
     position: sticky;
     top: 0;
     z-index: 10;
+}
+.ox-topbar__zeile {
+    display: flex;
+    align-items: center;
+    gap: var(--ox-space-3);
 }
 .ox-topbar h1 { flex: 1; font-size: var(--ox-text-lg); }
 

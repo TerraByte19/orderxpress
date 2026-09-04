@@ -85,7 +85,20 @@ export function zeichneSpeisekarte(
         : kategorien.filter((kategorie) => kategorie.items.length > 0);
 
     const leiste = baueKategorieLeiste(sichtbareKategorien, ziel, hamburger);
-    if (leiste) ziel.appendChild(leiste);
+    // Sitzt lieber IN der (ohnehin schon sticky) Kopfzeile als frei im
+    // Seiteninhalt (siehe guest.html #topbar-kategorien) - Feedback: eine
+    // zweite, eigene sticky-Flaeche im Inhalt kam mit dem Ansichtswechsel
+    // (View-Transitions-API) durcheinander, die Kopfzeile selbst nie.
+    // ansichten.ts blendet den Container je nach Ansicht ein/aus, hier wird
+    // nur befuellt - menu-editor.html hat den Container nicht, faellt also
+    // automatisch auf die alte Stelle im Inhalt zurueck.
+    const topbarZiel = document.getElementById("topbar-kategorien");
+    if (topbarZiel) {
+        topbarZiel.textContent = "";
+        if (leiste) topbarZiel.appendChild(leiste);
+    } else if (leiste) {
+        ziel.appendChild(leiste);
+    }
 
     for (const kategorie of sichtbareKategorien) {
         const abschnitt = el("section", "ox-kategorie-abschnitt");

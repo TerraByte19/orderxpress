@@ -37,6 +37,15 @@ export function zeigeAnsichtInhalt(id: Ansicht, restaurantName: string): void {
 
     const nameLeiste = document.getElementById("name-bar");
     if (nameLeiste) nameLeiste.hidden = !NAME_BAR_ANSICHTEN.includes(id);
+
+    // Kategorien-Sprungnav in der Kopfzeile (menu.ts befuellt sie, hier nur
+    // sichtbar/unsichtbar je Ansicht) - nur auf der Speisekarte UND nur,
+    // wenn ueberhaupt eine Leiste/ein Hamburger-Knopf drinsteckt (weniger
+    // als 2 Kategorien: menu.ts laesst den Container dann leer).
+    const topbarKategorien = document.getElementById("topbar-kategorien");
+    if (topbarKategorien) {
+        topbarKategorien.hidden = !(id === "view-menu" && topbarKategorien.childElementCount > 0);
+    }
 }
 
 /** Fuellt nur den INHALT von view-error - das Umschalten dorthin bleibt bei
