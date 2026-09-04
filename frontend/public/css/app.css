@@ -269,6 +269,19 @@ ul.plain li:last-child { border-bottom: none; }
     background: var(--card-2);
 }
 .mini-form .full { grid-column: 1 / -1; }
+/* Abschnitts-Trenner innerhalb eines mini-form (Feedback: Design-Karte war
+   ein einziger undifferenzierter Block aus ~20 Feldern - jetzt in
+   benannte Gruppen geteilt, ohne die Feld-Reihenfolge selbst zu aendern). */
+.mini-form__abschnitt {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: var(--sp-3);
+    margin-top: var(--sp-1);
+}
 .mini-form label {
     font-size: 11.5px;
     font-weight: 600;
