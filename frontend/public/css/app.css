@@ -1,84 +1,156 @@
-/* OrderXpress - gemeinsames Stylesheet fuer alle Ansichten */
+/* OrderXpress - gemeinsames Stylesheet fuer die Personal-Ansichten
+   (admin/kitchen/service/stats/waiter/platform/device). Diese Seiten laufen
+   noch als eigenstaendige HTML+JS-Dateien ausserhalb der Vite-Pipeline
+   (siehe CLAUDE.md), koennen also NICHT aus src/styles importieren - die
+   Werte hier sind bewusst dieselben wie dort (tokens.css/components.css),
+   nur als eigene Kopie. Google Fonts (nicht die selbst gehosteten
+   @fontsource-Pakete) liefern dieselben drei Schriften, per <link> im
+   jeweiligen <head>.
+
+   Selektoren sind UNVERAENDERT zur alten Fassung (.card, button.green,
+   .badge, ...) - admin.js/kitchen.js/service.js/stats.js/waiter.js/
+   platform.js kennen nur diese Namen, ein Umbenennen haette sie zerbrochen.
+   Nur die Werte dahinter sind neu. */
+
 :root {
-    --bg: #f4f5f7;
+    --bg: #f6f6f4;
     --card: #ffffff;
-    --text: #1f2430;
-    --muted: #6b7280;
-    --line: #e5e7eb;
-    --primary: #2563eb;
-    --green: #16a34a;
-    --red: #dc2626;
-    --amber: #d97706;
-    --radius: 12px;
+    --card-2: #efefec;
+    --text: #16171a;
+    --muted: #6e7076;
+    --line: #e2e2dd;
+
+    /* Eigene Farbe der Personal-Werkzeuge (nicht die Laden-Akzentfarbe der
+       Gaeste-Seite) - dieselbe wie theme-color in index.html/device.html,
+       damit die ganze Plattform hinter der Kulisse aus einem Guss wirkt. */
+    --primary: #1f3d34;
+    --primary-text: #ffffff;
+    --green: #16794f;
+    --red: #b3261e;
+    --amber: #b26a00;
+    --on-signal: #ffffff;
+
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --radius-pill: 999px;
+
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --sp-6: 32px;
+    --sp-7: 48px;
+
+    --font-display: "Bricolage Grotesque", Georgia, serif;
+    --font-sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+    --shadow-1: 0 1px 2px rgba(20, 25, 22, .05);
+    --shadow-2: 0 10px 28px rgba(20, 25, 22, .12);
+
+    --touch: 44px;
+    --touch-lg: 56px;
+
+    /* Rueckwaertskompatibel: alte Namen zeigen auf die neuen Werte, falls
+       irgendwo (z.B. Inline-Styles) noch --radius/--primary direkt verwendet wird. */
+    --radius-old: var(--radius);
 }
 
 * { box-sizing: border-box; }
 
 body {
     margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-sans);
     background: var(--bg);
     color: var(--text);
+    -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; }
+
 header.topbar {
-    background: #111827;
-    color: #fff;
-    padding: 12px 16px;
+    background: var(--primary);
+    color: var(--primary-text);
+    padding: var(--sp-3) var(--sp-4);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     position: sticky;
     top: 0;
     z-index: 10;
+    box-shadow: var(--shadow-1);
 }
-header.topbar h1 { font-size: 18px; margin: 0; flex: 1; }
-header.topbar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
-header.topbar .dot.on { background: var(--green); }
+header.topbar h1 { font-size: 17px; margin: 0; flex: 1; font-weight: 700; }
+header.topbar .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .35); flex: none; }
+header.topbar .dot.on { background: #6bd99a; }
+header.topbar .brand-logo { background: #fff; }
 
-main { max-width: 1100px; margin: 0 auto; padding: 16px; padding-bottom: 90px; }
+main { max-width: 1100px; margin: 0 auto; padding: var(--sp-4); padding-bottom: 90px; }
 
 .card {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 14px;
+    padding: var(--sp-4) var(--sp-5);
+    margin-bottom: var(--sp-4);
+    box-shadow: var(--shadow-1);
 }
-.card h2 { margin: 0 0 12px; font-size: 16px; }
+.card h2 {
+    margin: 0 0 var(--sp-3);
+    font-size: 16px;
+    letter-spacing: -.01em;
+}
 
-.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.columns { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
+.grid { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.columns { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
 
+/* ---------- Knoepfe: dieselbe Pillen-/Mindestgroessen-Sprache wie .ox-btn ---------- */
 button {
     font: inherit;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 14px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 0 var(--sp-4);
+    min-height: var(--touch);
     cursor: pointer;
     background: var(--primary);
-    color: #fff;
+    color: var(--primary-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    transition: filter .15s, opacity .15s;
 }
-button.green { background: var(--green); }
-button.red { background: var(--red); }
-button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
-button.small { padding: 6px 10px; font-size: 13px; }
+button:hover:not(:disabled) { filter: brightness(1.1); }
+button.green { background: var(--green); color: var(--on-signal); }
+button.red { background: var(--red); color: var(--on-signal); }
+button.ghost { background: transparent; color: var(--text); border-color: var(--line); }
+button.small { min-height: var(--touch); padding: 0 var(--sp-3); font-size: 13px; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 
 input, select, textarea {
     font: inherit;
-    padding: 10px;
+    min-height: var(--touch);
+    padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     width: 100%;
     background: #fff;
+    color: var(--text);
     resize: vertical;
 }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+input[type="color"] { width: 48px; height: var(--touch); padding: 2px; cursor: pointer; }
 
 .badge {
     display: inline-block;
-    padding: 2px 10px;
-    border-radius: 999px;
+    padding: 2px var(--sp-3);
+    border-radius: var(--radius-pill);
     font-size: 12px;
     font-weight: 600;
     color: #fff;
@@ -90,102 +162,119 @@ input, select, textarea {
 .badge.blue { background: var(--primary); }
 
 .muted { color: var(--muted); font-size: 13px; }
-.big { font-size: 26px; font-weight: 700; }
-.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.big { font-size: 26px; font-weight: 700; font-family: var(--font-display); }
+.row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .spacer { flex: 1; }
-.center { text-align: center; padding: 40px 16px; }
+.center { text-align: center; padding: var(--sp-7) var(--sp-4); }
 
-ul.plain { list-style: none; margin: 8px 0; padding: 0; }
-ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain { list-style: none; margin: var(--sp-2) 0; padding: 0; }
+ul.plain li { padding: var(--sp-2) 0; border-bottom: 1px solid var(--line); }
 ul.plain li:last-child { border-bottom: none; }
 
-/* Warenkorb-Leiste (Gast, unten fixiert) */
+/* Warenkorb-Leiste (Gast, unten fixiert) - auf den Personal-Seiten ungenutzt,
+   bleibt fuer den Gast-Vorschau-Link in der Inhaber-Ansicht erhalten. */
 .cartbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    background: #111827;
+    background: var(--primary);
     color: #fff;
-    padding: 12px 16px;
+    padding: var(--sp-3) var(--sp-4);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     z-index: 20;
 }
 .cartbar button { background: var(--green); }
 
-.qty { display: inline-flex; align-items: center; gap: 8px; }
-.qty button { padding: 4px 12px; font-size: 16px; }
+.qty { display: inline-flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); }
+.qty button { padding: 0 var(--sp-3); font-size: 16px; }
 
-/* Gerichte-Fotos */
+/* ---------- Gerichte-Fotos: Platzhalter ist der Normalfall, kein Fehlerzustand -
+   ein Gericht OHNE Foto ist ausdruecklich erlaubt (kein Pflichtfeld). ---------- */
 .thumb {
     width: 56px;
     height: 56px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
-    background: var(--line);
+    background: var(--card-2);
 }
 .thumb-placeholder {
     width: 56px;
     height: 56px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
-    background: var(--line);
+    background: var(--card-2);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--muted);
-    font-size: 22px;
+    font-size: 20px;
+    border: 1px dashed var(--line);
 }
 
-/* Kleine Inline-Formulare (Tisch/Kategorie/Gericht bearbeiten) */
+/* ---------- Kleine Inline-Formulare (Tisch/Kategorie/Gericht bearbeiten) ---------- */
 .mini-form {
     display: grid;
-    gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    padding: 12px;
-    border: 1px dashed var(--line);
-    border-radius: 8px;
-    margin: 10px 0;
-    background: #fafbfc;
+    gap: var(--sp-3);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    padding: var(--sp-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: var(--sp-3) 0;
+    background: var(--card-2);
 }
 .mini-form .full { grid-column: 1 / -1; }
-.mini-form label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 3px; }
-.check { display: flex; align-items: center; gap: 6px; }
-.check input { width: auto; }
+.mini-form label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: var(--sp-1);
+}
+.check { display: flex; align-items: center; gap: var(--sp-2); }
+.check input { width: auto; min-height: auto; }
 
 #toast {
     position: fixed;
     bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
-    background: #111827;
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 999px;
+    background: var(--text);
+    color: var(--bg);
+    padding: var(--sp-3) var(--sp-5);
+    border-radius: var(--radius-pill);
     opacity: 0;
     transition: opacity .3s;
     pointer-events: none;
     z-index: 50;
     max-width: 90%;
+    box-shadow: var(--shadow-2);
 }
 #toast.show { opacity: 1; }
 #toast.error { background: var(--red); }
 
-/* Overlay fuer die QR-Anzeige */
+/* ---------- Overlay fuer QR-Anzeige/Details ---------- */
 #overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.6);
+    background: rgba(15, 20, 17, .65);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 40;
+    padding: var(--sp-4);
 }
 #overlay.show { display: flex; }
-#overlay .box { background: #fff; padding: 20px; border-radius: var(--radius); text-align: center; }
+#overlay .box {
+    background: #fff;
+    padding: var(--sp-5);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    box-shadow: var(--shadow-2);
+}
 #overlay img { width: 280px; height: 280px; }
 
-/* Detail-Ansicht eines Gerichts (Gast) */
 #overlay .detail-box {
     text-align: left;
     width: 92%;
@@ -197,51 +286,33 @@ ul.plain li:last-child { border-bottom: none; }
     width: 100%;
     height: 220px;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
 }
 .clickable { cursor: pointer; }
 
-/* Bon-Vorschau (Admin.zeigeBonVorschau) - reine Bildschirm-Vorschau, kein
-   echter Druck. Monospace wie der tatsaechliche ESC/POS-Ausdruck. */
+/* ---------- Bon-Vorschau ---------- */
 #overlay .bon-box {
     width: 280px;
     max-width: 90vw;
     max-height: 88vh;
     overflow-y: auto;
     text-align: left;
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
 }
-.bon-kopf {
-    text-align: center;
-    font-weight: 700;
-    font-size: 16px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
-.bon-sub {
-    text-align: center;
-    color: var(--muted);
-}
-.bon-zeile {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 2px 0;
-}
-.bon-summe {
-    font-weight: 700;
-    font-size: 15px;
-}
+.bon-kopf { text-align: center; font-weight: 700; font-size: 16px; text-transform: uppercase; margin-bottom: var(--sp-1); }
+.bon-sub { text-align: center; color: var(--muted); }
+.bon-zeile { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 2px 0; font-variant-numeric: tabular-nums; }
+.bon-summe { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 600px) {
-    main { padding: 10px; padding-bottom: 90px; }
+    main { padding: var(--sp-3); padding-bottom: 90px; }
     .big { font-size: 22px; }
+    .card { padding: var(--sp-4); }
 }
 
-/* ===== Laden-Design (Gaeste-Seite) ===== */
+/* ===== Laden-Design (Gaeste-Seite ueber die alte Vorschau erreichbar) ===== */
 
-/* Logo in der Kopfzeile der Gaeste-Seite */
 .brand-logo {
     height: 32px;
     max-width: 160px;
@@ -251,37 +322,35 @@ ul.plain li:last-child { border-bottom: none; }
     padding: 2px 4px;
 }
 
-/* Optionales Hintergrundbild wird per Inline-Style gesetzt; diese Klasse
-   sorgt fuer eine helle, gut lesbare Ueberlagerung ueber dem Bild. */
 body.has-bg-image { background-size: cover; background-position: center; background-attachment: fixed; }
 body.has-bg-image main > .card,
 body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
 
-/* ===== Hamburger-Menue fuer Kategorien (Gast) ===== */
+/* ===== Hamburger-Menue fuer Kategorien (alte Gast-Vorschau) ===== */
 .cat-bar {
     position: sticky;
     top: 52px;
     z-index: 15;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 8px 12px;
-    margin-bottom: 12px;
+    padding: var(--sp-2) var(--sp-3);
+    margin-bottom: var(--sp-3);
 }
 .cat-bar .burger {
     background: var(--primary);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    padding: var(--sp-2) var(--sp-3);
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
 }
-.cat-bar .cat-title { font-weight: 700; }
+.cat-bar .cat-title { font-weight: 700; font-family: var(--font-display); }
 .cat-panel {
     display: none;
     position: sticky;
@@ -290,8 +359,8 @@ body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 8px;
-    margin-bottom: 12px;
+    padding: var(--sp-2);
+    margin-bottom: var(--sp-3);
 }
 .cat-panel.open { display: block; }
 .cat-panel button {
@@ -301,139 +370,140 @@ body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
     background: transparent;
     color: var(--text);
     border: none;
-    border-bottom: 1px dashed var(--line);
-    padding: 12px 8px;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    padding: var(--sp-3) var(--sp-2);
     font-size: 15px;
     cursor: pointer;
 }
 .cat-panel button:last-child { border-bottom: none; }
 
-/* Farbwaehler in der Inhaber-Ansicht */
-input[type="color"] { width: 48px; height: 38px; padding: 2px; cursor: pointer; }
-
-/* Umschalt-Leiste zwischen Inhaber / Service / Kueche (rollenabhaengig) */
+/* ---------- Umschalt-Leiste zwischen Inhaber / Service / Kueche ---------- */
 .ox-nav {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     flex-wrap: wrap;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 8px 12px;
-    margin-bottom: 14px;
+    padding: var(--sp-2) var(--sp-3);
+    margin-bottom: var(--sp-4);
 }
 .ox-nav a {
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
     color: var(--text);
     border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--sp-4);
     font-size: 14px;
 }
-.ox-nav a.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+.ox-nav a.current { background: var(--primary); color: #fff; border-color: transparent; }
 
 /* QR-Code eines Personal-Geraets */
-.device-qr { width: 240px; height: 240px; background: #fff; border-radius: 8px; }
+.device-qr { width: 240px; height: 240px; background: #fff; border-radius: var(--radius-sm); border: 1px solid var(--line); }
 
-/* Statistik-Karte (Inhaber) */
-.stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+/* ---------- Statistik-Karte (Inhaber) ---------- */
+.stat-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
 .stat-box {
     flex: 1;
-    min-width: 120px;
-    background: var(--bg);
+    min-width: 130px;
+    background: var(--card-2);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 14px;
+    padding: var(--sp-4);
     text-align: center;
 }
-.stat-value { font-size: 26px; font-weight: 700; color: var(--primary); }
-.stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.bar { height: 6px; background: var(--line); border-radius: 999px; margin-top: 4px; overflow: hidden; }
-.bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+.stat-value { font-size: 26px; font-weight: 700; font-family: var(--font-mono); color: var(--primary); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 12.5px; color: var(--muted); margin-top: var(--sp-1); text-transform: uppercase; letter-spacing: .04em; }
+.bar { height: 6px; background: var(--line); border-radius: var(--radius-pill); margin-top: var(--sp-1); overflow: hidden; }
+.bar-fill { height: 100%; background: var(--primary); border-radius: var(--radius-pill); }
 
 /* Zeitraum-Reiter (Statistik-Seite) */
-.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 .tabs button {
-    background: var(--bg);
+    background: var(--card-2);
     color: var(--text);
     border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 14px;
-    cursor: pointer;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--sp-4);
+    min-height: 38px;
+    font-size: 13.5px;
 }
-.tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.tabs button.active { background: var(--primary); color: #fff; border-color: transparent; }
 
 /* Senkrechtes Balkendiagramm (Umsatz pro Tag / Stosszeiten) */
-.vchart { display: flex; align-items: flex-end; gap: 4px; height: 140px; overflow-x: auto; padding-top: 6px; }
+.vchart { display: flex; align-items: flex-end; gap: 4px; height: 140px; overflow-x: auto; padding-top: var(--sp-2); }
 .vbar { flex: 1 0 22px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
 .vbar .fill { width: 70%; min-height: 2px; background: var(--primary); border-radius: 4px 4px 0 0; }
 .vbar .fill.empty { background: var(--line); }
-.vbar .cap { font-size: 11px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; }
-.vbar .lab { font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+.vbar .cap { font-size: 11px; color: var(--muted); margin-bottom: var(--sp-1); white-space: nowrap; font-family: var(--font-mono); }
+.vbar .lab { font-size: 11px; color: var(--muted); margin-top: var(--sp-1); white-space: nowrap; }
 
 /* Gefahrenzone: Zuruecksetzen / Verlauf loeschen */
 .danger { border-color: var(--red); }
 .danger h2 { color: var(--red); }
 
-/* QR-Login per Kamera (Overlay) */
+/* ---------- QR-Login per Kamera ---------- */
 #qr-overlay {
     position: fixed; inset: 0; z-index: 1000;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(10, 14, 12, 0.9);
     display: flex; align-items: center; justify-content: center;
-    padding: 16px;
+    padding: var(--sp-4);
 }
 #qr-overlay .qr-box { width: 100%; max-width: 420px; text-align: center; position: relative; }
 #qr-video {
-    width: 100%; max-height: 70vh; border-radius: 12px; background: #000; object-fit: cover;
+    width: 100%; max-height: 70vh; border-radius: var(--radius); background: #000; object-fit: cover;
 }
 #qr-overlay .qr-frame {
     position: absolute; top: 50%; left: 50%; width: 60%; aspect-ratio: 1;
     transform: translate(-50%, -55%);
-    border: 3px solid #fff; border-radius: 12px; box-shadow: 0 0 0 100vmax rgba(0,0,0,0.15);
+    border: 3px solid #fff; border-radius: var(--radius);
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,0.2);
     pointer-events: none;
 }
-#qr-hint { color: #fff; margin: 12px 0; }
-#qr-close { color: #fff; border-color: #888; }
+#qr-hint { color: #fff; margin: var(--sp-3) 0; }
+#qr-close { color: #fff; border-color: rgba(255,255,255,.4); }
 
-/* ---------- Kellner-Ruf: Alarm-Schicht (Service/Kellner, OX.callAlert) ----------
-   Rotes Dauer-Banner ganz oben: Kopfzeile (Anzahl + Ton-Schalter), darunter
-   je offener Ruf eine Zeile mit "Erledigt". */
+/* ---------- Kellner-Ruf: Alarm-Schicht (bewusst NICHT im Marken-Gruen -
+   ein Alarm muss sich von allem anderen abheben, das ist Funktion). ---------- */
 #ox-ruf-bar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-    background: #b3261e; color: #fff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+    background: var(--red); color: #fff;
+    box-shadow: var(--shadow-2);
     font-size: 15px;
 }
 #ox-ruf-bar .ox-ruf-bar__kopf {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px 6px;
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4) var(--sp-2);
     font-weight: 700; font-size: 16px;
+    font-family: var(--font-display);
 }
 #ox-ruf-bar .ox-ruf-bar__kopf > span { flex: 1; }
 #ox-ruf-bar .ox-ruf-bar__ton {
     background: rgba(255, 255, 255, .18); color: #fff;
-    border: 1px solid rgba(255, 255, 255, .55); border-radius: 8px;
-    padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, .55); border-radius: var(--radius-sm);
+    padding: var(--sp-2) var(--sp-3); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 #ox-ruf-bar .ox-ruf-bar__zeile {
-    display: flex; align-items: center; gap: 12px;
-    padding: 8px 16px;
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
     border-top: 1px solid rgba(255, 255, 255, .25);
 }
 #ox-ruf-bar .ox-ruf-bar__zeile > span { flex: 1; }
 #ox-ruf-bar .ox-ruf-bar__ok {
-    background: #fff; color: #b3261e;
-    border: 0; border-radius: 8px;
-    padding: 8px 16px; font: inherit; font-weight: 700; cursor: pointer;
+    background: #fff; color: var(--red);
+    border: 0; border-radius: var(--radius-sm);
+    padding: var(--sp-2) var(--sp-4); font: inherit; font-weight: 700; cursor: pointer;
 }
 #ox-ruf-bar .ox-ruf-bar__ok:disabled { opacity: .5; }
 
-/* Kurzer roter Bildschirm-Blitz bei jedem neuen Ruf */
 #ox-ruf-blitz {
     position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-    background: #b3261e; opacity: 0;
+    background: var(--red); opacity: 0;
 }
 #ox-ruf-blitz.an { animation: ox-ruf-blitz 1.1s ease-out; }
 @keyframes ox-ruf-blitz {
