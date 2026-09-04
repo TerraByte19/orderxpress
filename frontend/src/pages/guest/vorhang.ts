@@ -18,7 +18,10 @@
 import { bewegungAus } from "./animation";
 
 const SCHLUESSEL_PREFIX = "ox-intro-";
-const HALT_MIT_MARKE_MS = 550;
+/** Lesezeit fuer Logo/Willkommenstext - bewusst FEST (nicht von introSpeed
+ *  skaliert): Tempo betrifft nur die Vorhang-Bewegung, die Lesezeit eines
+ *  Menschen ist keine Stiloption. 2s reichen fuer einen kurzen Satz. */
+const HALT_MIT_MARKE_MS = 2000;
 const GUELTIGE_STILE = new Set(["HOCHKLAPPEN", "FADE", "MITTE", "VORHANG"]);
 const ZWEI_HAELFTEN = new Set(["MITTE", "VORHANG"]);
 
@@ -74,7 +77,9 @@ export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
         ? (theme.introSpeed as string)
         : "NORMAL";
     const dauerMs = Math.round(BASIS_DAUER_MS[stilSicher] * GESCHWINDIGKEIT_FAKTOR[geschwindigkeitSicher]);
-    const haltMitMarkeMs = Math.round(HALT_MIT_MARKE_MS * GESCHWINDIGKEIT_FAKTOR[geschwindigkeitSicher]);
+    // Lesezeit bleibt fest (siehe HALT_MIT_MARKE_MS) - nur die Vorhang-Bewegung
+    // selbst (dauerMs oben) folgt dem gewaehlten Tempo.
+    const haltMitMarkeMs = HALT_MIT_MARKE_MS;
 
     const vorhang = document.createElement("div");
     vorhang.className = `ox-vorhang ox-vorhang--${stilSicher.toLowerCase()}`;
