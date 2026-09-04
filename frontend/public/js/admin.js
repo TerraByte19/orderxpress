@@ -26,7 +26,7 @@ const Admin = {
             this.start();
         } catch (e) {
             OX.clearAuth();
-            OX.toast(e.status === 401 ? "Falsche Zugangsdaten" : e.message, true);
+            OX.toast(e.status === 401 || e.status === 403 ? "Falsche Zugangsdaten" : e.message, true);
         }
     },
 
