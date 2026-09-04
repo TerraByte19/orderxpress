@@ -22,7 +22,11 @@ export function ladeTheme(restaurantId: number): Promise<LadenTheme> {
     return api<LadenTheme>(`/api/guest/theme/${restaurantId}`);
 }
 
-export function wendeThemeAn(theme: LadenTheme): void {
+/** titelZusatz: menu-editor.ts nutzt dieselbe Funktion fuer die
+ *  Hero-Pixelparitaet (siehe dessen index.ts), braucht als Editor-Werkzeug
+ *  aber "Speisekarte" statt "Bestellen" im Tab-Titel - sonst klingt es wie
+ *  die Gaeste-Ansicht selbst. Default bleibt "Bestellen" fuer guest/index.ts. */
+export function wendeThemeAn(theme: LadenTheme, titelZusatz = "Bestellen"): void {
     setzeLadenDesign({
         accentColor: theme.accentColor,
         backgroundColor: theme.backgroundColor,
@@ -33,7 +37,7 @@ export function wendeThemeAn(theme: LadenTheme): void {
     });
 
     if (theme.name) {
-        document.title = `${theme.name} – Bestellen`;
+        document.title = `${theme.name} – ${titelZusatz}`;
     }
 
     // Cache-Buster wie in der alten Fassung (guest.js, loadTheme()): ohne ihn

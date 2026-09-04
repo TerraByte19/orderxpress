@@ -45,7 +45,7 @@ async function start(): Promise<void> {
 
     try {
         geladenesTheme = await ladeTheme(me.restaurantId);
-        wendeThemeAn(geladenesTheme);
+        wendeThemeAn(geladenesTheme, "Speisekarte bearbeiten");
     } catch { /* Theme optional, Standard-Optik greift */ }
 
     await ladeUndZeichne();
