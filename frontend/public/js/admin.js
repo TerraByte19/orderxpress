@@ -290,7 +290,21 @@ const Admin = {
         fileInput.type = "file";
         fileInput.accept = "image/jpeg,image/png";
         fileInput.style.display = "none";
-        fileInput.onchange = () => this.uploadImage(item.id, fileInput.files[0]);
+        fileInput.onchange = () => {
+            const foto = fileInput.files[0];
+            fileInput.value = "";
+            if (!foto) return;
+            // Erst Zuschnitt-Dialog (mit Gast-Vorschau), dann Upload
+            (async () => {
+                let restaurantId = 0;
+                try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* Vorschau faellt dann zurueck */ }
+                OX.oeffneCropper({
+                    datei: foto, restaurantId: restaurantId,
+                    form: "quadrat", ausgabe: 900, fokus: "gericht:" + item.id,
+                    onFertig: (blob) => this.uploadImage(item.id, new File([blob], "foto.png", { type: "image/png" }))
+                });
+            })();
+        };
         row.appendChild(fileInput);
         row.appendChild(this.btn(item.imageUrl ? "Foto ändern" : "Foto", "ghost", () => fileInput.click()));
         if (item.imageUrl) {
@@ -652,21 +666,35 @@ const Admin = {
     async uploadAsset(kind) {
         const input = document.getElementById(kind === "logo" ? "logo-file" : "bg-file");
         const file = input.files[0];
+        input.value = "";
         if (!file) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/admin/design/" + kind, {
-            method: "POST", headers: OX.authHeader(), body: formData
+
+        let restaurantId = 0;
+        try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* Vorschau faellt dann zurueck */ }
+
+        const cfg = kind === "logo"
+            ? { form: "kreis", ausgabe: 600, fokus: "logo" }
+            : { form: "breit", ratio: 2.5, ausgabe: 1500, fokus: "background" };
+
+        OX.oeffneCropper({
+            datei: file, restaurantId: restaurantId,
+            form: cfg.form, ratio: cfg.ratio, ausgabe: cfg.ausgabe, fokus: cfg.fokus,
+            onFertig: async (blob) => {
+                const fd = new FormData();
+                fd.append("file", blob, kind + ".png");
+                const res = await fetch("/api/admin/design/" + kind, {
+                    method: "POST", headers: OX.authHeader(), body: fd
+                });
+                if (res.ok) {
+                    OX.toast(kind === "logo" ? "Logo gespeichert" : "Hintergrund gespeichert");
+                } else {
+                    let detail = null;
+                    try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+                    OX.toast(detail || "Upload fehlgeschlagen", true);
+                }
+                this.loadDesign();
+            }
         });
-        if (res.ok) {
-            OX.toast(kind === "logo" ? "Logo gespeichert" : "Hintergrund gespeichert");
-            input.value = "";
-        } else {
-            let detail = null;
-            try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
-            OX.toast(detail || "Upload fehlgeschlagen", true);
-        }
-        this.loadDesign();
     },
 
     async deleteAsset(kind) {
@@ -701,22 +729,36 @@ const Admin = {
 
     async uploadGalleryImage() {
         const input = document.getElementById("gallery-file");
-        const file = input.files[0];
-        if (!file) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/admin/gallery", {
-            method: "POST", headers: OX.authHeader(), body: formData
-        });
-        if (res.ok) {
-            OX.toast("Foto hinzugefügt");
-            input.value = "";
-        } else {
-            let detail = null;
-            try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
-            OX.toast(detail || "Upload fehlgeschlagen", true);
-        }
-        this.loadGallery();
+        const dateien = Array.from(input.files || []);
+        input.value = "";
+        if (!dateien.length) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
+
+        let restaurantId = 0;
+        try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* egal */ }
+
+        const naechste = (i) => {
+            if (i >= dateien.length) { this.loadGallery(); return; }
+            OX.oeffneCropper({
+                datei: dateien[i], restaurantId: restaurantId,
+                form: "breit", ratio: 1.5, ausgabe: 1200, fokus: "galerie",
+                onAbbrechen: () => naechste(i + 1),
+                onFertig: async (blob) => {
+                    const fd = new FormData();
+                    fd.append("file", blob, "galerie.png");
+                    const res = await fetch("/api/admin/gallery", {
+                        method: "POST", headers: OX.authHeader(), body: fd
+                    });
+                    if (res.ok) OX.toast("Foto hinzugefügt");
+                    else {
+                        let detail = null;
+                        try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+                        OX.toast(detail || "Upload fehlgeschlagen", true);
+                    }
+                    naechste(i + 1);
+                }
+            });
+        };
+        naechste(0);
     },
 
     async deleteGalleryImage(id) {
