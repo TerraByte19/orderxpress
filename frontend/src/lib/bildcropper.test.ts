@@ -50,4 +50,18 @@ describe("bildcropper _crop.ausgabeMasse", () => {
   it("rundet die Höhe", () => {
     expect(crop.ausgabeMasse(1000, 3).h).toBe(333);
   });
+  it("faellt bei ratio 0 auf 1 zurueck (ratio||1)", () => {
+    expect(crop.ausgabeMasse(600, 0)).toEqual({ w: 600, h: 600 });
+  });
+  it("faellt bei ratio undefined auf 1 zurueck (ratio||1)", () => {
+    expect(crop.ausgabeMasse(600, undefined as any)).toEqual({ w: 600, h: 600 });
+  });
+});
+
+describe("bildcropper _crop.zielAusFokus", () => {
+  const z = (window as any).OX._crop.zielAusFokus as (f: string) => { ziel: string; gerichtId?: string };
+  it("logo", () => expect(z("logo")).toEqual({ ziel: "logo" }));
+  it("background", () => expect(z("background")).toEqual({ ziel: "background" }));
+  it("galerie", () => expect(z("galerie")).toEqual({ ziel: "galerie" }));
+  it("gericht mit id", () => expect(z("gericht:42")).toEqual({ ziel: "gericht", gerichtId: "42" }));
 });
