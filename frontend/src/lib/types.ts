@@ -192,3 +192,22 @@ export interface AdminGericht {
     imageUrl: string | null;
     badges: string[];
 }
+
+/** Optionen fuer den klassischen Bild-Zuschnitt-Dialog aus
+ *  public/js/bildcropper.js (setzt window.OX.oeffneCropper). */
+export interface CropperOptionen {
+    datei: File;
+    form: "kreis" | "quadrat" | "breit";
+    ratio?: number;
+    ausgabe: number;
+    fokus: string;
+    restaurantId: number | string;
+    onFertig: (blob: Blob) => void;
+    onAbbrechen?: () => void;
+}
+
+declare global {
+    interface Window {
+        OX?: { oeffneCropper(opts: CropperOptionen): void };
+    }
+}

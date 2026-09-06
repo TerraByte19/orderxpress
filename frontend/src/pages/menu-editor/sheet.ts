@@ -5,10 +5,26 @@
  * Sheet getippt - Kategorie ergibt sich aus der Stelle, Position aus den
  * Pfeilen (siehe Spec/Plan, bewusste Vereinfachung). */
 
+import { api } from "../../lib/api";
 import { el } from "../../lib/ui";
-import type { AdminGericht } from "../../lib/types";
+import type { AdminGericht, Me } from "../../lib/types";
 import { GERICHT_MARKEN } from "../../lib/types";
 import { aendereGericht, ladeGerichtFoto, legeGerichtAn, loescheGerichtFoto } from "./api";
+
+/* Laden-Id fuer die Gast-Vorschau im Zuschnitt-Dialog. Der Editor kennt
+ * sie schon aus /api/me (index.ts) - hier einmal nachladen und merken,
+ * damit baueFotoBereich sie ohne Umweg erreicht. Faellt bei Fehler auf 0
+ * zurueck (der Cropper zeigt dann nur den Zuschnitt ohne Vorschau). */
+let restaurantIdCache: number | null = null;
+async function holeRestaurantId(): Promise<number> {
+    if (restaurantIdCache !== null) return restaurantIdCache;
+    try {
+        restaurantIdCache = (await api<Me>("/api/me")).restaurantId;
+    } catch {
+        restaurantIdCache = 0;
+    }
+    return restaurantIdCache;
+}
 
 function versteckeOverlay(overlay: HTMLElement): void {
     overlay.classList.remove("is-open");
@@ -130,10 +146,28 @@ function baueFotoBereich(gericht: AdminGericht, fehlerAnzeige: HTMLElement, beiE
     dateiFeld.accept = "image/jpeg,image/png";
     dateiFeld.addEventListener("change", () => {
         const datei = dateiFeld.files?.[0];
+        dateiFeld.value = "";
         if (!datei) return;
-        ladeGerichtFoto(gericht.id, datei)
-            .then(beiErfolg)
-            .catch((fehler: unknown) => { fehlerAnzeige.textContent = (fehler as Error).message; });
+
+        const hochladen = (f: File): void => {
+            ladeGerichtFoto(gericht.id, f)
+                .then(beiErfolg)
+                .catch((fehler: unknown) => { fehlerAnzeige.textContent = (fehler as Error).message; });
+        };
+
+        const cropper = window.OX?.oeffneCropper;
+        if (!cropper) { hochladen(datei); return; }
+
+        void holeRestaurantId().then((restaurantId) => {
+            cropper({
+                datei,
+                form: "quadrat",
+                ausgabe: 900,
+                fokus: "gericht:" + gericht.id,
+                restaurantId,
+                onFertig: (blob: Blob) => hochladen(new File([blob], "foto.png", { type: "image/png" }))
+            });
+        });
     });
     bereich.appendChild(dateiFeld);
     if (gericht.imageUrl) {
