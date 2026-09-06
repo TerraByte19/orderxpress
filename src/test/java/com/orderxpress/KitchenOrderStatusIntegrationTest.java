@@ -53,6 +53,16 @@ class KitchenOrderStatusIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void stornoAusFertigIstErlaubt() throws Exception {
+        // Solange noch nicht serviert wurde, darf auch eine READY-Bestellung storniert werden.
+        Ctx c = orderReady("k9");
+        setStatus(c.owner(), c.orderId(), "READY").andExpect(status().isOk());
+        setStatus(c.owner(), c.orderId(), "CANCELLED")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
     void ausStorniertGehtNichtsMehr() throws Exception {
         Ctx c = orderReady("k4");
         setStatus(c.owner(), c.orderId(), "CANCELLED").andExpect(status().isOk());

@@ -41,7 +41,7 @@ public class OrderService {
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
             OrderStatus.NEW, EnumSet.of(OrderStatus.IN_PREPARATION, OrderStatus.READY, OrderStatus.CANCELLED),
             OrderStatus.IN_PREPARATION, EnumSet.of(OrderStatus.READY, OrderStatus.CANCELLED),
-            OrderStatus.READY, EnumSet.of(OrderStatus.SERVED),
+            OrderStatus.READY, EnumSet.of(OrderStatus.SERVED, OrderStatus.CANCELLED),
             OrderStatus.SERVED, EnumSet.noneOf(OrderStatus.class),
             OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class));
 
