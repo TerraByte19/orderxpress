@@ -110,7 +110,7 @@ describe("vorschau: starteVorschau", () => {
       '<div id="menu-gallery" hidden></div><div id="cartbar" hidden></div>';
 
     const spies = {
-      ladeTheme: vi.fn().mockResolvedValue({ accentColor: "#1f3d34" }),
+      ladeTheme: vi.fn().mockResolvedValue({ accentColor: "#1f3d34", categoriesAsHamburger: true }),
       ladeSpeisekarte: vi.fn().mockResolvedValue([]),
       zeigeGalerie: vi.fn().mockResolvedValue(undefined),
       wendeThemeAn: vi.fn(),
@@ -122,8 +122,10 @@ describe("vorschau: starteVorschau", () => {
 
     expect(spies.ladeTheme).toHaveBeenCalledWith(5);
     expect(spies.ladeSpeisekarte).toHaveBeenCalledWith(5);
-    expect(spies.wendeThemeAn).toHaveBeenCalledWith({ accentColor: "#1f3d34" });
+    expect(spies.wendeThemeAn).toHaveBeenCalledWith({ accentColor: "#1f3d34", categoriesAsHamburger: true });
     expect(spies.zeichneSpeisekarte).toHaveBeenCalled();
+    // Fix 5: Hamburger-Flag wird aus dem Theme durchgereicht.
+    expect(spies.zeichneSpeisekarte).toHaveBeenCalledWith(expect.anything(), true);
     expect(spies.setzeBestellenErlaubt).toHaveBeenCalledWith(false);
     expect(spies.zeigeAnsichtInhalt).toHaveBeenCalledWith("view-menu");
     expect(spies.zeigeGalerie).toHaveBeenCalledWith(5);

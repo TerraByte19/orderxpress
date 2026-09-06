@@ -218,8 +218,12 @@
     ov.querySelector('[data-z="ein"]').addEventListener("click", function () { setzeZoom(skala * 1.15); });
     ov.querySelector('[data-z="aus"]').addEventListener("click", function () { setzeZoom(skala / 1.15); });
 
+    // Benannt, damit schliessen() ihn wieder abmelden kann (sonst Leak).
+    function beiResize() { maskeStellen(); canvasStellen(); begrenze(); zeichne(); }
+
     function schliessen() {
       window.removeEventListener("message", aufNachricht);
+      window.removeEventListener("resize", beiResize);
       ov.remove();
     }
     ov.querySelector('[data-a="ab"]').addEventListener("click", function () {
@@ -256,7 +260,7 @@
     bild.onload = function () {
       URL.revokeObjectURL(objUrl);
       maskeStellen(); canvasStellen(); start();
-      window.addEventListener("resize", function () { maskeStellen(); canvasStellen(); begrenze(); zeichne(); });
+      window.addEventListener("resize", beiResize);
     };
     bild.onerror = function () {
       URL.revokeObjectURL(objUrl); schliessen();

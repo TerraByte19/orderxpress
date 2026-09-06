@@ -142,14 +142,16 @@ async function start(): Promise<void> {
             ladeSpeisekarte,
             zeigeGalerie,
             wendeThemeAn: (theme) => wendeThemeAn(theme as LadenTheme),
-            zeichneSpeisekarte: (gerichte) => {
+            zeichneSpeisekarte: (gerichte, hamburger) => {
                 kategorien = Array.isArray(gerichte) ? (gerichte as Kategorie[]) : [];
                 const ziel = document.getElementById("menu-container");
                 if (!ziel) return;
                 // Bestellen ist aus - die Rueckrufe (Detail/Schnell-Hinzufuegen)
                 // bleiben nur als Signatur-Fueller, die "+"-Knoepfe sind per
-                // CSS (:root[data-vorschau]) ohnehin verborgen.
-                zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, false, false);
+                // CSS (:root[data-vorschau]) ohnehin verborgen. Hamburger-Modus
+                // kommt aus dem Theme (vorschau.ts), damit die Vorschau die
+                // echte Kategorien-Nav zeigt.
+                zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, false, hamburger);
                 staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
             },
             setzeBestellenErlaubt,

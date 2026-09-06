@@ -20,10 +20,12 @@ async function holeRestaurantId(): Promise<number> {
     if (restaurantIdCache !== null) return restaurantIdCache;
     try {
         restaurantIdCache = (await api<Me>("/api/me")).restaurantId;
+        return restaurantIdCache;
     } catch {
-        restaurantIdCache = 0;
+        // Fehler NICHT cachen - sonst liefert der Guard fuer immer 0.
+        // Der naechste Zuschnitt fragt /api/me erneut.
+        return 0;
     }
-    return restaurantIdCache;
 }
 
 function versteckeOverlay(overlay: HTMLElement): void {

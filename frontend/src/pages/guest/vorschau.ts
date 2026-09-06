@@ -108,7 +108,7 @@ export interface VorschauAbhaengigkeiten {
   ladeSpeisekarte: (id: number) => Promise<unknown>;
   zeigeGalerie: (id: number) => Promise<void>;
   wendeThemeAn: (theme: unknown) => void;
-  zeichneSpeisekarte: (gerichte: unknown) => void;
+  zeichneSpeisekarte: (gerichte: unknown, hamburger: boolean) => void;
   setzeBestellenErlaubt: (erlaubt: boolean) => void;
   zeigeAnsichtInhalt: (id: string, name?: string) => void;
 }
@@ -127,7 +127,10 @@ export async function starteVorschau(deps: VorschauAbhaengigkeiten): Promise<voi
     deps.ladeSpeisekarte(id).catch(() => [] as unknown)
   ]);
   if (theme) deps.wendeThemeAn(theme);
-  deps.zeichneSpeisekarte(gerichte ?? []);
+  // Kategorien-Sprungnav als Hamburger genau wie im Normalfluss (index.ts):
+  // aus dem geladenen Theme lesen, Rueckfall false wenn Theme fehlt.
+  const hamburger = !!(theme && (theme as { categoriesAsHamburger?: boolean }).categoriesAsHamburger);
+  deps.zeichneSpeisekarte(gerichte ?? [], hamburger);
   deps.setzeBestellenErlaubt(false);
   deps.zeigeAnsichtInhalt("view-menu");
   void deps.zeigeGalerie(id).catch(() => undefined);

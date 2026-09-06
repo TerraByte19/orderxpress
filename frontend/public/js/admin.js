@@ -294,6 +294,8 @@ const Admin = {
             const foto = fileInput.files[0];
             fileInput.value = "";
             if (!foto) return;
+            // Rueckfall, falls bildcropper.js nicht geladen wurde: direkt hochladen.
+            if (!OX.oeffneCropper) { this.uploadImage(item.id, foto); return; }
             // Erst Zuschnitt-Dialog (mit Gast-Vorschau), dann Upload
             (async () => {
                 let restaurantId = 0;
@@ -669,6 +671,24 @@ const Admin = {
         input.value = "";
         if (!file) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
 
+        // Rueckfall, falls bildcropper.js nicht geladen wurde: Datei roh hochladen.
+        if (!OX.oeffneCropper) {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/admin/design/" + kind, {
+                method: "POST", headers: OX.authHeader(), body: fd
+            });
+            if (res.ok) {
+                OX.toast(kind === "logo" ? "Logo gespeichert" : "Hintergrund gespeichert");
+            } else {
+                let detail = null;
+                try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+                OX.toast(detail || "Upload fehlgeschlagen", true);
+            }
+            this.loadDesign();
+            return;
+        }
+
         let restaurantId = 0;
         try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* Vorschau faellt dann zurueck */ }
 
@@ -733,6 +753,25 @@ const Admin = {
         input.value = "";
         if (!dateien.length) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
 
+        // Rueckfall, falls bildcropper.js nicht geladen wurde: Dateien roh hochladen.
+        if (!OX.oeffneCropper) {
+            for (const datei of dateien) {
+                const fd = new FormData();
+                fd.append("file", datei);
+                const res = await fetch("/api/admin/gallery", {
+                    method: "POST", headers: OX.authHeader(), body: fd
+                });
+                if (res.ok) OX.toast("Foto hinzugefügt");
+                else {
+                    let detail = null;
+                    try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+                    OX.toast(detail || "Upload fehlgeschlagen", true);
+                }
+            }
+            this.loadGallery();
+            return;
+        }
+
         let restaurantId = 0;
         try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* egal */ }
 
@@ -743,18 +782,25 @@ const Admin = {
                 form: "breit", ratio: 1.5, ausgabe: 1200, fokus: "galerie",
                 onAbbrechen: () => naechste(i + 1),
                 onFertig: async (blob) => {
-                    const fd = new FormData();
-                    fd.append("file", blob, "galerie.png");
-                    const res = await fetch("/api/admin/gallery", {
-                        method: "POST", headers: OX.authHeader(), body: fd
-                    });
-                    if (res.ok) OX.toast("Foto hinzugefügt");
-                    else {
-                        let detail = null;
-                        try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
-                        OX.toast(detail || "Upload fehlgeschlagen", true);
+                    try {
+                        const fd = new FormData();
+                        fd.append("file", blob, "galerie.png");
+                        const res = await fetch("/api/admin/gallery", {
+                            method: "POST", headers: OX.authHeader(), body: fd
+                        });
+                        if (res.ok) OX.toast("Foto hinzugefügt");
+                        else {
+                            let detail = null;
+                            try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
+                            OX.toast(detail || "Upload fehlgeschlagen", true);
+                        }
+                    } catch (e) {
+                        // Netzfehler (offline): Toast zeigen, aber die Queue NICHT
+                        // haengen lassen - naechste() laeuft unten im finally.
+                        OX.toast("Upload fehlgeschlagen", true);
+                    } finally {
+                        naechste(i + 1);
                     }
-                    naechste(i + 1);
                 }
             });
         };
