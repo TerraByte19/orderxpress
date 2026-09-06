@@ -90,7 +90,48 @@ export function hebeFokusHervor(fokus: string): void {
   if (!sel) return;
   const elm = document.querySelector(sel) as HTMLElement | null;
   if (!elm) return;
-  elm.scrollIntoView({ block: "center", behavior: "smooth" });
+  // Optionaler Aufruf wie in menu.ts: jsdom (Testumgebung) kennt scrollIntoView nicht.
+  elm.scrollIntoView?.({ block: "center", behavior: "smooth" });
   elm.classList.add("ox-vorschau-fokus");
   setTimeout(() => elm.classList.remove("ox-vorschau-fokus"), 1200);
+}
+
+/* ---------- Vorschau starten -------------------------------------------------
+   index.ts' start() biegt hierher ab, wenn istVorschau() greift: KEIN Scan,
+   KEINE Session, KEIN Live-Takt, KEIN Vorhang - nur Theme + Speisekarte laden
+   und ansehen. Die noetigen Bausteine werden hereingereicht (deps), damit
+   dieses Modul nicht den halben Seiten-Aufbau importieren muss und der Ablauf
+   testbar bleibt. */
+
+export interface VorschauAbhaengigkeiten {
+  ladeTheme: (id: number) => Promise<unknown>;
+  ladeSpeisekarte: (id: number) => Promise<unknown>;
+  zeigeGalerie: (id: number) => Promise<void>;
+  wendeThemeAn: (theme: unknown) => void;
+  zeichneSpeisekarte: (gerichte: unknown) => void;
+  setzeBestellenErlaubt: (erlaubt: boolean) => void;
+  zeigeAnsichtInhalt: (id: string, name?: string) => void;
+}
+
+export async function starteVorschau(deps: VorschauAbhaengigkeiten): Promise<void> {
+  document.documentElement.dataset.vorschau = "1";
+  const id = vorschauRestaurantId();
+
+  // Bild-Austausch vom Inhaber-Widget entgegennehmen (Logo/Hintergrund/Foto/Galerie).
+  window.addEventListener("message", verarbeiteVorschauNachricht);
+
+  // Theme ist optional (Rueckfall = Standard-Optik), Speisekarte laeuft
+  // parallel - ein Fehlschlag des einen reisst den anderen nicht mit.
+  const [theme, gerichte] = await Promise.all([
+    deps.ladeTheme(id).catch(() => null),
+    deps.ladeSpeisekarte(id).catch(() => [] as unknown)
+  ]);
+  if (theme) deps.wendeThemeAn(theme);
+  deps.zeichneSpeisekarte(gerichte ?? []);
+  deps.setzeBestellenErlaubt(false);
+  deps.zeigeAnsichtInhalt("view-menu");
+  void deps.zeigeGalerie(id).catch(() => undefined);
+
+  meldeVorschauBereit();
+  hebeFokusHervor(vorschauFokus());
 }

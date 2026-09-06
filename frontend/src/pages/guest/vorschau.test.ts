@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   istVorschau, vorschauRestaurantId, vorschauFokus,
-  verarbeiteVorschauNachricht, meldeVorschauBereit
+  verarbeiteVorschauNachricht, meldeVorschauBereit,
+  hebeFokusHervor, starteVorschau
 } from "./vorschau";
 
 function setSearch(s: string) {
@@ -84,5 +85,48 @@ describe("vorschau: meldeVorschauBereit", () => {
     setSearch("");
     meldeVorschauBereit();
     expect(spy).toHaveBeenCalledWith({ typ: "ox-vorschau-bereit" }, window.location.origin);
+  });
+});
+
+describe("vorschau: hebeFokusHervor", () => {
+  it("setzt .ox-vorschau-fokus und nimmt sie nach 1200ms wieder ab (gericht:<id>)", () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="ox-gericht" data-gericht-id="42"></div>';
+    hebeFokusHervor("gericht:42");
+    const karte = document.querySelector('[data-gericht-id="42"]') as HTMLElement;
+    expect(karte.classList.contains("ox-vorschau-fokus")).toBe(true);
+    vi.advanceTimersByTime(1200);
+    expect(karte.classList.contains("ox-vorschau-fokus")).toBe(false);
+    vi.useRealTimers();
+  });
+});
+
+describe("vorschau: starteVorschau", () => {
+  it("rendert Theme+Menü ohne Scan und sperrt Bestellen", async () => {
+    setSearch("?vorschau=1&restaurant=5&fokus=logo");
+    document.body.innerHTML =
+      '<div id="view-wait"></div><div id="view-menu" hidden></div>' +
+      '<div id="menu-hero"></div><img id="brand-logo" hidden><img id="hero-logo" hidden>' +
+      '<div id="menu-gallery" hidden></div><div id="cartbar" hidden></div>';
+
+    const spies = {
+      ladeTheme: vi.fn().mockResolvedValue({ accentColor: "#1f3d34" }),
+      ladeSpeisekarte: vi.fn().mockResolvedValue([]),
+      zeigeGalerie: vi.fn().mockResolvedValue(undefined),
+      wendeThemeAn: vi.fn(),
+      zeichneSpeisekarte: vi.fn(),
+      setzeBestellenErlaubt: vi.fn(),
+      zeigeAnsichtInhalt: vi.fn()
+    };
+    await starteVorschau(spies);
+
+    expect(spies.ladeTheme).toHaveBeenCalledWith(5);
+    expect(spies.ladeSpeisekarte).toHaveBeenCalledWith(5);
+    expect(spies.wendeThemeAn).toHaveBeenCalledWith({ accentColor: "#1f3d34" });
+    expect(spies.zeichneSpeisekarte).toHaveBeenCalled();
+    expect(spies.setzeBestellenErlaubt).toHaveBeenCalledWith(false);
+    expect(spies.zeigeAnsichtInhalt).toHaveBeenCalledWith("view-menu");
+    expect(spies.zeigeGalerie).toHaveBeenCalledWith(5);
+    expect(document.documentElement.dataset.vorschau).toBe("1");
   });
 });

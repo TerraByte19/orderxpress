@@ -34,7 +34,7 @@ import "./guest.css";
 import { ApiFehler } from "../../lib/api";
 import { el, toast } from "../../lib/ui";
 import { preis } from "../../lib/format";
-import type { BeitrittsAnfrage, GastStatusAntwort, Gericht, Kategorie, ScanAntwort } from "../../lib/types";
+import type { BeitrittsAnfrage, GastStatusAntwort, Gericht, Kategorie, LadenTheme, ScanAntwort } from "../../lib/types";
 
 import {
     entscheideBeitritt,
@@ -57,6 +57,7 @@ import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
 import { ladeTheme, leseModi, wendeThemeAn, zeigeGalerie } from "./laden-design";
+import { istVorschau, starteVorschau } from "./vorschau";
 import { zeigeVorhang } from "./vorhang";
 import {
     aktualisiereFreigabeKnoepfe,
@@ -132,6 +133,31 @@ function zeigeFehler(titel: string, text: string): void {
 /* ---------- Start: Scan / Wiederaufnahme ---------- */
 
 async function start(): Promise<void> {
+    // Vorschau-Modus des Inhaber-Zuschnitt-Widgets (?vorschau=1&restaurant=<id>&fokus=<ziel>):
+    // KEIN Scan, KEINE Statusabfrage, KEIN Live-Takt, KEIN Vorhang - nur Theme +
+    // Speisekarte laden und ansehen. Der Zweig kehrt vor jeder Session-Logik zurueck.
+    if (istVorschau()) {
+        await starteVorschau({
+            ladeTheme,
+            ladeSpeisekarte,
+            zeigeGalerie,
+            wendeThemeAn: (theme) => wendeThemeAn(theme as LadenTheme),
+            zeichneSpeisekarte: (gerichte) => {
+                kategorien = Array.isArray(gerichte) ? (gerichte as Kategorie[]) : [];
+                const ziel = document.getElementById("menu-container");
+                if (!ziel) return;
+                // Bestellen ist aus - die Rueckrufe (Detail/Schnell-Hinzufuegen)
+                // bleiben nur als Signatur-Fueller, die "+"-Knoepfe sind per
+                // CSS (:root[data-vorschau]) ohnehin verborgen.
+                zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, false, false);
+                staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
+            },
+            setzeBestellenErlaubt,
+            zeigeAnsichtInhalt: (id) => zeigeAnsichtInhalt(id as Ansicht, restaurantName)
+        });
+        return;
+    }
+
     qrToken = leseQrToken();
     if (!qrToken) {
         zeigeFehler("Kein Tisch-Code gefunden", "Bitte den QR-Code am Tisch scannen.");

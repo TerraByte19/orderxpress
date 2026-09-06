@@ -435,3 +435,31 @@
     border: 1px solid var(--ox-border);
     color: var(--ox-text-muted);
 }
+
+/* ---------- Vorschau-Modus (Inhaber sieht die Gaeste-Ansicht im iframe) ----------
+   ?vorschau=1 setzt data-vorschau="1" auf <html> (siehe vorschau.ts / index.ts).
+   Alles, was mit Bestellen / Session zu tun hat, bleibt aus - der Inhaber
+   schaut nur zu, wie sein zugeschnittenes Bild beim Gast wirkt. */
+:root[data-vorschau] #cartbar,
+:root[data-vorschau] #name-bar,
+:root[data-vorschau] #join-banner,
+:root[data-vorschau] #btn-call,
+:root[data-vorschau] .ox-gericht__hinzufuegen,
+:root[data-vorschau] .ox-detail__hinzufuegen {
+    display: none !important;
+}
+
+/* Kurzer Puls um das gerade zugeschnittene Element (Logo/Hintergrund/Foto/
+   Galerie), sobald die Vorschau steht - hebeFokusHervor() setzt die Klasse
+   und nimmt sie nach 1200 ms wieder ab. */
+.ox-vorschau-fokus {
+    animation: ox-vorschau-puls 1200ms ease-out;
+    border-radius: var(--ox-radius-md);
+}
+@keyframes ox-vorschau-puls {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(31, 61, 52, 0); }
+    30%      { box-shadow: 0 0 0 4px var(--ox-accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ox-vorschau-fokus { animation: none; }
+}
