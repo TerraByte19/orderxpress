@@ -95,7 +95,13 @@ public class RestaurantAdminService {
         Restaurant restaurant = findRestaurant(CurrentUser.restaurantId());
         restaurant.setAccentColor(request.accentColor());
         restaurant.setBackgroundColor(request.backgroundColor());
-        restaurant.setCategoriesAsHamburger(request.hamburgerOrDefault());
+        // Die Achse categoryStyle fuehrt, der aeltere Schalter wird
+        // mitgezogen - beide bleiben dadurch immer konsistent. Alte Clients
+        // ohne die Achse landen ueber categoryStyleOrDefault() wieder auf
+        // ihrem eigenen Schalter (siehe DesignRequest).
+        String categoryStyle = request.categoryStyleOrDefault();
+        restaurant.setCategoryStyle(categoryStyle);
+        restaurant.setCategoriesAsHamburger("HAMBURGER".equals(categoryStyle));
         restaurant.setKitchenDisplayEnabled(request.kitchenEnabledOrDefault());
         restaurant.setStyleShape(request.styleShapeOrDefault());
         restaurant.setDisplayFont(request.displayFontOrDefault());
@@ -112,6 +118,11 @@ public class RestaurantAdminService {
         restaurant.setOpeningHours(request.openingHours());
         restaurant.setAddress(request.address());
         restaurant.setPhone(request.phone());
+        restaurant.setMenuLayout(request.menuLayoutOrDefault());
+        restaurant.setHeroStyle(request.heroStyleOrDefault());
+        restaurant.setTextureStyle(request.textureStyleOrDefault());
+        restaurant.setControlStyle(request.controlStyleOrDefault());
+        restaurant.setMotionLevel(request.motionLevelOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -280,7 +291,13 @@ public class RestaurantAdminService {
                 restaurant.getIntroSpeed(),
                 restaurant.getOpeningHours(),
                 restaurant.getAddress(),
-                restaurant.getPhone());
+                restaurant.getPhone(),
+                restaurant.getMenuLayout(),
+                restaurant.getHeroStyle(),
+                restaurant.getTextureStyle(),
+                restaurant.getControlStyle(),
+                restaurant.getCategoryStyle(),
+                restaurant.getMotionLevel());
     }
 
     private void validateUpload(MultipartFile file) {

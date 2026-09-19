@@ -314,3 +314,60 @@ describe("zeichneBestellungen - In-Place-Aktualisierung beim erneuten Zeichnen",
         expect(chip.classList.contains("ox-chip--gut")).toBe(true);
     });
 });
+
+/* ---------- Fortschritts-Schiene ----------
+   Der Chip sagt, WO die Bestellung steht; die Schiene zeigt, WIE WEIT sie
+   ist. Sie wird - wie der Chip - beim Takt UMGESCHALTET statt neu gebaut,
+   sonst kann der CSS-Uebergang den Farbwechsel nicht zeigen. Genau das ist
+   der Teil, der still kaputtgehen kann. */
+describe("zeichneBestellungen - Fortschritts-Schiene", () => {
+    const voll = (ziel: HTMLElement) =>
+        ziel.querySelectorAll(".ox-fortschritt__abschnitt.is-voll").length;
+
+    it("fuellt einen von drei Abschnitten bei 'Angenommen'", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "NEW" })], ziel);
+        expect(ziel.querySelectorAll(".ox-fortschritt__abschnitt").length).toBe(3);
+        expect(voll(ziel)).toBe(1);
+    });
+
+    it("fuellt zwei Abschnitte in der Kueche und alle drei, wenn fertig", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "IN_PREPARATION" })], ziel);
+        expect(voll(ziel)).toBe(2);
+
+        zeichneBestellungen([bestellung({ status: "READY" })], ziel);
+        expect(voll(ziel)).toBe(3);
+    });
+
+    it("schaltet dieselbe Schiene um, statt sie neu zu bauen", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "NEW" })], ziel);
+        const vorher = ziel.querySelector(".ox-fortschritt");
+
+        zeichneBestellungen([bestellung({ status: "READY" })], ziel);
+        expect(ziel.querySelector(".ox-fortschritt")).toBe(vorher);
+        expect(voll(ziel)).toBe(3);
+    });
+
+    it("zeigt bei einer stornierten Bestellung gar keine Schiene", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "CANCELLED" })], ziel);
+        expect(ziel.querySelector(".ox-fortschritt")).toBeNull();
+    });
+
+    it("entfernt die Schiene, wenn eine laufende Bestellung storniert wird", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "IN_PREPARATION" })], ziel);
+        expect(ziel.querySelector(".ox-fortschritt")).not.toBeNull();
+
+        zeichneBestellungen([bestellung({ status: "CANCELLED" })], ziel);
+        expect(ziel.querySelector(".ox-fortschritt")).toBeNull();
+    });
+
+    it("ist fuer Screenreader stumm - den Status sagt bereits der Chip", () => {
+        const ziel = document.createElement("div");
+        zeichneBestellungen([bestellung({ status: "NEW" })], ziel);
+        expect(ziel.querySelector(".ox-fortschritt")!.getAttribute("aria-hidden")).toBe("true");
+    });
+});

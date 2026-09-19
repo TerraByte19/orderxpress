@@ -6,6 +6,13 @@
  * Ziel uebergeben, oeffneDetail haengt sein Overlay selbst an document.body
  * (wie toast() in lib/ui.ts).
  *
+ * Der Laden waehlt ueber menuLayout (LISTE | KACHELN | TAFEL), wie die Karte
+ * aufgebaut ist. LISTE und KACHELN unterscheiden sich NUR im Stylesheet
+ * (laden-layout.css) - dasselbe Markup, einmal als Zeile, einmal als Kachel.
+ * TAFEL greift dagegen bis hierher durch: es entsteht gar kein Bildelement
+ * (die gedruckte Karte hat keine Fotos, und so wird das Bild auch nicht
+ * uebertragen) und der Gerichtname bekommt die Punktlinie zum Preis.
+ *
  * WICHTIG: setzeBestellenErlaubt() zeichnet NICHT neu - der Gast blaettert
  * waehrend des Wartens in der Karte, ein erneutes zeichneSpeisekarte wuerfe
  * ihn an den Anfang zurueck. Stattdessen werden vorhandene Knoepfe per
@@ -14,6 +21,7 @@
 import { api } from "../../lib/api";
 import { preis } from "../../lib/format";
 import { el } from "../../lib/ui";
+import { bewegungAus, wachseFoto } from "./animation";
 import type { Gericht, Kategorie } from "../../lib/types";
 import { GERICHT_MARKEN } from "../../lib/types";
 
@@ -34,6 +42,20 @@ function markenLeiste(badges: string[]): HTMLElement | null {
  *  Auswahl, ueber die setzeBestellenErlaubt() beide Stellen erreicht. */
 const HINZUFUEGEN_AUSWAHL = ".ox-gericht__hinzufuegen, .ox-detail__hinzufuegen";
 
+/** Struktur-Achsen, die bis ins Markup durchschlagen. Beide optional: ohne
+ *  sie verhaelt sich das Modul genau wie zuvor (LISTE + Reiter/Hamburger). */
+export interface KartenOptionen {
+    /** LISTE | KACHELN | TAFEL - nur TAFEL aendert das Markup. */
+    layout?: string;
+    /** REITER | HAMBURGER | KAPITEL. Fehlt der Wert, entscheidet weiterhin
+     *  das aeltere hamburger-Argument. */
+    kategorieStil?: string;
+}
+
+function istTafel(layout?: string): boolean {
+    return layout === "TAFEL";
+}
+
 export function ladeSpeisekarte(restaurantId: number): Promise<Kategorie[]> {
     return api<Kategorie[]>(`/api/guest/menu/${restaurantId}`);
 }
@@ -51,9 +73,9 @@ function knopf(klasse: string, text?: string, ariaLabel?: string): HTMLButtonEle
 
 /** setAttribute statt der .loading-Property: jsdom spiegelt sie nicht auf
  *  das Attribut (siehe Bericht) - setAttribute landet zuverlaessig im HTML. */
-function bildElement(url: string): HTMLImageElement {
+function bildElement(url: string, klasse = "ox-gericht__bild"): HTMLImageElement {
     const bild = document.createElement("img");
-    bild.className = "ox-gericht__bild";
+    bild.className = klasse;
     bild.src = url;
     bild.alt = "";
     bild.setAttribute("loading", "lazy");
@@ -71,20 +93,25 @@ function bildElement(url: string): HTMLImageElement {
 export function zeichneSpeisekarte(
     kategorien: Kategorie[],
     ziel: HTMLElement,
-    beiAuswahl: (gericht: Gericht) => void,
+    beiAuswahl: (gericht: Gericht, quelle?: HTMLElement) => void,
     beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean,
     hamburger = false,
     istVerfuegbar?: (gerichtId: number) => boolean,
-    zeigeLeereKategorien = false
+    zeigeLeereKategorien = false,
+    optionen: KartenOptionen = {}
 ): void {
     ziel.textContent = "";
+
+    // Die Achse fuehrt, das aeltere hamburger-Argument ist der Rueckfall -
+    // dieselbe Reihenfolge wie im Backend (DesignRequest.categoryStyleOrDefault).
+    const kategorieStil = optionen.kategorieStil ?? (hamburger ? "HAMBURGER" : "REITER");
 
     const sichtbareKategorien = zeigeLeereKategorien
         ? kategorien
         : kategorien.filter((kategorie) => kategorie.items.length > 0);
 
-    const leiste = baueKategorieLeiste(sichtbareKategorien, ziel, hamburger);
+    const leiste = baueKategorieLeiste(sichtbareKategorien, ziel, kategorieStil);
     // Sitzt lieber IN der (ohnehin schon sticky) Kopfzeile als frei im
     // Seiteninhalt (siehe guest.html #topbar-kategorien) - Feedback: eine
     // zweite, eigene sticky-Flaeche im Inhalt kam mit dem Ansichtswechsel
@@ -109,12 +136,47 @@ export function zeichneSpeisekarte(
         for (const gericht of kategorie.items) {
             grid.appendChild(baueGerichtKarte(
                 gericht, beiAuswahl, beiSchnellHinzufuegen, bestellenErlaubt,
-                istVerfuegbar ? istVerfuegbar(gericht.id) : true
+                istVerfuegbar ? istVerfuegbar(gericht.id) : true, optionen.layout
             ));
         }
         abschnitt.appendChild(grid);
         ziel.appendChild(abschnitt);
     }
+}
+
+/* ---------- Platzhalter waehrend des Ladens ---------- */
+
+/** Graue Platzhalter-Karten, solange die Speisekarte unterwegs ist. Sie
+ *  tragen dieselben Klassen wie echte Karten und folgen damit automatisch dem
+ *  gewaehlten Aufbau (Zeile oder Kachel) - der Gast sieht sofort die Form
+ *  seiner Karte statt einer leeren Flaeche, und beim Eintreffen der Daten
+ *  springt nichts.
+ *
+ *  aria-hidden: es gibt hier nichts vorzulesen; die Ansage uebernimmt der
+ *  Wartehinweis der Ansicht. */
+export function zeigeSkelett(ziel: HTMLElement, anzahl = 6, layout?: string): void {
+    ziel.textContent = "";
+    const grid = el("div", "ox-grid");
+    for (let i = 0; i < anzahl; i++) {
+        const karte = el("article", "ox-card ox-gericht ox-skelett");
+        karte.setAttribute("aria-hidden", "true");
+
+        const zeile = el("div", "ox-gericht__oeffnen");
+        if (!istTafel(layout)) zeile.appendChild(el("div", "ox-gericht__bild ox-skelett__block"));
+        const inhalt = el("div", "ox-gericht__inhalt");
+        inhalt.append(
+            el("span", "ox-skelett__block ox-skelett__zeile"),
+            el("span", "ox-skelett__block ox-skelett__zeile ox-skelett__zeile--kurz")
+        );
+        zeile.appendChild(inhalt);
+
+        const fuss = el("div", "ox-row ox-gericht__fuss");
+        fuss.appendChild(el("span", "ox-skelett__block ox-skelett__preis"));
+
+        karte.append(zeile, fuss);
+        grid.appendChild(karte);
+    }
+    ziel.appendChild(grid);
 }
 
 /** Foto-Karte auf .ox-card (Padding 0, Bild reicht randlos zum Rand). Zwei
@@ -127,23 +189,48 @@ export function zeichneSpeisekarte(
  *  "+"-Knopf faelschlich ebenfalls das Overlay oeffnete. */
 function baueGerichtKarte(
     gericht: Gericht,
-    beiAuswahl: (gericht: Gericht) => void,
+    beiAuswahl: (gericht: Gericht, quelle?: HTMLElement) => void,
     beiSchnellHinzufuegen: (gericht: Gericht, quelle: HTMLElement) => void,
     bestellenErlaubt: boolean,
-    verfuegbar = true
+    verfuegbar = true,
+    layout?: string
 ): HTMLElement {
+    const tafel = istTafel(layout);
     const oeffnenKnopf = knopf("ox-gericht__oeffnen", undefined,
         `${gericht.name}, ${preis(gericht.price)} – Details öffnen`);
-    const bild = gericht.imageUrl ? bildElement(gericht.imageUrl) : el("div", "ox-gericht__bild ox-gericht__bild--leer");
-    oeffnenKnopf.appendChild(bild);
+    // TAFEL ist die gedruckte Karte: kein Foto und auch kein Platzhalter -
+    // der leere Teller waere hier keine Luecke, sondern ein Fremdkoerper.
+    //
+    // Der Platzhalter (leerer Teller) erscheint nur noch in der LISTE: dort
+    // ist er 84x84 gross und haelt die Zeile in Form. In der KACHEL waere er
+    // eine 4:3-Flaeche ueber die halbe Kachel - dann lieber eine Textkachel.
+    if (gericht.imageUrl && !tafel) {
+        oeffnenKnopf.appendChild(bildElement(gericht.imageUrl));
+    } else if (!tafel && layout !== "KACHELN") {
+        oeffnenKnopf.appendChild(el("div", "ox-gericht__bild ox-gericht__bild--leer"));
+    }
 
     const inhalt = el("div", "ox-gericht__inhalt");
-    inhalt.appendChild(el("span", "ox-gericht__name", gericht.name));
+    const name = el("span", "ox-gericht__name", gericht.name);
+    if (tafel) {
+        // Name + Punktlinie in einer Zeile; die Linie fuellt bis zur
+        // Preisspalte (Optik: laden-layout.css). Rein dekorativ.
+        const titelzeile = el("div", "ox-gericht__titelzeile");
+        const leader = el("span", "ox-gericht__leader");
+        leader.setAttribute("aria-hidden", "true");
+        titelzeile.append(name, leader);
+        inhalt.appendChild(titelzeile);
+    } else {
+        inhalt.appendChild(name);
+    }
     if (gericht.description) inhalt.appendChild(el("span", "ox-muted", gericht.description));
     const marken = markenLeiste(gericht.badges);
     if (marken) inhalt.appendChild(marken);
     oeffnenKnopf.appendChild(inhalt);
-    oeffnenKnopf.addEventListener("click", () => beiAuswahl(gericht));
+    // Das Foto der Karte wird dem Aufrufer mitgegeben: oeffneDetail laesst es
+    // in das grosse Foto des Blattes wachsen (animation.ts, wachseFoto).
+    oeffnenKnopf.addEventListener("click", () =>
+        beiAuswahl(gericht, oeffnenKnopf.querySelector<HTMLElement>(".ox-gericht__bild") ?? undefined));
 
     const fuss = el("div", "ox-row ox-gericht__fuss");
     const hinzufuegenKnopf = knopf("ox-btn ox-btn--klein ox-gericht__hinzufuegen", "+", `${gericht.name} hinzufügen`);
@@ -173,14 +260,19 @@ function baueGerichtKarte(
  *  der Laden waehlt das ueber categoriesAsHamburger aus dem Theme. jsdom
  *  (Testumgebung) implementiert scrollIntoView nicht, daher per optional
  *  chaining auf die Methode SELBST abgesichert. */
-function baueKategorieLeiste(kategorien: Kategorie[], ziel: HTMLElement, hamburger: boolean): HTMLElement | null {
+function baueKategorieLeiste(kategorien: Kategorie[], ziel: HTMLElement, kategorieStil: string): HTMLElement | null {
     if (kategorien.length < 2) return null; // nichts zum Wechseln
+
+    // KAPITEL kommt ohne Navigation aus: die Kategorienamen selbst bleiben
+    // beim Scrollen stehen (laden-layout.css) - eine zusaetzliche Leiste
+    // waere die gleiche Information ein zweites Mal.
+    if (kategorieStil === "KAPITEL") return null;
 
     const springe = (kategorieId: number): void => {
         ziel.querySelector<HTMLElement>(`#cat-${kategorieId}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     };
 
-    if (!hamburger) {
+    if (kategorieStil !== "HAMBURGER") {
         const leiste = el("nav", "ox-kategorie-leiste");
         leiste.setAttribute("aria-label", "Kategorien");
 
@@ -282,14 +374,26 @@ function holeOderErstelleOverlay(): HTMLDivElement {
 export function oeffneDetail(
     gericht: Gericht,
     beiHinzufuegen: (gericht: Gericht, menge: number, hinweis: string, quelle: HTMLElement) => void,
-    bestellenErlaubt: boolean
+    bestellenErlaubt: boolean,
+    optionen: { layout?: string; quelle?: HTMLElement } = {}
 ): void {
     const overlay = holeOderErstelleOverlay();
     const box = overlay.querySelector<HTMLDivElement>(".ox-overlay__box")!;
     box.textContent = "";
     let menge = 1;
 
-    if (gericht.imageUrl) box.appendChild(bildElement(gericht.imageUrl));
+    // TAFEL bleibt auch im Blatt ohne Foto - der Laden hat sich bewusst fuer
+    // die reine Schriftkarte entschieden, ein Foto nur hier waere ein Bruch.
+    const zeigeFoto = Boolean(gericht.imageUrl) && !istTafel(optionen.layout);
+    let grossesBild: HTMLImageElement | null = null;
+    if (zeigeFoto) {
+        // Eigene Klasse statt .ox-gericht__bild: im Blatt fuellt das Foto die
+        // ganze Breite (siehe guest.css .ox-detail__bild). Vorher trug es die
+        // Karten-Klasse und blieb bei 84x84 - wer ein Gericht antippt, will
+        // es aber gross sehen.
+        grossesBild = bildElement(gericht.imageUrl as string, "ox-detail__bild");
+        box.appendChild(grossesBild);
+    }
     box.appendChild(el("h2", undefined, gericht.name));
     const detailMarken = markenLeiste(gericht.badges);
     if (detailMarken) box.appendChild(detailMarken);
@@ -341,8 +445,23 @@ export function oeffneDetail(
     // so hat das .ox-overlay__box--sheet einen Ausgangszustand
     // (transform: translateY(100%)), von dem aus die CSS-Transition
     // sichtbar nach oben slidet.
+    // Wandert ein Foto in seine grosse Fassung, blendet das Blatt nur auf,
+    // statt zusaetzlich hochzuschieben: zwei gleichzeitige Bewegungen auf
+    // derselben Flaeche lesen sich als Zucken. Ohne Foto (oder bei
+    // reduzierter Bewegung) bleibt es beim gewohnten Hochschieben - und nur
+    // dann steht das Blatt beim Messen schon an seinem Platz.
+    const mitFotoWechsel = Boolean(optionen.quelle && grossesBild) && !bewegungAus();
+    overlay.classList.toggle("ox-detail-overlay--foto", mitFotoWechsel);
+
     overlay.style.display = "flex";
-    requestAnimationFrame(() => overlay.classList.add("is-open"));
+    requestAnimationFrame(() => {
+        overlay.classList.add("is-open");
+        // Das angetippte Foto wandert in seine grosse Fassung. Nur wenn beide
+        // Fotos wirklich da sind - sonst bleibt es beim Hochschieben des
+        // Blattes. wachseFoto misst erst NACH is-open, weil das Blatt dann
+        // an seiner endgueltigen Stelle steht.
+        if (mitFotoWechsel) wachseFoto(optionen.quelle as HTMLElement, grossesBild as HTMLImageElement);
+    });
 }
 
 /* ---------- Bestellen sperren/entsperren ---------- */

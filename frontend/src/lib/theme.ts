@@ -99,6 +99,15 @@ export interface LadenDesign {
     dunkel?: boolean;
     shape?: string | null;   // "SQUARE" | "SOFT"
     font?: string | null;    // BRICOLAGE | FRAUNCES | SPACE_GROTESK | INSTRUMENT_SERIF | MANROPE | SORA | DM_SERIF
+    /* Struktur-Achsen. Jede landet als data-Attribut auf <html>; der
+       Standardwert setzt KEIN Attribut (gleiches Muster wie shape/font
+       oben), damit die Grundregeln in tokens.css/components.css gelten. */
+    layout?: string | null;      // LISTE | KACHELN | TAFEL
+    hero?: string | null;        // BAND | VOLL | SCHLICHT
+    textur?: string | null;      // KEIN | PAPIER | LINIEN | TERRAZZO
+    control?: string | null;     // FLACH | RAHMEN | ERHOBEN
+    kategorie?: string | null;   // REITER | HAMBURGER | KAPITEL
+    bewegung?: string | null;    // DEZENT | NORMAL | VERSPIELT
 }
 
 /** Schreibt das Design des Ladens als Variablen auf <html>. */
@@ -112,6 +121,22 @@ export function setzeLadenDesign(design: LadenDesign): void {
     };
     setzeOderEntferne(wurzel, "data-shape", design.shape ? FORM[design.shape] : undefined);
     setzeOderEntferne(wurzel, "data-font", design.font ? SCHRIFT[design.font] : undefined);
+
+    // Struktur-Achsen. Die jeweiligen Standardwerte (LISTE/BAND/KEIN/FLACH/
+    // REITER/NORMAL) fehlen in den Tabellen absichtlich - ein unbekannter
+    // oder der Standardwert liefert undefined und das Attribut faellt weg.
+    const LAYOUT: Record<string, string> = { KACHELN: "kacheln", TAFEL: "tafel" };
+    const HERO: Record<string, string> = { VOLL: "voll", SCHLICHT: "schlicht" };
+    const TEXTUR: Record<string, string> = { PAPIER: "papier", LINIEN: "linien", TERRAZZO: "terrazzo" };
+    const CONTROL: Record<string, string> = { RAHMEN: "rahmen", ERHOBEN: "erhoben" };
+    const KATEGORIE: Record<string, string> = { HAMBURGER: "hamburger", KAPITEL: "kapitel" };
+    const BEWEGUNG: Record<string, string> = { DEZENT: "dezent", VERSPIELT: "verspielt" };
+    setzeOderEntferne(wurzel, "data-layout", design.layout ? LAYOUT[design.layout] : undefined);
+    setzeOderEntferne(wurzel, "data-hero", design.hero ? HERO[design.hero] : undefined);
+    setzeOderEntferne(wurzel, "data-textur", design.textur ? TEXTUR[design.textur] : undefined);
+    setzeOderEntferne(wurzel, "data-control", design.control ? CONTROL[design.control] : undefined);
+    setzeOderEntferne(wurzel, "data-kategorie", design.kategorie ? KATEGORIE[design.kategorie] : undefined);
+    setzeOderEntferne(wurzel, "data-motion", design.bewegung ? BEWEGUNG[design.bewegung] : undefined);
 
     if (design.dunkel) {
         wurzel.setAttribute("data-theme", "dark");
@@ -134,6 +159,16 @@ export function setzeLadenDesign(design: LadenDesign): void {
         const textfarbe = textfarbeAuf(design.backgroundColor);
         wurzel.style.setProperty("--ox-text", textfarbe);
         wurzel.style.setProperty("--ox-text-muted", gedaempfterText(textfarbe, design.backgroundColor));
+
+        // Toenung der Hintergrund-Textur (data-textur, siehe laden-stile.css).
+        // Sie folgt der GERECHNETEN Textfarbe, nicht der hellen/dunklen Haut:
+        // ein Laden darf einen dunklen Hintergrund-Hex ohne darkMode waehlen,
+        // dann muss die Textur trotzdem heller als der Grund sein. Deckkraft
+        // knapp unter 6% - sichtbar als Material, nie als Muster ueber dem Text.
+        wurzel.style.setProperty(
+            "--ox-textur-farbe",
+            textfarbe === "#000000" ? "rgba(0, 0, 0, .055)" : "rgba(255, 255, 255, .06)"
+        );
 
         // Verlauf ist rein dekorativ (--ox-bg-image) - die Kontrast-Rechnung
         // oben bleibt bewusst allein auf backgroundColor gestuetzt (die

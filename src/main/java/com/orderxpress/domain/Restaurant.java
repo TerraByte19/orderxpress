@@ -127,6 +127,47 @@ public class Restaurant {
     @Column(name = "phone", length = 40)
     private String phone;
 
+    // ---------- Design: Struktur-Achsen ----------
+    // Die vorherigen Achsen aendern Farbe, Schrift und Radius - das Skelett
+    // der Gaeste-Seite blieb bei jedem Laden gleich. Diese sechs Spalten
+    // aendern Aufbau und Rhythmus. Alle nullable, damit bestehende
+    // Datenbanken ohne Reset auskommen; null/leer = bisheriges Verhalten.
+
+    /** Aufbau der Speisekarte: LISTE (Zeile mit kleinem Foto, bisher) |
+     *  KACHELN (zwei Spalten, grosses Foto) | TAFEL (reine Schrift ohne
+     *  Fotos, fuer Bars/Baeckereien ohne Bildmaterial). null/leer = LISTE. */
+    @Column(name = "menu_layout", length = 20)
+    private String menuLayout;
+
+    /** Kopf der Speisekarte: BAND (Foto-Streifen, bisher) | VOLL
+     *  (bildschirmfuellender Auftakt) | SCHLICHT (nur der Ladenname gross
+     *  gesetzt, kein Foto). null/leer = BAND. */
+    @Column(name = "hero_style", length = 20)
+    private String heroStyle;
+
+    /** Textur des Seitenhintergrunds: KEIN | PAPIER | LINIEN | TERRAZZO.
+     *  Reines CSS, Toenung folgt der errechneten Textfarbe. null/leer = KEIN. */
+    @Column(name = "texture_style", length = 20)
+    private String textureStyle;
+
+    /** Optik aller Knoepfe und Pillen: FLACH (bisher) | RAHMEN (nur Kontur) |
+     *  ERHOBEN (getragener Schatten). null/leer = FLACH. */
+    @Column(name = "control_style", length = 20)
+    private String controlStyle;
+
+    /** Kategorien-Navigation: REITER | HAMBURGER | KAPITEL (keine Leiste,
+     *  klebende Kapitel-Ueberschriften). null/leer wird aus dem aelteren
+     *  Schalter categoriesAsHamburger abgeleitet - bestehende Laeden
+     *  behalten dadurch ihre Einstellung ohne Datenwanderung. */
+    @Column(name = "category_style", length = 20)
+    private String categoryStyle;
+
+    /** Staerke aller Bewegungen: DEZENT | NORMAL | VERSPIELT. Skaliert im
+     *  Frontend die Dauern und schaltet die verspielten Zugaben zu.
+     *  prefers-reduced-motion schlaegt das weiterhin immer. null/leer = NORMAL. */
+    @Column(name = "motion_level", length = 20)
+    private String motionLevel;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -351,5 +392,64 @@ public class Restaurant {
 
     public void setPhone(String v) {
         this.phone = v;
+    }
+
+    // ---------- Struktur-Achsen ----------
+
+    public String getMenuLayout() {
+        return orDefault(menuLayout, "LISTE");
+    }
+
+    public void setMenuLayout(String v) {
+        this.menuLayout = v;
+    }
+
+    public String getHeroStyle() {
+        return orDefault(heroStyle, "BAND");
+    }
+
+    public void setHeroStyle(String v) {
+        this.heroStyle = v;
+    }
+
+    public String getTextureStyle() {
+        return orDefault(textureStyle, "KEIN");
+    }
+
+    public void setTextureStyle(String v) {
+        this.textureStyle = v;
+    }
+
+    public String getControlStyle() {
+        return orDefault(controlStyle, "FLACH");
+    }
+
+    public void setControlStyle(String v) {
+        this.controlStyle = v;
+    }
+
+    /**
+     * Rueckfall auf den aelteren Schalter categoriesAsHamburger: ein Laden,
+     * der vor dieser Achse "Kategorien als Hamburger" gesetzt hatte, bekommt
+     * HAMBURGER - sonst REITER. Erst wenn die Achse selbst gesetzt ist,
+     * fuehrt sie (updateDesign haelt beide Felder danach synchron).
+     */
+    public String getCategoryStyle() {
+        if (categoryStyle == null || categoryStyle.isBlank()) {
+            return categoriesAsHamburger ? "HAMBURGER" : "REITER";
+        }
+        return categoryStyle;
+    }
+
+    public void setCategoryStyle(String v) {
+        this.categoryStyle = v;
+    }
+
+    public String getMotionLevel() {
+        return orDefault(motionLevel, "NORMAL");
+    }
+
+    public void setMotionLevel(String v) {
+        this.motionLevel = v;
     }
 }

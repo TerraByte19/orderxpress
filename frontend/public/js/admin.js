@@ -562,17 +562,39 @@ const Admin = {
 
     /* Feste Design-Vorlagen (nur Frontend). applyVorlage() fuellt die Felder,
        gespeichert wird ueber den normalen "Speichern"-Knopf. */
+    /* Eine Vorlage fuellt ALLE Design-Felder, auch die sechs Struktur-Achsen
+       (Aufbau, Kopf, Kategorien, Textur, Knoepfe, Bewegung). Erst die machen
+       aus einer Farbpalette einen erkennbaren Laden - zwei Vorlagen mit
+       gleicher Struktur unterscheiden sich sonst nur durch den Anstrich. */
     VORLAGEN: {
         bistro:  { accentColor: "#b3502e", backgroundColor: "#f7f4ef", darkMode: false,
-                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "VORHANG" },
+                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "VORHANG",
+                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL" },
         kasse:   { accentColor: "#1f3d34", backgroundColor: "#f6f6f4", darkMode: false,
-                   styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP", introStyle: "HOCHKLAPPEN" },
+                   styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP", introStyle: "HOCHKLAPPEN",
+                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "FLACH",   motionLevel: "DEZENT" },
         nacht:   { accentColor: "#c9a227", backgroundColor: "#15181a", darkMode: true,
-                   styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "FADE" },
+                   styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "FADE",
+                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "RAHMEN",  motionLevel: "NORMAL" },
         frisch:  { accentColor: "#0f9d8f", backgroundColor: "#ffffff", darkMode: false,
-                   styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "MITTE" },
+                   styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "MITTE",
+                   menuLayout: "KACHELN", heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "ERHOBEN", motionLevel: "VERSPIELT" },
         klassik: { accentColor: "#1a1a1a", backgroundColor: "#faf9f6", darkMode: false,
-                   styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN" }
+                   styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN",
+                   menuLayout: "LISTE",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "RAHMEN",  motionLevel: "DEZENT" },
+        /* Bar: Getraenkekarte ohne Bildmaterial - genau der Fall, fuer den
+           TAFEL gedacht ist. Dunkel, ruhig, die Schrift traegt alles. */
+        bar:     { accentColor: "#c0873c", backgroundColor: "#141210", darkMode: true,
+                   styleShape: "SQUARE", displayFont: "INSTRUMENT_SERIF", cartFlyStyle: "PLUS", orderConfirmStyle: "CHECK", introStyle: "FADE",
+                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "LINIEN",   controlStyle: "RAHMEN",  motionLevel: "DEZENT" },
+        /* Imbiss: das Foto verkauft, und es darf sich etwas bewegen. */
+        imbiss:  { accentColor: "#e2571f", backgroundColor: "#fffaf3", darkMode: false,
+                   styleShape: "SOFT",   displayFont: "SORA",          cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "MITTE",
+                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "TERRAZZO", controlStyle: "ERHOBEN", motionLevel: "VERSPIELT" },
+        /* Atelier: Cafe oder Baeckerei - hell, viel Luft, Schrift vorn. */
+        atelier: { accentColor: "#5a6650", backgroundColor: "#f2f0eb", darkMode: false,
+                   styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN",
+                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL" }
     },
 
     applyVorlage(name) {
@@ -586,11 +608,18 @@ const Admin = {
         document.getElementById("design-fly").value = v.cartFlyStyle;
         document.getElementById("design-confirm").value = v.orderConfirmStyle;
         document.getElementById("design-intro").value = v.introStyle;
+        document.getElementById("design-layout").value = v.menuLayout;
+        document.getElementById("design-hero").value = v.heroStyle;
+        document.getElementById("design-kategorie").value = v.categoryStyle;
+        document.getElementById("design-textur").value = v.textureStyle;
+        document.getElementById("design-control").value = v.controlStyle;
+        document.getElementById("design-motion").value = v.motionLevel;
         // Keine der Vorlagen kennt bislang einen Verlauf - eine Vorlage
         // "fuellt alle Felder", also auch diesen zuruecksetzen statt einen
         // vorher von Hand gesetzten Verlauf stehen zu lassen.
         document.getElementById("design-bg-gradient").checked = false;
         document.getElementById("design-intro-speed").value = "NORMAL";
+        this.sendeVorschau();
         OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
     },
 
@@ -599,8 +628,18 @@ const Admin = {
             const t = await OX.api("/api/admin/design");
             document.getElementById("design-accent").value = t.accentColor || "#2563eb";
             document.getElementById("design-bg").value = t.backgroundColor || "#f4f5f7";
-            document.getElementById("design-hamburger").checked = !!t.categoriesAsHamburger;
             document.getElementById("design-kitchen").checked = t.kitchenDisplayEnabled !== false;
+            // Die Kategorien-Navigation ist seit den Struktur-Achsen eine
+            // Auswahl mit drei Werten. Liefert ein aelterer Server sie noch
+            // nicht, wird sie aus dem alten Schalter abgeleitet - genau wie
+            // im Backend (DesignRequest.categoryStyleOrDefault).
+            document.getElementById("design-kategorie").value =
+                t.categoryStyle || (t.categoriesAsHamburger ? "HAMBURGER" : "REITER");
+            document.getElementById("design-layout").value = t.menuLayout || "LISTE";
+            document.getElementById("design-hero").value = t.heroStyle || "BAND";
+            document.getElementById("design-textur").value = t.textureStyle || "KEIN";
+            document.getElementById("design-control").value = t.controlStyle || "FLACH";
+            document.getElementById("design-motion").value = t.motionLevel || "NORMAL";
             document.getElementById("design-shape").value = t.styleShape || "SQUARE";
             document.getElementById("design-font").value = t.displayFont || "BRICOLAGE";
             document.getElementById("design-fly").value = t.cartFlyStyle || "PLUS";
@@ -625,36 +664,142 @@ const Admin = {
             const bg = document.getElementById("bg-preview");
             if (t.backgroundUrl) { bg.src = t.backgroundUrl + "?v=" + Date.now(); bg.style.display = ""; }
             else { bg.style.display = "none"; }
+
+            this.vorschauVorbereiten();
         } catch (e) { /* Design ist optional */ }
+    },
+
+    /* ---------- Live-Vorschau der Gaeste-Seite ----------
+       Der Inhaber stellt hier Werte ein, die erst beim Gast sichtbar werden -
+       ohne Vorschau muesste er jedes Mal speichern und die Gaeste-Seite
+       oeffnen. Das iframe laedt die ECHTE Gaeste-Seite im Vorschau-Modus
+       (?vorschau=1, kein Scan, keine Session, kein Bestellen - siehe
+       frontend/src/pages/guest/vorschau.ts) und bekommt bei jeder Aenderung
+       den aktuellen Formularstand per postMessage. Gespeichert wird dabei
+       nichts: was im iframe steht, ist ein Entwurf.
+
+       Dieselbe Mechanik nutzt schon der Bild-Zuschnitt (bildcropper.js) -
+       hier kommt nur eine zweite Nachrichtenart dazu. */
+
+    vorschauBereit: false,
+    vorschauTakt: null,
+
+    async vorschauVorbereiten() {
+        const frame = document.getElementById("design-vorschau-frame");
+        if (!frame || frame.dataset.bereit === "1") return;
+        frame.dataset.bereit = "1";
+
+        // Die Vorschau klebt beim Scrollen oben - aber unter der (ebenfalls
+        // klebenden) Kopfleiste. Deren Hoehe haengt an Schriftgroesse und
+        // Fensterbreite, also wird sie gemessen statt geraten; das
+        // Stylesheet haelt nur einen Rueckfallwert bereit.
+        const kopf = document.querySelector("header.topbar");
+        if (kopf) {
+            const setzeHoehe = () => document.documentElement.style.setProperty(
+                "--topbar-hoehe", Math.round(kopf.getBoundingClientRect().height) + "px");
+            setzeHoehe();
+            if (typeof ResizeObserver !== "undefined") new ResizeObserver(setzeHoehe).observe(kopf);
+        }
+
+        // Antwort des iframe ("ich stehe") - erst danach lohnt das Senden.
+        window.addEventListener("message", (e) => {
+            if (e.origin !== window.location.origin) return;
+            if (e.data && e.data.typ === "ox-vorschau-bereit") {
+                this.vorschauBereit = true;
+                this.sendeVorschau();
+            }
+        });
+
+        // Jede Aenderung in der Design-Karte geht an die Vorschau. Ein
+        // gemeinsamer Zuhoerer auf dem Container statt 20 einzelne: neue
+        // Felder wirken dadurch automatisch mit.
+        const karte = document.querySelector(".design-werkstatt .mini-form");
+        if (karte) {
+            karte.addEventListener("input", () => this.sendeVorschauGedrosselt());
+            karte.addEventListener("change", () => this.sendeVorschauGedrosselt());
+        }
+
+        let restaurantId = 0;
+        try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* ohne Id keine Vorschau */ }
+        if (!restaurantId) {
+            const hinweis = document.getElementById("design-vorschau-hinweis");
+            if (hinweis) hinweis.textContent = "Vorschau nicht verfügbar.";
+            return;
+        }
+        frame.src = "/guest.html?vorschau=1&restaurant=" + encodeURIComponent(restaurantId);
+    },
+
+    /* Farbwaehler feuern bei jedem Ziehen - ohne Drosselung waere das ein
+       Neuzeichnen pro Mausbewegung. 120 ms sind kurz genug, dass es sich
+       weiterhin unmittelbar anfuehlt. */
+    sendeVorschauGedrosselt() {
+        clearTimeout(this.vorschauTakt);
+        this.vorschauTakt = setTimeout(() => this.sendeVorschau(), 120);
+    },
+
+    sendeVorschau() {
+        if (!this.vorschauBereit) return;
+        const frame = document.getElementById("design-vorschau-frame");
+        if (!frame || !frame.contentWindow) return;
+        try {
+            frame.contentWindow.postMessage(
+                { typ: "ox-vorschau-design", design: this.designAusFormular() },
+                window.location.origin
+            );
+        } catch (e) { /* iframe noch nicht bereit */ }
+    },
+
+    vorschauNeuLaden() {
+        const frame = document.getElementById("design-vorschau-frame");
+        if (!frame || !frame.src) return;
+        this.vorschauBereit = false;
+        frame.src = frame.src;
+    },
+
+    /* Der aktuelle Stand der Design-Karte als Objekt - EINE Quelle fuer das
+       Speichern und fuer die Vorschau. Frueher baute saveDesign() dieses
+       Objekt inline; zwei Fassungen waeren sofort auseinandergelaufen. */
+    designAusFormular() {
+        const wert = (id) => document.getElementById(id).value;
+        const text = (id) => document.getElementById(id).value.trim() || null;
+        const an = (id) => document.getElementById(id).checked;
+        const kategorieStil = wert("design-kategorie");
+        return {
+            accentColor: wert("design-accent"),
+            backgroundColor: wert("design-bg"),
+            // Bleibt im Datensatz mitgefuehrt, damit aeltere Ansichten und
+            // Clients weiter damit arbeiten koennen; fuehrend ist categoryStyle.
+            categoriesAsHamburger: kategorieStil === "HAMBURGER",
+            categoryStyle: kategorieStil,
+            kitchenDisplayEnabled: an("design-kitchen"),
+            styleShape: wert("design-shape"),
+            displayFont: wert("design-font"),
+            cartFlyStyle: wert("design-fly"),
+            orderConfirmStyle: wert("design-confirm"),
+            darkMode: an("design-dark"),
+            introStyle: wert("design-intro"),
+            introText: text("design-intro-text"),
+            introSpeed: wert("design-intro-speed"),
+            instagramUrl: text("design-instagram"),
+            facebookUrl: text("design-facebook"),
+            websiteUrl: text("design-website"),
+            backgroundColor2: an("design-bg-gradient") ? wert("design-bg2") : null,
+            openingHours: text("design-hours"),
+            address: text("design-address"),
+            phone: text("design-phone"),
+            menuLayout: wert("design-layout"),
+            heroStyle: wert("design-hero"),
+            textureStyle: wert("design-textur"),
+            controlStyle: wert("design-control"),
+            motionLevel: wert("design-motion")
+        };
     },
 
     async saveDesign() {
         try {
             const theme = await OX.api("/api/admin/design", {
                 method: "PUT",
-                body: JSON.stringify({
-                    accentColor: document.getElementById("design-accent").value,
-                    backgroundColor: document.getElementById("design-bg").value,
-                    categoriesAsHamburger: document.getElementById("design-hamburger").checked,
-                    kitchenDisplayEnabled: document.getElementById("design-kitchen").checked,
-                    styleShape: document.getElementById("design-shape").value,
-                    displayFont: document.getElementById("design-font").value,
-                    cartFlyStyle: document.getElementById("design-fly").value,
-                    orderConfirmStyle: document.getElementById("design-confirm").value,
-                    darkMode: document.getElementById("design-dark").checked,
-                    introStyle: document.getElementById("design-intro").value,
-                    introText: document.getElementById("design-intro-text").value.trim() || null,
-                    introSpeed: document.getElementById("design-intro-speed").value,
-                    instagramUrl: document.getElementById("design-instagram").value.trim() || null,
-                    facebookUrl: document.getElementById("design-facebook").value.trim() || null,
-                    websiteUrl: document.getElementById("design-website").value.trim() || null,
-                    backgroundColor2: document.getElementById("design-bg-gradient").checked
-                        ? document.getElementById("design-bg2").value
-                        : null,
-                    openingHours: document.getElementById("design-hours").value.trim() || null,
-                    address: document.getElementById("design-address").value.trim() || null,
-                    phone: document.getElementById("design-phone").value.trim() || null
-                })
+                body: JSON.stringify(this.designAusFormular())
             });
             // Eigene Seite sofort mit umfaerben, statt erst nach einem
             // Neuladen - saveDesign() bekommt das frische Theme direkt

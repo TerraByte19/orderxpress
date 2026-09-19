@@ -641,3 +641,44 @@ body.has-bg-image #view-menu > .card { background: rgba(255, 255, 255, 0.94); }
 @media (prefers-reduced-motion: reduce) {
     #ox-ruf-blitz.an { animation: none; }
 }
+
+/* ---------- Design-Werkstatt: Regler links, Live-Vorschau rechts ----------
+   Die Struktur-Achsen (Aufbau, Kopf, Kategorien, Textur, Knoepfe, Bewegung)
+   aendern mehr als eine Farbe - man muss sie sehen, um sie zu waehlen.
+   Rechts steht deshalb die ECHTE Gaeste-Seite im Vorschau-Modus
+   (admin.js vorschauVorbereiten), nicht ein nachgebautes Bildchen.
+
+   Bis 1000px stehen Regler und Vorschau untereinander: bei schmalerem
+   Fenster bliebe fuer beides nebeneinander zu wenig Platz, und die
+   Gaeste-Seite selbst ist fuers Handy gebaut - sie braucht ihre Breite. */
+.design-werkstatt {
+    display: grid;
+    gap: var(--sp-4);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+}
+@media (min-width: 1000px) {
+    .design-werkstatt { grid-template-columns: minmax(0, 1fr) 340px; }
+    /* Bleibt beim Scrollen durch die lange Feldliste im Blick - sonst waere
+       sie genau dann weg, wenn unten etwas verstellt wird. Der Abstand nach
+       oben rechnet die (ebenfalls klebende) Kopfleiste mit, sonst schoebe
+       sich die Vorschau darunter. */
+    .design-vorschau { position: sticky; top: calc(var(--topbar-hoehe, 68px) + var(--sp-3)); }
+}
+.design-vorschau__kopf { margin-bottom: var(--sp-2); }
+/* Feste Hoehe statt Seitenverhaeltnis: das iframe zeigt eine scrollbare
+   Seite, es soll also einen ruhigen Ausschnitt geben und nicht mit dem
+   Inhalt wachsen. 560px entspricht ungefaehr einem Handy-Bildschirm. */
+.design-vorschau__rahmen {
+    height: 560px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card-2);
+}
+.design-vorschau__rahmen iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}

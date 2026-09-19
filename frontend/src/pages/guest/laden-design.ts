@@ -33,7 +33,13 @@ export function wendeThemeAn(theme: LadenTheme, titelZusatz = "Bestellen"): void
         backgroundColor2: theme.backgroundColor2,
         shape: theme.styleShape,
         font: theme.displayFont,
-        dunkel: theme.darkMode
+        dunkel: theme.darkMode,
+        layout: theme.menuLayout,
+        hero: theme.heroStyle,
+        textur: theme.textureStyle,
+        control: theme.controlStyle,
+        kategorie: theme.categoryStyle,
+        bewegung: theme.motionLevel
     });
 
     if (theme.name) {
@@ -62,7 +68,12 @@ export function wendeThemeAn(theme: LadenTheme, titelZusatz = "Bestellen"): void
     // Design-Gespraech: klareres Lesen der Karte beim Scrollen).
     const hero = document.getElementById("menu-hero");
     if (hero) {
-        if (theme.backgroundUrl) {
+        // SCHLICHT ist der Kopf OHNE Foto: dann wird das Bild auch gar nicht
+        // erst geladen - der Laden hat sich fuer die reine Schrift
+        // entschieden, ein Download waere reine Verschwendung. Ein spaeter
+        // hinterlegtes Foto bleibt erhalten und erscheint wieder, sobald der
+        // Laden auf BAND oder VOLL umstellt.
+        if (theme.backgroundUrl && theme.heroStyle !== "SCHLICHT") {
             hero.style.backgroundImage = `url("${theme.backgroundUrl}${zeitstempel}")`;
             hero.classList.add("ox-hero--bild");
         } else {
@@ -192,5 +203,18 @@ export function leseModi(theme: LadenTheme): { fly: "PLUS" | "PHOTO"; confirm: "
     return {
         fly: theme.cartFlyStyle === "PHOTO" ? "PHOTO" : "PLUS",
         confirm: theme.orderConfirmStyle === "STAMP" ? "STAMP" : "CHECK"
+    };
+}
+
+/** Die beiden Struktur-Achsen, die menu.ts beim Zeichnen braucht (die
+ *  uebrigen wirken rein ueber CSS, siehe theme.ts). Unbekannte Werte fallen
+ *  auf den Standard zurueck, damit ein neuerer Server die Seite nie
+ *  durcheinanderbringt. */
+export function leseStruktur(theme: LadenTheme): { layout: string; kategorieStil: string } {
+    const LAYOUTS = ["LISTE", "KACHELN", "TAFEL"];
+    const STILE = ["REITER", "HAMBURGER", "KAPITEL"];
+    return {
+        layout: LAYOUTS.includes(theme.menuLayout) ? theme.menuLayout : "LISTE",
+        kategorieStil: STILE.includes(theme.categoryStyle) ? theme.categoryStyle : "REITER"
     };
 }

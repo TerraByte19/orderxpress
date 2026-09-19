@@ -208,6 +208,93 @@ describe("zeichneSpeisekarte - Sicherheit: reiner Text statt Markup", () => {
     });
 });
 
+/* ---------- Struktur-Achsen: was bis ins Markup durchschlaegt ----------
+   LISTE und KACHELN unterscheiden sich NUR im Stylesheet - dafuer gibt es
+   hier nichts zu pruefen. TAFEL und KAPITEL dagegen aendern, was ueberhaupt
+   gebaut wird, und genau das kann still falsch werden. */
+describe("zeichneSpeisekarte - Aufbau TAFEL", () => {
+    it("baut kein Bildelement, auch nicht den leeren Platzhalter", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: "/bild.jpg" })] })],
+            ziel, vi.fn(), vi.fn(), true, false, undefined, false, { layout: "TAFEL" });
+
+        expect(ziel.querySelector("img")).toBeNull();
+        expect(ziel.querySelector(".ox-gericht__bild")).toBeNull();
+    });
+
+    it("haengt die Punktlinie zwischen Name und Preis ein", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie()], ziel, vi.fn(), vi.fn(), true, false, undefined, false, { layout: "TAFEL" });
+
+        const titelzeile = ziel.querySelector(".ox-gericht__titelzeile");
+        expect(titelzeile).not.toBeNull();
+        expect(titelzeile!.querySelector(".ox-gericht__name")).not.toBeNull();
+        // Rein dekorativ - fuer Screenreader gibt es dort nichts zu holen.
+        expect(titelzeile!.querySelector(".ox-gericht__leader")!.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("laesst die Punktlinie in der LISTE weg", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie()], ziel, vi.fn(), vi.fn(), true);
+        expect(ziel.querySelector(".ox-gericht__leader")).toBeNull();
+    });
+});
+
+describe("zeichneSpeisekarte - Aufbau KACHELN", () => {
+    it("laesst den leeren Foto-Platzhalter weg (in der Kachel waere er eine Luecke)", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: null })] })],
+            ziel, vi.fn(), vi.fn(), true, false, undefined, false, { layout: "KACHELN" });
+
+        expect(ziel.querySelector(".ox-gericht__bild--leer")).toBeNull();
+    });
+
+    it("zeigt ein vorhandenes Foto weiterhin", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: "/bild.jpg" })] })],
+            ziel, vi.fn(), vi.fn(), true, false, undefined, false, { layout: "KACHELN" });
+
+        expect(ziel.querySelector("img.ox-gericht__bild")).not.toBeNull();
+    });
+
+    it("behaelt den Platzhalter in der LISTE - dort haelt er die Zeile in Form", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte([kategorie({ items: [gericht({ imageUrl: null })] })], ziel, vi.fn(), vi.fn(), true);
+        expect(ziel.querySelector(".ox-gericht__bild--leer")).not.toBeNull();
+    });
+});
+
+describe("zeichneSpeisekarte - Kategorien-Navigation", () => {
+    const zweiKategorien = () => [
+        kategorie({ id: 1, name: "Pizza" }),
+        kategorie({ id: 2, name: "Getraenke", items: [gericht({ id: 2 })] })
+    ];
+
+    it("baut bei KAPITEL keine Leiste - die Ueberschriften bleiben selbst stehen", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte(zweiKategorien(), ziel, vi.fn(), vi.fn(), true, false, undefined, false,
+            { kategorieStil: "KAPITEL" });
+
+        expect(ziel.querySelector(".ox-kategorie-leiste")).toBeNull();
+        expect(ziel.querySelector(".ox-kategorie-hamburger")).toBeNull();
+        // Die Kategorien selbst stehen weiterhin da.
+        expect(ziel.querySelectorAll(".ox-kategorie-abschnitt").length).toBe(2);
+    });
+
+    it("baut bei HAMBURGER das Klappmenue", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte(zweiKategorien(), ziel, vi.fn(), vi.fn(), true, false, undefined, false,
+            { kategorieStil: "HAMBURGER" });
+        expect(ziel.querySelector(".ox-kategorie-hamburger")).not.toBeNull();
+    });
+
+    it("folgt dem aelteren hamburger-Argument, wenn die Achse fehlt", () => {
+        const ziel = document.createElement("div");
+        zeichneSpeisekarte(zweiKategorien(), ziel, vi.fn(), vi.fn(), true, true);
+        expect(ziel.querySelector(".ox-kategorie-hamburger")).not.toBeNull();
+    });
+});
+
 describe("zeichneSpeisekarte - Karte: Detail-Overlay vs. Schnell-Hinzufuegen", () => {
     it("ein Klick auf die Karte (Foto/Name) ruft NUR beiAuswahl auf, nicht beiSchnellHinzufuegen", () => {
         const g = gericht({ id: 7, name: "Calzone" });
@@ -218,7 +305,11 @@ describe("zeichneSpeisekarte - Karte: Detail-Overlay vs. Schnell-Hinzufuegen", (
 
         ziel.querySelector<HTMLButtonElement>(".ox-gericht__oeffnen")!.click();
 
-        expect(beiAuswahl).toHaveBeenCalledWith(g);
+        // Zweites Argument ist das Foto-Element der Karte (hier der leere
+        // Platzhalter): oeffneDetail laesst es in das grosse Foto des
+        // Detail-Blattes wachsen. Geprueft wird hier nur, DASS die Karte
+        // ihre Quelle mitgibt - die Bewegung selbst hat ihren eigenen Test.
+        expect(beiAuswahl).toHaveBeenCalledWith(g, expect.any(HTMLElement));
         expect(beiSchnellHinzufuegen).not.toHaveBeenCalled();
     });
 
@@ -465,6 +556,32 @@ describe("oeffneDetail - Inhalt", () => {
 
         expect(document.querySelectorAll(".ox-detail-overlay").length).toBe(1);
         expect(document.querySelector(".ox-detail-overlay h2")!.textContent).toBe("B");
+    });
+});
+
+describe("oeffneDetail - Foto im Blatt", () => {
+    it("gibt dem Foto die eigene Blatt-Klasse, nicht die kleine Karten-Klasse", () => {
+        // Vorher trug das Foto im Blatt .ox-gericht__bild und blieb dadurch
+        // bei 84x84 - wer ein Gericht antippt, um es anzusehen, bekam eine
+        // Briefmarke. Die eigene Klasse ist die Stelle, an der die Breite
+        // haengt (guest-bausteine.css), deshalb wird sie hier festgehalten.
+        oeffneDetail(gericht({ imageUrl: "/pizza.jpg" }), () => {}, true);
+        const bild = document.querySelector<HTMLImageElement>(".ox-detail-overlay img")!;
+        expect(bild.className).toBe("ox-detail__bild");
+    });
+
+    it("zeigt im Aufbau TAFEL gar kein Foto - auch nicht, wenn eins hinterlegt ist", () => {
+        // Der Laden hat sich fuer die reine Schriftkarte entschieden; ein
+        // Foto allein im Blatt waere ein Bruch in genau dieser Entscheidung.
+        oeffneDetail(gericht({ imageUrl: "/pizza.jpg" }), () => {}, true, { layout: "TAFEL" });
+        expect(document.querySelector(".ox-detail-overlay img")).toBeNull();
+    });
+
+    it("schaltet ohne Foto-Wechsel NICHT in den Aufblend-Modus (das Blatt schiebt sich weiter hoch)", async () => {
+        oeffneDetail(gericht({ imageUrl: "/pizza.jpg" }), () => {}, true);
+        await naechsterFrame();
+        const overlay = document.querySelector(".ox-detail-overlay")!;
+        expect(overlay.classList.contains("ox-detail-overlay--foto")).toBe(false);
     });
 });
 

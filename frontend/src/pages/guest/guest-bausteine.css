@@ -1,0 +1,100 @@
+/* Neue Bausteine der Gaeste-Seite, die es weder in components.css noch in
+   guest.css schon gab: das grosse Foto im Detail-Blatt, die Platzhalter
+   waehrend des Ladens und die Fortschritts-Schiene einer Bestellung.
+
+   Eigene Datei, damit guest.css nicht weiter waechst (siehe dortigen
+   Dateikopf). Reine Optik - das Markup bauen menu.ts und orders.ts.
+   Keine festen Farb-/Abstandswerte, alles aus var(--ox-...). */
+
+/* ---------- Grosses Foto im Detail-Blatt ----------
+   Vorher trug das Foto im Blatt dieselbe Klasse wie das Karten-Thumbnail und
+   blieb damit bei 84x84: wer ein Gericht antippt, um es anzusehen, bekam es
+   in Briefmarkengroesse. Jetzt fuellt es die Breite und laeuft ueber die
+   Polsterung des Blattes hinaus bis an dessen Kante (daher die negativen
+   Aussenabstaende in Hoehe von --ox-space-5, der Polsterung aus
+   .ox-overlay__box). Oben folgt es der Rundung des Blattes, unten nicht -
+   dort geht es in den Text ueber. */
+.ox-detail__bild {
+    display: block;
+    width: calc(100% + 2 * var(--ox-space-5));
+    /* base.css setzt img { max-width: 100% } - das kappt die berechnete
+       Breite oben wieder auf die Textbreite, und das Foto endet vor der
+       rechten Kante. Hier ausdruecklich aufheben. */
+    max-width: none;
+    margin: calc(-1 * var(--ox-space-5)) calc(-1 * var(--ox-space-5)) var(--ox-space-4);
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--ox-surface-2);
+    border-radius: var(--ox-radius-lg) var(--ox-radius-lg) 0 0;
+}
+
+/* ---------- Platzhalter waehrend des Ladens (menu.ts zeigeSkelett) ----------
+   Die Platzhalter tragen die echten Karten-Klassen und folgen darum
+   automatisch dem gewaehlten Aufbau. Hier nur die grauen Bloecke. */
+.ox-skelett {
+    pointer-events: none;
+}
+/* Die echte Karte bekommt ihre Breite vom Text im Inhalt-Block. Der
+   Platzhalter hat keinen Text, nur Bloecke mit Prozentbreiten - ohne
+   flex: 1 faellt der Block deshalb auf Breite 0 zusammen und die Zeilen
+   sind unsichtbar (genau so gesehen). */
+.ox-skelett .ox-gericht__inhalt {
+    flex: 1;
+}
+.ox-skelett__block {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    background: var(--ox-surface-2);
+    border-radius: var(--ox-radius-sm);
+}
+.ox-skelett__zeile {
+    height: 1em;
+    width: 70%;
+    margin-bottom: var(--ox-space-2);
+}
+.ox-skelett__zeile--kurz {
+    width: 45%;
+}
+.ox-skelett__preis {
+    height: 1em;
+    width: 72px;
+}
+/* Ein Lichtstreifen wandert durch - das Zeichen dafuer, dass etwas laeuft
+   und nicht haengt. Der Streifen ist die Textfarbe bei sehr geringer
+   Deckkraft, damit er in heller wie dunkler Haut sichtbar bleibt. */
+.ox-skelett__block::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--ox-textur-farbe), transparent);
+    animation: ox-skelett-schimmer 1.4s var(--ox-ease-out) infinite;
+}
+@keyframes ox-skelett-schimmer {
+    to { transform: translateX(100%); }
+}
+
+/* ---------- Fortschritts-Schiene einer Bestellung (orders.ts) ----------
+   Drei Abschnitte: angenommen, in der Kueche, fertig. Der Farbwechsel laeuft
+   als Uebergang, weil orders.ts dieselben Knoten umschaltet statt sie neu zu
+   bauen - derselbe Kniff wie beim Status-Chip. */
+.ox-fortschritt {
+    display: flex;
+    gap: var(--ox-space-1);
+    margin: var(--ox-space-3) 0;
+}
+.ox-fortschritt__abschnitt {
+    flex: 1;
+    height: 4px;
+    border-radius: var(--ox-radius-pill);
+    background: var(--ox-surface-2);
+    transition: background var(--ox-dur-slow) var(--ox-ease-out);
+}
+.ox-fortschritt__abschnitt.is-voll {
+    background: var(--ox-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ox-skelett__block::after { animation: none; opacity: 0; }
+}

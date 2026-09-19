@@ -64,6 +64,15 @@ export interface LadenTheme {
     openingHours: string | null;
     address: string | null;
     phone: string | null;
+    /* Struktur-Achsen: aendern Aufbau und Rhythmus der Seite, nicht nur
+       Farbe/Schrift. Backend liefert immer einen Wert (nie null), weil die
+       Getter in Restaurant.java auf den Standard zurueckfallen. */
+    menuLayout: string;      // LISTE | KACHELN | TAFEL
+    heroStyle: string;       // BAND | VOLL | SCHLICHT
+    textureStyle: string;    // KEIN | PAPIER | LINIEN | TERRAZZO
+    controlStyle: string;    // FLACH | RAHMEN | ERHOBEN
+    categoryStyle: string;   // REITER | HAMBURGER | KAPITEL
+    motionLevel: string;     // DEZENT | NORMAL | VERSPIELT
 }
 
 /** OrderResponse.OrderLineDto */

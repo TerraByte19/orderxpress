@@ -213,3 +213,53 @@
     .ox-chip--warn .ox-chip__punkt { animation: none; }
     .ox-overlay__box--sheet { transition: none; transform: none; }
 }
+
+/* ---------- Das angetippte Foto wird das grosse Foto (animation.ts wachseFoto) ----------
+   Der fliegende Klon liegt ueber dem Blatt (.ox-overlay hat z-index 40) und
+   faengt keine Tipper ab. object-fit: cover haelt ihn in jeder
+   Zwischengroesse richtig beschnitten - die beiden Fotos haben verschiedene
+   Seitenverhaeltnisse. Bewegt werden left/top/width/height; die Dauer setzt
+   animation.ts selbst als Inline-Stil (sie haengt an der Bewegungsstufe). */
+.ox-foto-klon {
+    position: fixed;
+    z-index: 60;
+    object-fit: cover;
+    pointer-events: none;
+    /* Breite und Hoehe setzt animation.ts als Inline-Stil; das globale
+       img { max-width: 100% } aus base.css wuerde sie beschneiden. */
+    max-width: none;
+}
+
+/* Waehrend ein Foto wandert, schiebt sich das Blatt NICHT zusaetzlich hoch,
+   sondern blendet auf: zwei gleichzeitige Bewegungen auf derselben Flaeche
+   lesen sich als Zucken. Ausserdem steht das Blatt so von Anfang an an
+   seinem Platz - nur deshalb kann wachseFoto sein Ziel richtig ausmessen.
+   Die Klasse setzt menu.ts nur, wenn es tatsaechlich ein Foto zu bewegen
+   gibt (siehe dort). */
+.ox-detail-overlay--foto .ox-overlay__box--sheet {
+    transform: none;
+    opacity: 0;
+    transition: opacity var(--ox-dur) var(--ox-ease-out);
+}
+.ox-detail-overlay--foto.is-open .ox-overlay__box--sheet {
+    transform: none;
+    opacity: 1;
+}
+
+/* ---------- Warenkorb-Leiste federt herein (index.ts) ----------
+   Sie erscheint in dem Moment, in dem der erste Artikel im Korb liegt - das
+   ist eine Antwort auf eine Handlung, also darf sie sich zeigen. index.ts
+   setzt die Klasse nur beim Uebergang unsichtbar -> sichtbar, nicht bei
+   jeder Mengenaenderung. */
+@keyframes ox-leiste-rein {
+    from { transform: translateY(110%); }
+    to   { transform: none; }
+}
+#cartbar.ox-leiste-rein {
+    animation: ox-leiste-rein var(--ox-dur) var(--ox-ease-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #cartbar.ox-leiste-rein { animation: none; }
+    .ox-detail-overlay--foto .ox-overlay__box--sheet { transition: none; opacity: 1; }
+}
