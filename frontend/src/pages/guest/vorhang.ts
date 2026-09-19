@@ -202,9 +202,6 @@ export function zeigeVorhang(theme: VorhangTheme): void {
             leinwand.className = "ox-vorhang__leinwand";
             leinwand.append(links, rechts);
             if (stange) leinwand.appendChild(stange);
-            const licht = document.createElement("div");
-            licht.className = "ox-vorhang__licht";
-            leinwand.appendChild(licht);
             vorhang.appendChild(leinwand);
         } else {
             vorhang.append(links, rechts);

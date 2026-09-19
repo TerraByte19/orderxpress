@@ -277,10 +277,7 @@
    weiterhin die ganze Abfolge gemeinsam statt jeden Teil einzeln.
 
      0 .. 50 %   Vorhang schwenkt auf (dieselben Keyframes wie VORHANG)
-     0 .. 40 %   Vorhang verliert sein Anstrahl-Licht (brightness)
-    14 .. 48 %   Leinwand wird breit
-    45 .. 75 %   Leinwand wird hoch
-    20 .. 95 %   Buehnenlicht steigt auf und verglimmt
+    12 .. 80 %   Leinwand waechst - Breite und Hoehe zusammen
 
    Das Original laesst die Leinwand ueber 4 s wachsen und braucht insgesamt
    rund 6 s. Am Tisch will jemand bestellen, nicht warten - deshalb
@@ -320,16 +317,20 @@
    Kino-Moment fiel weg. In den Aufnahmen fiel das nicht auf, weil dort
    sofort --los gesetzt wurde. */
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__leinwand {
-    animation-name: ox-kino-breit, ox-kino-hoch;
-    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .34),
-                        calc(var(--ox-vorhang-dauer, 1800ms) * .30);
-    animation-delay: calc(var(--ox-vorhang-dauer, 1800ms) * .14),
-                     calc(var(--ox-vorhang-dauer, 1800ms) * .45);
-    animation-timing-function: var(--ox-ease-out), var(--ox-ease-out);
-    animation-fill-mode: forwards, forwards;
+    animation: ox-kino-oeffnen
+               calc(var(--ox-vorhang-dauer, 1800ms) * .68)
+               calc(var(--ox-vorhang-dauer, 1800ms) * .12)
+               var(--ox-ease-out) forwards;
 }
-@keyframes ox-kino-breit { to { width: 100vw; } }
-@keyframes ox-kino-hoch  { to { height: 100vh; } }
+
+/* Breite UND Hoehe zusammen, in EINER Bewegung. Die Vorlage macht das in
+   zwei Stufen (erst breit, dann hoch) - dann steht die Leinwand aber eine
+   Weile breit und flach da, und ueber und unter der Karte liegen schwarze
+   Balken wie ein Rahmen. Gemeinsam gewachsen bleibt der Saal bis zuletzt
+   auf allen vier Seiten und es entsteht nie ein Balken. */
+@keyframes ox-kino-oeffnen {
+    to { width: 100vw; height: 100vh; }
+}
 
 /* Stoff und Falten wie beim Buehnenvorhang - hier nur die Bewegung und das
    Anstrahl-Licht. Die Haelften sitzen in der Leinwand und wachsen mit ihr. */
@@ -341,57 +342,28 @@
         linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
     background-repeat: repeat-x, no-repeat;
     background-size: 26px 100%, 100% 100%;
-    filter: brightness(175%);
+    /* KEIN filter: brightness() hier. Die Vorlage strahlt den Vorhang an und
+       nimmt das Licht beim Oeffnen zurueck - dabei stimmt die gezeigte Farbe
+       aber nicht mehr mit der ueberein, die der Laden eingestellt hat
+       (#7a1f2b wirkte aufgehellt rosa). Die eingestellte Farbe schlaegt den
+       Effekt. */
 }
 .ox-vorhang--kino .ox-vorhang__feld--links { transform-origin: top right; }
 .ox-vorhang--kino .ox-vorhang__feld--rechts { transform-origin: top left; }
 
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--links,
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .5),
-                        calc(var(--ox-vorhang-dauer, 1800ms) * .4);
-    animation-timing-function: var(--ox-ease-out), linear;
-    animation-fill-mode: forwards, forwards;
+    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .5);
+    animation-timing-function: var(--ox-ease-out);
+    animation-fill-mode: forwards;
 }
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--links {
-    animation-name: ox-vorhang-schwenk-links, ox-kino-abblenden;
+    animation-name: ox-vorhang-schwenk-links;
 }
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation-name: ox-vorhang-schwenk-rechts, ox-kino-abblenden;
-}
-@keyframes ox-kino-abblenden {
-    to { filter: brightness(100%); }
-}
-
-/* Buehnenlicht. Die Vorlage nimmt dafuer einen 10000px grossen Kreis mit
-   box-shadow: 0 0 100px 100px white - auf einem Handy ist das ein sehr
-   teurer Schatten. Derselbe Eindruck als Verlauf, und bewegt wird nur
-   transform/opacity: das kostet praktisch nichts. */
-.ox-vorhang--kino .ox-vorhang__licht {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 190%;
-    aspect-ratio: 2 / 1;
-    pointer-events: none;
-    background: radial-gradient(ellipse at center,
-                rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 68%);
-    transform: translate(-50%, 55%);
-    opacity: 0;
-}
-.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__licht {
-    animation: ox-kino-licht calc(var(--ox-vorhang-dauer, 1800ms) * .75)
-               calc(var(--ox-vorhang-dauer, 1800ms) * .2) var(--ox-ease-out) forwards;
-}
-@keyframes ox-kino-licht {
-    0%   { transform: translate(-50%, 55%); opacity: 0; }
-    40%  { opacity: .85; }
-    100% { transform: translate(-50%, 18%); opacity: 0; }
+    animation-name: ox-vorhang-schwenk-rechts;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ox-vorhang--kino .ox-vorhang__leinwand,
-    .ox-vorhang--kino .ox-vorhang__licht {
-        animation: none;
-    }
+    .ox-vorhang--kino .ox-vorhang__leinwand { animation: none; }
 }

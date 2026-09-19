@@ -256,7 +256,10 @@ describe("zeigeVorhang", () => {
         expect(leinwand).not.toBeNull();
         expect(leinwand.querySelectorAll(".ox-vorhang__feld").length).toBe(2);
         expect(leinwand.querySelector(".ox-vorhang__stange")).not.toBeNull();
-        expect(leinwand.querySelector(".ox-vorhang__licht")).not.toBeNull();
+        // Kein Buehnenlicht mehr: auf Wunsch entfernt, zusammen mit dem
+        // Anstrahl-Licht auf dem Stoff - das verfaelschte die eingestellte
+        // Vorhangfarbe (siehe vorhang.css).
+        expect(leinwand.querySelector(".ox-vorhang__licht")).toBeNull();
         // Nicht daneben, sondern darin - sonst dehnt sich die Leinwand aus,
         // ohne den Vorhang mitzunehmen.
         expect(v.querySelector(":scope > .ox-vorhang__feld")).toBeNull();
