@@ -280,4 +280,19 @@ describe("zeigeVorhang", () => {
         const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
         expect(v.style.getPropertyValue("--ox-vorhang-farbe")).toBe("#141210");
     });
+
+    it("dehnt die Leinwand NICHT schon waehrend der Haltezeit aus", () => {
+        // Gesehen und behoben: die Ausdehnung hing am blossen Vorhandensein
+        // des Vorhangs statt an .ox-vorhang--los. Bei introHold NORMAL (2 s)
+        // war das Bildfenster dadurch bildschirmfuellend, bevor der Vorhang
+        // ueberhaupt aufging - der Kino-Moment fiel weg. jsdom wertet die
+        // CSS nicht aus, geprueft wird darum die Klasse, an der es haengt.
+        vi.useFakeTimers();
+        zeigeVorhang(theme({ introStyle: "KINO", introText: "Willkommen", introHold: "NORMAL" }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(1500);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(false);
+        vi.advanceTimersByTime(600);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(true);
+    });
 });

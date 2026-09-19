@@ -311,6 +311,15 @@
     overflow: hidden;
     background: transparent;
     box-shadow: 0 0 0 100vmax var(--ox-kino-saal);
+}
+
+/* Die Ausdehnung haengt an .ox-vorhang--los, NICHT am blossen Vorhandensein
+   des Vorhangs. Stand sie am Grundzustand, dehnte sich die Leinwand schon
+   waehrend der Haltezeit aus (introHold, bis 3,5 s) - der Vorhang war dann
+   noch zu, das Bildfenster aber laengst bildschirmfuellend, und der ganze
+   Kino-Moment fiel weg. In den Aufnahmen fiel das nicht auf, weil dort
+   sofort --los gesetzt wurde. */
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__leinwand {
     animation-name: ox-kino-breit, ox-kino-hoch;
     animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .34),
                         calc(var(--ox-vorhang-dauer, 1800ms) * .30);
