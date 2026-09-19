@@ -115,7 +115,13 @@
     function maskMasse() {
       var r = buehne.getBoundingClientRect();
       var w = Math.min(r.width, r.height) * maskAnteil;
-      return { w: w, h: w / ratio, rechteck: r };
+      var h = w / ratio;
+      // Hochformat (ratio < 1): die Maske waere hoeher als die Buehne und
+      // liefe unten heraus. Dann ueber die HOEHE begrenzen und die Breite
+      // nachziehen. Fuer ratio >= 1 aendert das nichts (h <= w <= Hoehe).
+      var maxH = r.height * maskAnteil;
+      if (h > maxH) { h = maxH; w = h * ratio; }
+      return { w: w, h: h, rechteck: r };
     }
     function maskeStellen() {
       var m = maskMasse();

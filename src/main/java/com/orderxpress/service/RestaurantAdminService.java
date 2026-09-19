@@ -51,6 +51,10 @@ public class RestaurantAdminService {
     /** Logos werden kleiner gehalten als Hintergrundbilder. */
     private static final int LOGO_MAX = 600;
     private static final int BACKGROUND_MAX = 1600;
+    /** Vorhang-Bild: fuellt im Modus FLAECHE einen ganzen Handy-Bildschirm,
+     *  im Modus AUFGELEGT hoechstens dessen halbe Hoehe. 1400px reichen fuer
+     *  beides auch auf einem Bildschirm mit doppelter Pixeldichte. */
+    private static final int INTRO_MAX = 1400;
     /** Ambiente-Fotos sind wie das Hintergrundbild verkleinert (Stimmungsbilder, keine Detailaufnahmen). */
     private static final int GALLERY_MAX = 1600;
     private static final int MAX_GALLERY_IMAGES = 8;
@@ -129,6 +133,7 @@ public class RestaurantAdminService {
         restaurant.setIntroLogo(request.introLogoOrDefault());
         restaurant.setIntroHold(request.introHoldOrDefault());
         restaurant.setIntroRepeat(request.introRepeatOrDefault());
+        restaurant.setIntroImageStyle(request.introImageStyleOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -139,7 +144,11 @@ public class RestaurantAdminService {
         Long rid = CurrentUser.restaurantId();
         validateUpload(file);
         boolean png = "image/png".equalsIgnoreCase(file.getContentType());
-        int max = kind == AssetKind.LOGO ? LOGO_MAX : BACKGROUND_MAX;
+        int max = switch (kind) {
+            case LOGO -> LOGO_MAX;
+            case INTRO -> INTRO_MAX;
+            case BACKGROUND -> BACKGROUND_MAX;
+        };
         byte[] encoded;
         try {
             encoded = resizeAndReencode(file.getBytes(), png, max);
@@ -307,7 +316,9 @@ public class RestaurantAdminService {
                 restaurant.getIntroColor(),
                 restaurant.getIntroLogo(),
                 restaurant.getIntroHold(),
-                restaurant.getIntroRepeat());
+                restaurant.getIntroRepeat(),
+                kinds.contains(AssetKind.INTRO) ? base + "/intro" : null,
+                restaurant.getIntroImageStyle());
     }
 
     private void validateUpload(MultipartFile file) {

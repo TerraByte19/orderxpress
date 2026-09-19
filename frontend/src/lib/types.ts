@@ -79,6 +79,9 @@ export interface LadenTheme {
     introLogo: string;       // OHNE | KLEIN | GROSS
     introHold: string;       // OHNE | KURZ | NORMAL | LANG
     introRepeat: string;     // IMMER | EINMAL
+    /** Vorhang-Bild; null, wenn der Laden keins hochgeladen hat. */
+    introImageUrl: string | null;
+    introImageStyle: string; // AUFGELEGT | FLAECHE
 }
 
 /** OrderResponse.OrderLineDto */

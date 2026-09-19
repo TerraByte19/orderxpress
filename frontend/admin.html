@@ -250,6 +250,14 @@
                     <input type="color" id="design-intro-color" value="#7a1f2b">
                 </div>
                 <div class="full">
+                    <label for="design-intro-image-style">Vorhang-Bild verwenden als
+                        <span class="muted">(Bild unten hochladen)</span></label>
+                    <select id="design-intro-image-style">
+                        <option value="AUFGELEGT">Plakat &ndash; liegt mittig auf dem Vorhang</option>
+                        <option value="FLAECHE">Fl&auml;che &ndash; das Bild IST der Vorhang</option>
+                    </select>
+                </div>
+                <div class="full">
                     <button class="small" onclick="Admin.vorschauVorhang()">Vorhang zeigen</button>
                     <span class="muted">spielt ihn rechts in der Vorschau ab</span>
                 </div>
@@ -317,6 +325,17 @@
                     <div class="row">
                         <button class="small" onclick="Admin.uploadAsset('background')">Hochladen</button>
                         <button class="small red" onclick="Admin.deleteAsset('background')">Entfernen</button>
+                    </div>
+                </div>
+                <div class="upload-card">
+                    <span class="muted">Vorhang-Bild (JPG/PNG)</span>
+                    <div class="upload-card__preview">
+                        <img id="intro-preview" class="thumb" alt="" style="display:none">
+                    </div>
+                    <input type="file" id="intro-file" accept="image/png,image/jpeg">
+                    <div class="row">
+                        <button class="small" onclick="Admin.uploadAsset('intro')">Hochladen</button>
+                        <button class="small red" onclick="Admin.deleteAsset('intro')">Entfernen</button>
                     </div>
                 </div>
             </div>

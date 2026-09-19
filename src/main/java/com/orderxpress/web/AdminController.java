@@ -286,6 +286,19 @@ public class AdminController {
         restaurantAdminService.deleteAsset(AssetKind.BACKGROUND);
     }
 
+    /** Vorhang-Bild hochladen (JPG/PNG, max. 5 MB - wird serverseitig verkleinert). */
+    @PostMapping(value = "/design/intro", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void uploadIntro(@RequestParam("file") MultipartFile file) {
+        restaurantAdminService.saveAsset(AssetKind.INTRO, file);
+    }
+
+    @DeleteMapping("/design/intro")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteIntro() {
+        restaurantAdminService.deleteAsset(AssetKind.INTRO);
+    }
+
     // ---------- Bildergalerie (Ambiente-/Stimmungsfotos) ----------
 
     @GetMapping("/gallery")

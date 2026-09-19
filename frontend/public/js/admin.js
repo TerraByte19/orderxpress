@@ -689,6 +689,11 @@ const Admin = {
             if (t.backgroundUrl) { bg.src = t.backgroundUrl + "?v=" + Date.now(); bg.style.display = ""; }
             else { bg.style.display = "none"; }
 
+            const intro = document.getElementById("intro-preview");
+            if (t.introImageUrl) { intro.src = t.introImageUrl + "?v=" + Date.now(); intro.style.display = ""; }
+            else { intro.style.display = "none"; }
+            document.getElementById("design-intro-image-style").value = t.introImageStyle || "AUFGELEGT";
+
             this.vorschauVorbereiten();
         } catch (e) { /* Design ist optional */ }
     },
@@ -823,6 +828,7 @@ const Admin = {
             introHold: wert("design-intro-hold"),
             introRepeat: wert("design-intro-repeat"),
             introColor: an("design-intro-eigene-farbe") ? wert("design-intro-color") : null,
+            introImageStyle: wert("design-intro-image-style"),
             instagramUrl: text("design-instagram"),
             facebookUrl: text("design-facebook"),
             websiteUrl: text("design-website"),
@@ -853,8 +859,27 @@ const Admin = {
     },
 
     /* kind: "logo" | "background" */
+    /* Die drei Laden-Bilder unterscheiden sich nur in Eingabefeld, Zuschnitt
+       und Meldung - vorher standen diese Unterschiede als Ketten von
+       Ternaeren mitten im Ablauf, was bei der dritten Bildart nicht mehr
+       lesbar gewesen waere.
+
+       Der Vorhang-Zuschnitt ist HOCHformatig (ratio < 1): das Bild fuellt im
+       Modus FLAECHE einen ganzen Handy-Bildschirm. "breit" heisst im Cropper
+       nur "freies Seitenverhaeltnis", nicht Querformat. */
+    BILDARTEN: {
+        logo:       { feld: "logo-file",  meldung: "Logo gespeichert",
+                      form: "kreis", ausgabe: 600,  fokus: "logo" },
+        background: { feld: "bg-file",    meldung: "Hintergrund gespeichert",
+                      form: "breit", ratio: 2.5, ausgabe: 1500, fokus: "background" },
+        intro:      { feld: "intro-file", meldung: "Vorhang-Bild gespeichert",
+                      form: "breit", ratio: 0.7, ausgabe: 1400, fokus: "" }
+    },
+
     async uploadAsset(kind) {
-        const input = document.getElementById(kind === "logo" ? "logo-file" : "bg-file");
+        const cfg = this.BILDARTEN[kind];
+        if (!cfg) return;
+        const input = document.getElementById(cfg.feld);
         const file = input.files[0];
         input.value = "";
         if (!file) { OX.toast("Bitte zuerst eine Datei auswählen", true); return; }
@@ -867,7 +892,7 @@ const Admin = {
                 method: "POST", headers: OX.authHeader(), body: fd
             });
             if (res.ok) {
-                OX.toast(kind === "logo" ? "Logo gespeichert" : "Hintergrund gespeichert");
+                OX.toast(cfg.meldung);
             } else {
                 let detail = null;
                 try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }
@@ -880,10 +905,6 @@ const Admin = {
         let restaurantId = 0;
         try { restaurantId = (await OX.me()).restaurantId; } catch (e) { /* Vorschau faellt dann zurueck */ }
 
-        const cfg = kind === "logo"
-            ? { form: "kreis", ausgabe: 600, fokus: "logo" }
-            : { form: "breit", ratio: 2.5, ausgabe: 1500, fokus: "background" };
-
         OX.oeffneCropper({
             datei: file, restaurantId: restaurantId,
             form: cfg.form, ratio: cfg.ratio, ausgabe: cfg.ausgabe, fokus: cfg.fokus,
@@ -894,7 +915,7 @@ const Admin = {
                     method: "POST", headers: OX.authHeader(), body: fd
                 });
                 if (res.ok) {
-                    OX.toast(kind === "logo" ? "Logo gespeichert" : "Hintergrund gespeichert");
+                    OX.toast(cfg.meldung);
                 } else {
                     let detail = null;
                     try { detail = (await res.json()).detail; } catch (e) { /* keine JSON-Antwort */ }

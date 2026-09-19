@@ -188,6 +188,15 @@ public class Restaurant {
     @Column(name = "intro_repeat", length = 20)
     private String introRepeat;
 
+    /**
+     * Wie das Vorhang-Bild (AssetKind.INTRO) benutzt wird:
+     * AUFGELEGT = es liegt mittig auf dem Vorhang, wie ein Plakat.
+     * FLAECHE   = es IST der Vorhang, bildschirmfuellend.
+     * null/leer = AUFGELEGT. Ohne hochgeladenes Bild ohne Wirkung.
+     */
+    @Column(name = "intro_image_style", length = 20)
+    private String introImageStyle;
+
     /** Staerke aller Bewegungen: DEZENT | NORMAL | VERSPIELT. Skaliert im
      *  Frontend die Dauern und schaltet die verspielten Zugaben zu.
      *  prefers-reduced-motion schlaegt das weiterhin immer. null/leer = NORMAL. */
@@ -513,5 +522,13 @@ public class Restaurant {
 
     public void setIntroRepeat(String v) {
         this.introRepeat = v;
+    }
+
+    public String getIntroImageStyle() {
+        return orDefault(introImageStyle, "AUFGELEGT");
+    }
+
+    public void setIntroImageStyle(String v) {
+        this.introImageStyle = v;
     }
 }

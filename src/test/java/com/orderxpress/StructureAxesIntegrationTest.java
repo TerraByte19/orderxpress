@@ -173,6 +173,29 @@ class StructureAxesIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void vorhangBildStilHatStandardUndLaesstSichSetzen() throws Exception {
+        Owner o = createRestaurant("vorhang-bildstil");
+
+        mvc.perform(get("/api/guest/theme/" + o.restaurantId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.introImageStyle").value("AUFGELEGT"))
+                // Ohne hochgeladenes Bild gibt es keine Adresse - genau wie
+                // bei logoUrl/backgroundUrl.
+                .andExpect(jsonPath("$.introImageUrl").doesNotExist());
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introImageStyle\":\"FLAECHE\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.introImageStyle").value("FLAECHE"));
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introImageStyle\":\"PLAKAT\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void alterClientOhneAchsenSetztDieUebrigenAufIhrenStandard() throws Exception {
         Owner o = createRestaurant("achsen-alterclient2");
 

@@ -207,6 +207,22 @@ Bezeichner Englisch, Kommentare/Fehlermeldungen Deutsch (ASCII-Umschreibung ue/o
 - **Tests: Backend 139 grün, Frontend 340 grün** (`vorhang.test.ts` jetzt 20 Tests: Farbe + gerechnete Schriftfarbe, kaputte Farbe bricht nicht ab, Logo-Grössen, Haltezeiten, EINMAL pro Laden).
 - **Offen, bewusst nicht geraten:** eigenes Vorhang-BILD (Upload) — bräuchte neue `AssetKind`, Upload, Zuschnitt, Löschen, Cache-Busting.
 
+**Neu (19.09.2026, Teil 4): Vorhang-Bild — als Plakat ODER als Fläche. Plus eine böse Enum-Falle.**
+- **Neue `AssetKind.INTRO`** (drittes Laden-Bild neben LOGO und BACKGROUND), Endpunkte `POST/DELETE /api/admin/design/intro` und öffentlich `GET /api/guest/restaurants/{id}/intro`. Wie bei allen Bildern: **hochgeladen = wird gezeigt**, gelöscht = weg. Keine „Bild an/aus"-Spalte.
+- **Neue Spalte `intro_image_style`** AUFGELEGT|FLAECHE (nullable, Standard AUFGELEGT). EIN hochgeladenes Bild, zwei ganz verschiedene Wirkungen: Plakat mittig auf dem Stoff, oder das Bild IST der Vorhang.
+- **FLAECHE-Detail, das zweimal falsch war:** bei den zweiteiligen Stilen (MITTE, VORHANG) darf das Bild nicht per `background-size: 200% 100%` auf die Hälften gelegt werden — das SKALIERT auf die Kachelgröße und deckt nicht ab (aus Kreisen wurden Ellipsen). Stattdessen trägt jede Hälfte ein **Pseudo-Element doppelter Breite** mit `background-size: cover`; darauf rechnet cover mit den Maßen des ganzen Vorhangs, und weil es ein Kind der Hälfte ist, schwenkt es beim Aufgehen mit hinaus. Zusätzlich `box-shadow: none` auf den Hälften — der Falten-Schlagschatten sah auf einem durchgehenden Foto wie ein Riss aus.
+- **Marke auf Weiß + radialer Abdunkler** bei FLAECHE: ein Foto kann beliebig hell sein, und die gerechnete Schriftfarbe gilt für die VORHANGFARBE, nicht für das Foto (gleiche Überlegung wie beim Hero-Bild).
+- **`bildcropper.js` konnte kein Hochformat:** `maskMasse()` begrenzte die Maske nur über die Breite, bei `ratio < 1` lief sie unten aus der Bühne. Jetzt zusätzlich über die Höhe gedeckelt (für `ratio >= 1` ändert das nichts). Der Vorhang-Zuschnitt nutzt `ratio: 0.7`.
+- **`Admin.BILDARTEN`**: die drei Bild-Uploads unterscheiden sich nur in Eingabefeld, Zuschnitt und Meldung — vorher standen die Unterschiede als Ketten von Ternären mitten in `uploadAsset()`, was bei der dritten Art nicht mehr lesbar gewesen wäre.
+
+**⚠️ TEUERSTE FALLE DIESER SESSION — Enum-Werte sind ein Schema-Bruch:**
+- **Symptom:** `AssetKind.INTRO` hinzugefügt, alle 141 Tests grün, Upload auf der echten Datenbank scheitert mit `409` und im Log `Wert nicht erlaubt für Feld "('BACKGROUND', 'LOGO')": "INTRO"`.
+- **Ursache:** **Hibernate 7 bildet Java-Enums auf den NATIVEN Enum-Typ der Datenbank ab — auch bei `@Enumerated(EnumType.STRING)` mit `length = 20`.** In H2 entstand `ENUM('BACKGROUND','LOGO')`, festgeschrieben beim ersten Erzeugen der Tabelle. Ein neuer Enum-Wert ist damit KEINE additive Änderung, und `ddl-auto: update` ändert bestehende Spaltentypen grundsätzlich nicht.
+- **Warum die Tests das nicht gefunden haben:** die Testdatenbank wird bei jedem Lauf frisch erzeugt (`create-drop`), dort kennt der Enum-Typ von Anfang an alle drei Werte. **Eine Testdatenbank, die anders abbildet als der Betrieb, prüft die falsche Sache.**
+- **Behoben zweifach:** (1) `hibernate.type.preferred_enum_jdbc_type: VARCHAR` in `application.yml` **UND in `src/test/resources/application.yml`** — ab jetzt sind alle Enums schlichte Zeichenketten (betrifft auch `UserRole`, `OrderStatus`, `GuestStatus`, `SessionStatus`, `CallStatus`, `MenuItemBadge`). (2) `config/EnumSpaltenMigration` stellt die bestehende Spalte beim Start einmalig auf `VARCHAR(20)` um (nur H2, idempotent, protokolliert).
+- **Für die Zukunft:** `EnumSpaltenMigration` ist ein ausdrücklicher STOPGAP für genau diesen einen Fall und soll mit dem Umstieg auf Flyway ersatzlos verschwinden. **Die nächste Migration gehört in ein Migrationswerkzeug, nicht in eine weitere solche Klasse.** Der frühere Satz zum WAITER-Enumwert („keine Schema-Änderung, String-Spalte") stimmte unter Hibernate 6 und stimmt unter Hibernate 7 nicht mehr.
+- **Tests: Backend 141 grün, Frontend 345 grün.**
+
 **Offen / nächste Schritte:**
 1. Vor echtem Einsatz: Passwörter ändern, H2-Konsole + Swagger sperren, HTTPS, `public-base-url` setzen.
 2. Später: PostgreSQL + Flyway (statt `ddl-auto: update`), echten Bondrucker testen (`printer.mode: network` + IP), evtl. Bezahlung.

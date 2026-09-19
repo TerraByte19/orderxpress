@@ -61,7 +61,9 @@ public record DesignRequest(
         @Pattern(regexp = "OHNE|KURZ|NORMAL|LANG",
                 message = "Haltezeit muss OHNE, KURZ, NORMAL oder LANG sein.") String introHold,
         @Pattern(regexp = "IMMER|EINMAL",
-                message = "Wiederholung muss IMMER oder EINMAL sein.") String introRepeat) {
+                message = "Wiederholung muss IMMER oder EINMAL sein.") String introRepeat,
+        @Pattern(regexp = "AUFGELEGT|FLAECHE",
+                message = "Vorhang-Bild muss AUFGELEGT oder FLAECHE sein.") String introImageStyle) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;
@@ -149,5 +151,9 @@ public record DesignRequest(
 
     public String introRepeatOrDefault() {
         return orDefault(introRepeat, "IMMER");
+    }
+
+    public String introImageStyleOrDefault() {
+        return orDefault(introImageStyle, "AUFGELEGT");
     }
 }

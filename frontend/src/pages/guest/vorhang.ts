@@ -92,6 +92,10 @@ export interface VorhangTheme {
     introLogo?: string | null;
     introHold?: string | null;
     introRepeat?: string | null;
+    /** Vorhang-Bild des Ladens (AssetKind.INTRO), null wenn keins da ist. */
+    introImageUrl?: string | null;
+    /** AUFGELEGT = liegt mittig auf dem Vorhang, FLAECHE = IST der Vorhang. */
+    introImageStyle?: string | null;
     /** Nur fuer introRepeat = EINMAL noetig (Merker-Schluessel). */
     id?: number;
 }
@@ -131,7 +135,19 @@ export function zeigeVorhang(theme: VorhangTheme): void {
     // nur auf dem Vorhang weg.
     const logoKlasse = LOGO_KLASSE[theme.introLogo || "KLEIN"];
     const zeigeLogo = Boolean(theme.logoUrl) && Boolean(logoKlasse);
-    const hatMarke = Boolean(text) || zeigeLogo;
+
+    // Das Vorhang-Bild kann zweierlei sein: ein Plakat AUF dem Stoff
+    // (AUFGELEGT, gehoert dann in die Marke wie Logo und Text) oder der Stoff
+    // SELBST (FLAECHE, dann traegt es der Vorhang als Hintergrund und die
+    // Falten treten zurueck - Samtfalten ueber einem Foto werden matschig).
+    // Bewusst OHNE Cache-Buster: der Vorhang spielt seit dem 19.09. bei jedem
+    // Seitenaufruf, ein erzwungener Neu-Download waere auf dem Handy teuer.
+    // Der Endpunkt erlaubt 10 Minuten Zwischenspeicher (GuestController).
+    const bildUrl = theme.introImageUrl || null;
+    const bildFuelltFlaeche = Boolean(bildUrl) && theme.introImageStyle === "FLAECHE";
+    const zeigeBildAufgelegt = Boolean(bildUrl) && !bildFuelltFlaeche;
+
+    const hatMarke = Boolean(text) || zeigeLogo || zeigeBildAufgelegt;
 
     const geschwindigkeitSicher = GUELTIGE_GESCHWINDIGKEITEN.has(theme.introSpeed || "")
         ? (theme.introSpeed as string)
@@ -149,6 +165,11 @@ export function zeigeVorhang(theme: VorhangTheme): void {
     // sonst stuende die Kontrastfarbe der Akzentfarbe auf einem ganz anderen
     // Ton, und ein dunkler Vorhang bekaeme schwarzen Text. Die Falten sind
     // ein halbdurchsichtiges SVG darueber und faerben sich automatisch mit.
+    if (bildFuelltFlaeche) {
+        vorhang.classList.add("ox-vorhang--bild");
+        vorhang.style.setProperty("--ox-vorhang-bild", `url("${bildUrl}")`);
+    }
+
     if (istHexFarbe(theme.introColor)) {
         vorhang.style.setProperty("--ox-vorhang-farbe", theme.introColor as string);
         vorhang.style.setProperty("--ox-vorhang-text", textfarbeAuf(theme.introColor as string));
@@ -174,6 +195,16 @@ export function zeigeVorhang(theme: VorhangTheme): void {
     if (hatMarke) {
         const marke = document.createElement("div");
         marke.className = "ox-vorhang__marke";
+        if (zeigeBildAufgelegt) {
+            // Zuoberst und am groessten: wer ein Plakat aufhaengt, will es
+            // zuerst sehen. object-fit: contain schneidet nichts ab - es ist
+            // ein Bildwerk, kein Hintergrund (Optik: vorhang.css).
+            const bild = document.createElement("img");
+            bild.className = "ox-vorhang__marke-bild";
+            bild.src = bildUrl as string;
+            bild.alt = "";
+            marke.appendChild(bild);
+        }
         if (zeigeLogo) {
             const logo = document.createElement("img");
             logo.className = `ox-vorhang__marke-logo ${logoKlasse}`;

@@ -163,11 +163,93 @@
     width: min(48vw, 180px);
     height: min(48vw, 180px);
 }
+/* Plakat auf dem Vorhang (introImageStyle = AUFGELEGT). Hoehe gedeckelt,
+   damit Bild, Logo und Text zusammen auf einen Handy-Bildschirm passen;
+   contain statt cover, weil ein Bildwerk nicht angeschnitten werden darf. */
+.ox-vorhang__marke-bild {
+    width: min(72vw, 420px);
+    max-height: 44vh;
+    object-fit: contain;
+    border-radius: var(--ox-radius-lg);
+}
+
 .ox-vorhang__marke-text {
     font-family: var(--ox-font-display);
     font-weight: 600;
     font-size: var(--ox-text-2xl);
     text-align: center;
+}
+
+/* ---------- Bild ALS Vorhang (introImageStyle = FLAECHE) ----------
+   Das Foto traegt den ganzen Auftakt. vorhang.ts setzt --ox-vorhang-bild als
+   Inline-Stil und die Klasse .ox-vorhang--bild.
+
+   Drei Dinge muessen dabei anders sein als beim farbigen Vorhang:
+   1. Die Falten treten zurueck - eine Samt-Textur ueber einem Foto wird
+      matschig. Die Regel unten hat zwei Klassen und schlaegt damit die
+      einklassige Falten-Regel oben.
+   2. Bei den zweiteiligen Stilen (MITTE, VORHANG) zeigt jede Haelfte ihre
+      HAELFTE des Fotos (background-size: 200%): beim Aufgehen teilt sich EIN
+      Bild, statt dass zweimal dasselbe auseinanderfaehrt.
+   3. Marke auf Weiss plus Abdunkler. Ein Foto kann beliebig hell sein, und
+      die gerechnete Schriftfarbe gilt fuer die VORHANGFARBE, nicht fuer das
+      Foto - dieselbe Ueberlegung wie beim Hero-Bild (guest.css). */
+/* Einteilige Stile (HOCHKLAPPEN, FADE): das Feld ist so breit wie der
+   Bildschirm, cover rechnet also richtig. */
+.ox-vorhang--bild .ox-vorhang__feld {
+    background-image: var(--ox-vorhang-bild);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Zweiteilige Stile (MITTE, VORHANG): jede Haelfte ist nur halb so breit.
+   Ein Hintergrund direkt darauf wuerde entweder zweimal dasselbe zeigen
+   (cover je Haelfte) oder das Bild verzerren ("200% 100%" SKALIERT auf die
+   Kachelgroesse, es deckt nicht ab - genau so gesehen: aus Kreisen wurden
+   Ellipsen).
+
+   Stattdessen traegt jede Haelfte ein Pseudo-Element von DOPPELTER Breite,
+   also der Breite des ganzen Vorhangs. Darauf rechnet cover wieder mit den
+   richtigen Massen, und weil das Pseudo-Element ein Kind der Haelfte ist,
+   schwenkt es beim Aufgehen mit hinaus. overflow: hidden schneidet es auf
+   die Haelfte zu; left/right heften die beiden Teile so aneinander, dass
+   die Naht in der Mitte des Bildes liegt. */
+.ox-vorhang--bild .ox-vorhang__feld--links,
+.ox-vorhang--bild .ox-vorhang__feld--rechts {
+    background-image: none;
+    position: relative;
+    overflow: hidden;
+    /* Der Schlagschatten der Falten-Optik saehe auf einem durchgehenden Foto
+       wie ein Riss in der Mitte aus. */
+    box-shadow: none;
+}
+.ox-vorhang--bild .ox-vorhang__feld--links::before,
+.ox-vorhang--bild .ox-vorhang__feld--rechts::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 200%;
+    background-image: var(--ox-vorhang-bild);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.ox-vorhang--bild .ox-vorhang__feld--links::before { left: 0; }
+.ox-vorhang--bild .ox-vorhang__feld--rechts::before { right: 0; }
+
+.ox-vorhang--bild .ox-vorhang__marke {
+    color: #fff;
+}
+/* Abdunkler direkt unter der Marke, nicht auf dem Stoff: bei zwei Haelften
+   laege er sonst zweimal nebeneinander und die Naht waere sichtbar. */
+.ox-vorhang--bild .ox-vorhang__marke::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, .62), rgba(0, 0, 0, .3));
 }
 
 @media (prefers-reduced-motion: reduce) {

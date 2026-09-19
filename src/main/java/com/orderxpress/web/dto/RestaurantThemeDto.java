@@ -36,5 +36,7 @@ public record RestaurantThemeDto(Long id,
                                  String introColor,
                                  String introLogo,
                                  String introHold,
-                                 String introRepeat) {
+                                 String introRepeat,
+                                 String introImageUrl,
+                                 String introImageStyle) {
 }

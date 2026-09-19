@@ -172,6 +172,12 @@ public class GuestController {
         return asset(restaurantId, AssetKind.BACKGROUND);
     }
 
+    /** Vorhang-Bild eines Ladens (oeffentlich, wie Logo und Hintergrund). */
+    @GetMapping("/restaurants/{restaurantId}/intro")
+    public ResponseEntity<byte[]> intro(@PathVariable Long restaurantId) {
+        return asset(restaurantId, AssetKind.INTRO);
+    }
+
     /** Ids der Ambiente-/Stimmungsfotos eines Ladens (Bildergalerie), in Anlegereihenfolge. */
     @GetMapping("/restaurants/{restaurantId}/gallery")
     public List<Long> gallery(@PathVariable Long restaurantId) {

@@ -190,4 +190,55 @@ describe("zeigeVorhang", () => {
         expect(vorhaenge().length).toBe(2);
         expect(localStorage.length).toBe(0);
     });
+
+    /* ---------- Vorhang-Bild ----------
+       Zwei ganz verschiedene Dinge aus EINEM hochgeladenen Bild: AUFGELEGT
+       haengt es als Plakat in die Marke, FLAECHE macht es zum Vorhang
+       selbst. Verwechselt man die beiden, sieht man es nicht sofort - der
+       Vorhang ist in beiden Faellen "da". */
+    it("haengt das Bild als Plakat in die Marke (AUFGELEGT)", () => {
+        zeigeVorhang(theme({ introImageUrl: "/api/guest/restaurants/1/intro", introImageStyle: "AUFGELEGT" }));
+        const bild = document.querySelector<HTMLImageElement>(".ox-vorhang__marke-bild");
+        expect(bild).not.toBeNull();
+        expect(bild!.src).toContain("/api/guest/restaurants/1/intro");
+        // Als Plakat gehoert es NICHT auf den Stoff.
+        expect(document.querySelector(".ox-vorhang")!.classList.contains("ox-vorhang--bild")).toBe(false);
+    });
+
+    it("macht das Bild zum Vorhang selbst (FLAECHE) - kein Plakat in der Marke", () => {
+        zeigeVorhang(theme({ introImageUrl: "/bild.jpg", introImageStyle: "FLAECHE", introText: "Hallo" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.classList.contains("ox-vorhang--bild")).toBe(true);
+        expect(v.style.getPropertyValue("--ox-vorhang-bild")).toBe('url("/bild.jpg")');
+        expect(document.querySelector(".ox-vorhang__marke-bild")).toBeNull();
+    });
+
+    it("baut ohne hochgeladenes Bild weder Plakat noch Flaeche", () => {
+        zeigeVorhang(theme({ introImageUrl: null, introImageStyle: "FLAECHE" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.classList.contains("ox-vorhang--bild")).toBe(false);
+        expect(document.querySelector(".ox-vorhang__marke-bild")).toBeNull();
+    });
+
+    it("haelt fuer ein aufgelegtes Plakat an, auch ohne Text und Logo", () => {
+        vi.useFakeTimers();
+        zeigeVorhang(theme({
+            introStyle: "HOCHKLAPPEN", introText: null, logoUrl: null,
+            introImageUrl: "/plakat.jpg", introImageStyle: "AUFGELEGT", introHold: "NORMAL"
+        }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(1500);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(false);
+    });
+
+    it("haelt bei FLAECHE ohne Text und Logo NICHT an - es gibt nichts zu lesen", () => {
+        vi.useFakeTimers();
+        zeigeVorhang(theme({
+            introStyle: "HOCHKLAPPEN", introText: null, logoUrl: null,
+            introImageUrl: "/bild.jpg", introImageStyle: "FLAECHE", introHold: "LANG"
+        }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(10);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(true);
+    });
 });
