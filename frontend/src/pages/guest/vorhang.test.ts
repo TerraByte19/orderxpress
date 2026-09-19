@@ -241,4 +241,43 @@ describe("zeigeVorhang", () => {
         vi.advanceTimersByTime(10);
         expect(v.classList.contains("ox-vorhang--los")).toBe(true);
     });
+
+    /* ---------- Kinoleinwand ----------
+       Anders als die vier aelteren Stile baut KINO zusaetzliche Elemente:
+       die Leinwand umschliesst den Vorhang (sie dehnt sich aus, der Vorhang
+       waechst mit) und traegt das Buehnenlicht. Wer das spaeter umbaut,
+       merkt an diesen Tests, wenn die Schachtelung kippt. */
+    it("baut Leinwand, Stange und Licht - und der Vorhang liegt IN der Leinwand", () => {
+        zeigeVorhang(theme({ introStyle: "KINO" }));
+        const v = document.querySelector(".ox-vorhang")!;
+        expect(v.classList.contains("ox-vorhang--kino")).toBe(true);
+
+        const leinwand = v.querySelector(".ox-vorhang__leinwand")!;
+        expect(leinwand).not.toBeNull();
+        expect(leinwand.querySelectorAll(".ox-vorhang__feld").length).toBe(2);
+        expect(leinwand.querySelector(".ox-vorhang__stange")).not.toBeNull();
+        expect(leinwand.querySelector(".ox-vorhang__licht")).not.toBeNull();
+        // Nicht daneben, sondern darin - sonst dehnt sich die Leinwand aus,
+        // ohne den Vorhang mitzunehmen.
+        expect(v.querySelector(":scope > .ox-vorhang__feld")).toBeNull();
+    });
+
+    it("gibt dem Buehnenvorhang KEINE Leinwand", () => {
+        zeigeVorhang(theme({ introStyle: "VORHANG" }));
+        expect(document.querySelector(".ox-vorhang__leinwand")).toBeNull();
+        expect(document.querySelector(".ox-vorhang__stange")).not.toBeNull();
+    });
+
+    it("rechnet die Gesamtdauer aus 1800 ms und dem Tempo des Ladens", () => {
+        zeigeVorhang(theme({ introStyle: "KINO", introSpeed: "SCHNELL" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        // 1800 * 0.6 = 1080; die Einzelteile rechnen sich in der CSS daraus.
+        expect(v.style.getPropertyValue("--ox-vorhang-dauer")).toBe("1080ms");
+    });
+
+    it("nimmt die eigene Vorhangfarbe auch im Kino an", () => {
+        zeigeVorhang(theme({ introStyle: "KINO", introColor: "#141210" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.style.getPropertyValue("--ox-vorhang-farbe")).toBe("#141210");
+    });
 });

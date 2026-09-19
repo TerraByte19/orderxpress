@@ -76,8 +76,8 @@ public class Restaurant {
     @Column(name = "order_confirm_style", length = 20)
     private String orderConfirmStyle;
 
-    /** Vorhang-Animation beim ersten Oeffnen der Speisekarte: HOCHKLAPPEN |
-     *  FADE | MITTE | VORHANG. null/leer = HOCHKLAPPEN. */
+    /** Vorhang-Animation beim Oeffnen der Speisekarte: HOCHKLAPPEN | FADE |
+     *  MITTE | VORHANG | KINO. null/leer = HOCHKLAPPEN. */
     @Column(name = "intro_style", length = 20)
     private String introStyle;
 

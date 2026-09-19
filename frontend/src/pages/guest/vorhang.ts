@@ -56,8 +56,10 @@ const LOGO_KLASSE: Record<string, string> = {
  *  Laden". Ein Gast, der neu scannt, bekommt einen neuen guestToken - mit
  *  einem Token-Schluessel liefe der Vorhang trotz EINMAL wieder. */
 const SCHLUESSEL_PREFIX = "ox-intro-laden-";
-const GUELTIGE_STILE = new Set(["HOCHKLAPPEN", "FADE", "MITTE", "VORHANG"]);
-const ZWEI_HAELFTEN = new Set(["MITTE", "VORHANG"]);
+const GUELTIGE_STILE = new Set(["HOCHKLAPPEN", "FADE", "MITTE", "VORHANG", "KINO"]);
+const ZWEI_HAELFTEN = new Set(["MITTE", "VORHANG", "KINO"]);
+/** Stile mit Vorhangstange oben. */
+const MIT_STANGE = new Set(["VORHANG", "KINO"]);
 
 /** Muss zu den ms-Rueckfallwerten in vorhang.css passen (dort als
  *  var(--ox-vorhang-dauer, XXXms) hinterlegt). */
@@ -65,7 +67,14 @@ const BASIS_DAUER_MS: Record<string, number> = {
     HOCHKLAPPEN: 600,
     FADE: 550,
     MITTE: 650,
-    VORHANG: 750
+    VORHANG: 750,
+    // KINO hat mehrere Bewegungen nacheinander (Vorhang, Leinwand breit,
+    // Leinwand hoch, Licht). Diese Zahl ist die GESAMTdauer; die einzelnen
+    // Teile rechnen sich in vorhang.css als Bruchteil davon aus, damit das
+    // Tempo des Ladens (introSpeed) weiterhin alles gemeinsam skaliert.
+    // Die Vorlage braucht rund 6 s - fuer jemanden, der am Tisch bestellen
+    // will, ist das zu lang, deshalb auf 1,8 s zusammengezogen.
+    KINO: 1800
 };
 
 const GUELTIGE_GESCHWINDIGKEITEN = new Set(["LANGSAM", "NORMAL", "SCHNELL"]);
@@ -180,11 +189,26 @@ export function zeigeVorhang(theme: VorhangTheme): void {
         links.className = "ox-vorhang__feld ox-vorhang__feld--links";
         const rechts = document.createElement("div");
         rechts.className = "ox-vorhang__feld ox-vorhang__feld--rechts";
-        vorhang.append(links, rechts);
-        if (stilSicher === "VORHANG") {
-            const stange = document.createElement("div");
-            stange.className = "ox-vorhang__stange";
-            vorhang.appendChild(stange);
+        const stange = MIT_STANGE.has(stilSicher) ? document.createElement("div") : null;
+        if (stange) stange.className = "ox-vorhang__stange";
+
+        if (stilSicher === "KINO") {
+            // Beim Kino liegt der Vorhang IN der Leinwand, nicht auf dem
+            // ganzen Bildschirm: die Leinwand ist erst ein kleines Fenster
+            // und dehnt sich aus, der Vorhang waechst dabei mit. Alles
+            // ausserhalb des Fensters dunkelt ein grosser Aussenschatten ab
+            // (siehe vorhang.css) - so entsteht der Saal um die Leinwand.
+            const leinwand = document.createElement("div");
+            leinwand.className = "ox-vorhang__leinwand";
+            leinwand.append(links, rechts);
+            if (stange) leinwand.appendChild(stange);
+            const licht = document.createElement("div");
+            licht.className = "ox-vorhang__licht";
+            leinwand.appendChild(licht);
+            vorhang.appendChild(leinwand);
+        } else {
+            vorhang.append(links, rechts);
+            if (stange) vorhang.appendChild(stange);
         }
     } else {
         const feld = document.createElement("div");

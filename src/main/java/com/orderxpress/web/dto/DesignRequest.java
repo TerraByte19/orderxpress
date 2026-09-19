@@ -28,7 +28,7 @@ public record DesignRequest(
         @Pattern(regexp = "STAMP|CHECK",
                 message = "Bestaetigung muss STAMP oder CHECK sein.") String orderConfirmStyle,
         Boolean darkMode,
-        @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG",
+        @Pattern(regexp = "HOCHKLAPPEN|FADE|MITTE|VORHANG|KINO",
                 message = "Unbekannter Vorhang-Stil.") String introStyle,
         @Size(max = 80, message = "Vorhang-Text darf hoechstens 80 Zeichen haben.") String introText,
         @Pattern(regexp = "LANGSAM|NORMAL|SCHNELL", message = "Unbekanntes Vorhang-Tempo.") String introSpeed,
