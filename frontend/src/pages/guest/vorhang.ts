@@ -193,20 +193,19 @@ export function zeigeVorhang(theme: VorhangTheme): void {
         if (stange) stange.className = "ox-vorhang__stange";
 
         if (stilSicher === "KINO") {
-            // Beim Kino liegt der Vorhang IN der Leinwand, nicht auf dem
-            // ganzen Bildschirm: die Leinwand ist erst ein kleines Fenster
-            // und dehnt sich aus, der Vorhang waechst dabei mit. Alles
-            // ausserhalb des Fensters dunkelt ein grosser Aussenschatten ab
-            // (siehe vorhang.css) - so entsteht der Saal um die Leinwand.
+            // Die Leinwand liegt HINTER dem Vorhang, nicht um ihn herum.
+            // Erster Versuch war andersherum (Vorhang als Kind der Leinwand)
+            // - dann hing der Vorhang als kleines Rechteck mitten im
+            // schwarzen Saal, statt den Bildschirm zu fuellen. Jetzt:
+            // Vorhang zu = ganzer Bildschirm, wie bei jedem anderen Stil.
+            // Erst beim Aufgehen kommt dahinter das kleine, dunkel gerahmte
+            // Bildfenster zum Vorschein und dehnt sich aus.
             const leinwand = document.createElement("div");
             leinwand.className = "ox-vorhang__leinwand";
-            leinwand.append(links, rechts);
-            if (stange) leinwand.appendChild(stange);
             vorhang.appendChild(leinwand);
-        } else {
-            vorhang.append(links, rechts);
-            if (stange) vorhang.appendChild(stange);
         }
+        vorhang.append(links, rechts);
+        if (stange) vorhang.appendChild(stange);
     } else {
         const feld = document.createElement("div");
         feld.className = "ox-vorhang__feld";

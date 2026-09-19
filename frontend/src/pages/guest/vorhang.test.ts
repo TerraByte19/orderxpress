@@ -254,15 +254,17 @@ describe("zeigeVorhang", () => {
 
         const leinwand = v.querySelector(".ox-vorhang__leinwand")!;
         expect(leinwand).not.toBeNull();
-        expect(leinwand.querySelectorAll(".ox-vorhang__feld").length).toBe(2);
-        expect(leinwand.querySelector(".ox-vorhang__stange")).not.toBeNull();
         // Kein Buehnenlicht mehr: auf Wunsch entfernt, zusammen mit dem
         // Anstrahl-Licht auf dem Stoff - das verfaelschte die eingestellte
         // Vorhangfarbe (siehe vorhang.css).
-        expect(leinwand.querySelector(".ox-vorhang__licht")).toBeNull();
-        // Nicht daneben, sondern darin - sonst dehnt sich die Leinwand aus,
-        // ohne den Vorhang mitzunehmen.
-        expect(v.querySelector(":scope > .ox-vorhang__feld")).toBeNull();
+        expect(v.querySelector(".ox-vorhang__licht")).toBeNull();
+
+        // Vorhang und Stange sind GESCHWISTER der Leinwand, keine Kinder.
+        // Gesehen und behoben: lagen sie darin, hing der Vorhang als kleines
+        // Rechteck mitten im schwarzen Saal, statt den Bildschirm zu fuellen.
+        expect(v.querySelectorAll(":scope > .ox-vorhang__feld").length).toBe(2);
+        expect(v.querySelector(":scope > .ox-vorhang__stange")).not.toBeNull();
+        expect(leinwand.querySelector(".ox-vorhang__feld")).toBeNull();
     });
 
     it("gibt dem Buehnenvorhang KEINE Leinwand", () => {

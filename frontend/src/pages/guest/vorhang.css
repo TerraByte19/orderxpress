@@ -277,7 +277,7 @@
    weiterhin die ganze Abfolge gemeinsam statt jeden Teil einzeln.
 
      0 .. 50 %   Vorhang schwenkt auf (dieselben Keyframes wie VORHANG)
-    12 .. 80 %   Leinwand waechst - Breite und Hoehe zusammen
+    35 .. 90 %   Bildfenster dahinter waechst - Breite und Hoehe zusammen
 
    Das Original laesst die Leinwand ueber 4 s wachsen und braucht insgesamt
    rund 6 s. Am Tisch will jemand bestellen, nicht warten - deshalb
@@ -293,21 +293,34 @@
    ab - billiger und genauer als vier Balken, und er verschwindet von selbst,
    sobald das Fenster den Bildschirm fuellt. background bleibt durchsichtig,
    damit die Speisekarte durch das Fenster zu sehen ist. */
+/* Das Bildfenster liegt HINTER dem Vorhang (z-index 0 gegen 1). Solange der
+   Vorhang zu ist, sieht man davon nichts - er fuellt den Bildschirm wie bei
+   jedem anderen Stil. Erst beim Aufgehen kommt das kleine Fenster mit dem
+   dunklen Saal ringsum zum Vorschein und dehnt sich aus.
+
+   Der Aussenschatten dunkelt alles ausserhalb ab - billiger und genauer als
+   vier Balken, und er verschwindet von selbst, sobald das Fenster den
+   Bildschirm fuellt. Der Hintergrund bleibt durchsichtig, damit die
+   Speisekarte durch das Fenster zu sehen ist. */
 .ox-vorhang--kino .ox-vorhang__leinwand {
-    /* Die beiden Haelften sind Flex-Kinder mit flex: 1 - sonst waren sie
-       Kinder von .ox-vorhang (display: flex). In der Leinwand brauchen sie
-       denselben Container, sonst fallen sie auf Breite 0 zusammen und man
-       sieht durch den "geschlossenen" Vorhang hindurch. */
-    display: flex;
     position: absolute;
     top: 50%;
     left: 50%;
+    z-index: 0;
     width: 62vw;
     height: 30vh;
     transform: translate(-50%, -50%);
-    overflow: hidden;
     background: transparent;
     box-shadow: 0 0 0 100vmax var(--ox-kino-saal);
+}
+
+/* Der Vorhang gehoert ueber das Fenster, die Stange ueber beides. */
+.ox-vorhang--kino .ox-vorhang__feld {
+    position: relative;
+    z-index: 1;
+}
+.ox-vorhang--kino .ox-vorhang__stange {
+    z-index: 2;
 }
 
 /* Die Ausdehnung haengt an .ox-vorhang--los, NICHT am blossen Vorhandensein
@@ -318,8 +331,8 @@
    sofort --los gesetzt wurde. */
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__leinwand {
     animation: ox-kino-oeffnen
-               calc(var(--ox-vorhang-dauer, 1800ms) * .68)
-               calc(var(--ox-vorhang-dauer, 1800ms) * .12)
+               calc(var(--ox-vorhang-dauer, 1800ms) * .55)
+               calc(var(--ox-vorhang-dauer, 1800ms) * .35)
                var(--ox-ease-out) forwards;
 }
 
