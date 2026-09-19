@@ -10,9 +10,18 @@
     display: flex;
 }
 
+/* Der Stoff nimmt die eigene Vorhangfarbe des Ladens, sonst den Akzent.
+   vorhang.ts setzt --ox-vorhang-farbe/--ox-vorhang-text als Inline-Stil auf
+   den Container, wenn eine eigene Farbe hinterlegt ist - der Rueckfall im
+   var() ist der Normalfall, nicht die Ausnahme.
+
+   Warum ueberhaupt eine eigene Farbe: der Akzent ist eine KNOPF-Farbe,
+   kleine Flaeche und hohe Saettigung. Bildschirmfuellend ist derselbe Ton
+   oft zu hart - ein dunkler Vorhang zu einem hellen Akzent ist eine ganz
+   normale Kombination. */
 .ox-vorhang__feld {
     flex: 1;
-    background-color: var(--ox-accent);
+    background-color: var(--ox-vorhang-farbe, var(--ox-accent));
 }
 
 /* ---------- Hochklappen: eine Flaeche faehrt nach oben weg ----------
@@ -65,7 +74,7 @@
    bleibt oben stehen und rahmt die Buehne. */
 .ox-vorhang--vorhang .ox-vorhang__feld--links,
 .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
-    background-color: var(--ox-accent);
+    background-color: var(--ox-vorhang-farbe, var(--ox-accent));
     background-image:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='4'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.38'/%3E%3Cstop offset='.16' stop-color='%23fff' stop-opacity='.22'/%3E%3Cstop offset='.38' stop-color='%23000' stop-opacity='.12'/%3E%3Cstop offset='.6' stop-color='%23fff' stop-opacity='.3'/%3E%3Cstop offset='.82' stop-color='%23000' stop-opacity='.16'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='4' fill='url(%23f)'/%3E%3C/svg%3E"),
         linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
@@ -121,7 +130,9 @@
     gap: var(--ox-space-3);
     padding: 0 var(--ox-space-5);
     opacity: 0;
-    color: var(--ox-accent-text);
+    /* Kontrastfarbe zur VORHANGFARBE, nicht zur Akzentfarbe - bei eigener
+       Vorhangfarbe rechnet vorhang.ts sie neu (textfarbeAuf). */
+    color: var(--ox-vorhang-text, var(--ox-accent-text));
     transition: opacity 220ms var(--ox-ease-out);
     pointer-events: none;
 }
@@ -132,18 +143,113 @@
     opacity: 0;
     transition-duration: 160ms;
 }
+/* Groesse kommt aus der Achse introLogo (OHNE | KLEIN | GROSS); OHNE baut
+   vorhang.ts gar kein Bild. KLEIN ist der bisherige Wert, so gross wie das
+   Logo in der Kopfzeile. GROSS traegt einen ganzen Bildschirm allein -
+   gedacht fuer Laeden, die den Auftakt nur ueber ihr Zeichen machen und
+   keinen Willkommenstext setzen. */
 .ox-vorhang__marke-logo {
-    width: 64px;
-    height: 64px;
     border-radius: var(--ox-radius-pill);
     object-fit: cover;
     box-shadow: var(--ox-shadow-2);
 }
+.ox-vorhang__marke-logo--klein {
+    width: 64px;
+    height: 64px;
+}
+.ox-vorhang__marke-logo--gross {
+    /* Mitwachsend, aber gedeckelt: auf einem schmalen Handy sonst randlos,
+       auf einem Tisch-Bildschirm sonst absurd gross. */
+    width: min(48vw, 180px);
+    height: min(48vw, 180px);
+}
+/* Plakat auf dem Vorhang (introImageStyle = AUFGELEGT). Hoehe gedeckelt,
+   damit Bild, Logo und Text zusammen auf einen Handy-Bildschirm passen;
+   contain statt cover, weil ein Bildwerk nicht angeschnitten werden darf. */
+.ox-vorhang__marke-bild {
+    width: min(72vw, 420px);
+    max-height: 44vh;
+    object-fit: contain;
+    border-radius: var(--ox-radius-lg);
+}
+
 .ox-vorhang__marke-text {
     font-family: var(--ox-font-display);
     font-weight: 600;
     font-size: var(--ox-text-2xl);
     text-align: center;
+}
+
+/* ---------- Bild ALS Vorhang (introImageStyle = FLAECHE) ----------
+   Das Foto traegt den ganzen Auftakt. vorhang.ts setzt --ox-vorhang-bild als
+   Inline-Stil und die Klasse .ox-vorhang--bild.
+
+   Drei Dinge muessen dabei anders sein als beim farbigen Vorhang:
+   1. Die Falten treten zurueck - eine Samt-Textur ueber einem Foto wird
+      matschig. Die Regel unten hat zwei Klassen und schlaegt damit die
+      einklassige Falten-Regel oben.
+   2. Bei den zweiteiligen Stilen (MITTE, VORHANG) zeigt jede Haelfte ihre
+      HAELFTE des Fotos (background-size: 200%): beim Aufgehen teilt sich EIN
+      Bild, statt dass zweimal dasselbe auseinanderfaehrt.
+   3. Marke auf Weiss plus Abdunkler. Ein Foto kann beliebig hell sein, und
+      die gerechnete Schriftfarbe gilt fuer die VORHANGFARBE, nicht fuer das
+      Foto - dieselbe Ueberlegung wie beim Hero-Bild (guest.css). */
+/* Einteilige Stile (HOCHKLAPPEN, FADE): das Feld ist so breit wie der
+   Bildschirm, cover rechnet also richtig. */
+.ox-vorhang--bild .ox-vorhang__feld {
+    background-image: var(--ox-vorhang-bild);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Zweiteilige Stile (MITTE, VORHANG): jede Haelfte ist nur halb so breit.
+   Ein Hintergrund direkt darauf wuerde entweder zweimal dasselbe zeigen
+   (cover je Haelfte) oder das Bild verzerren ("200% 100%" SKALIERT auf die
+   Kachelgroesse, es deckt nicht ab - genau so gesehen: aus Kreisen wurden
+   Ellipsen).
+
+   Stattdessen traegt jede Haelfte ein Pseudo-Element von DOPPELTER Breite,
+   also der Breite des ganzen Vorhangs. Darauf rechnet cover wieder mit den
+   richtigen Massen, und weil das Pseudo-Element ein Kind der Haelfte ist,
+   schwenkt es beim Aufgehen mit hinaus. overflow: hidden schneidet es auf
+   die Haelfte zu; left/right heften die beiden Teile so aneinander, dass
+   die Naht in der Mitte des Bildes liegt. */
+.ox-vorhang--bild .ox-vorhang__feld--links,
+.ox-vorhang--bild .ox-vorhang__feld--rechts {
+    background-image: none;
+    position: relative;
+    overflow: hidden;
+    /* Der Schlagschatten der Falten-Optik saehe auf einem durchgehenden Foto
+       wie ein Riss in der Mitte aus. */
+    box-shadow: none;
+}
+.ox-vorhang--bild .ox-vorhang__feld--links::before,
+.ox-vorhang--bild .ox-vorhang__feld--rechts::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 200%;
+    background-image: var(--ox-vorhang-bild);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.ox-vorhang--bild .ox-vorhang__feld--links::before { left: 0; }
+.ox-vorhang--bild .ox-vorhang__feld--rechts::before { right: 0; }
+
+.ox-vorhang--bild .ox-vorhang__marke {
+    color: #fff;
+}
+/* Abdunkler direkt unter der Marke, nicht auf dem Stoff: bei zwei Haelften
+   laege er sonst zweimal nebeneinander und die Naht waere sichtbar. */
+.ox-vorhang--bild .ox-vorhang__marke::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, .62), rgba(0, 0, 0, .3));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -158,5 +264,125 @@
     }
     .ox-vorhang {
         display: none;
+    }
+}
+
+/* ---------- Kinoleinwand (introStyle = KINO) ----------
+   Vorlage: docs/referenz/kinoleinwand-codepen.md. Uebernommen ist die Idee,
+   NICHT der fremde Bild-Link der Vorlage - die Falten sind dieselbe eigene
+   SVG-Textur wie beim Buehnenvorhang.
+
+   Vier Bewegungen nacheinander, alle als Bruchteil von --ox-vorhang-dauer
+   (1800 ms, siehe vorhang.ts): so skaliert das Tempo des Ladens (introSpeed)
+   weiterhin die ganze Abfolge gemeinsam statt jeden Teil einzeln.
+
+     0 .. 50 %   Vorhang schwenkt auf (dieselben Keyframes wie VORHANG)
+     0 .. 40 %   Vorhang verliert sein Anstrahl-Licht (brightness)
+    14 .. 48 %   Leinwand wird breit
+    45 .. 75 %   Leinwand wird hoch
+    20 .. 95 %   Buehnenlicht steigt auf und verglimmt
+
+   Das Original laesst die Leinwand ueber 4 s wachsen und braucht insgesamt
+   rund 6 s. Am Tisch will jemand bestellen, nicht warten - deshalb
+   zusammengezogen. */
+
+.ox-vorhang--kino {
+    /* Der Saal um die Leinwand. Reines Schwarz, kein getoenter Fast-Schwarz-
+       Ton: hier ist es ein dunkler Raum und keine Design-Flaeche. */
+    --ox-kino-saal: #000;
+}
+
+/* Das Fenster, das sich ausdehnt. Der Aussenschatten dunkelt ALLES ausserhalb
+   ab - billiger und genauer als vier Balken, und er verschwindet von selbst,
+   sobald das Fenster den Bildschirm fuellt. background bleibt durchsichtig,
+   damit die Speisekarte durch das Fenster zu sehen ist. */
+.ox-vorhang--kino .ox-vorhang__leinwand {
+    /* Die beiden Haelften sind Flex-Kinder mit flex: 1 - sonst waren sie
+       Kinder von .ox-vorhang (display: flex). In der Leinwand brauchen sie
+       denselben Container, sonst fallen sie auf Breite 0 zusammen und man
+       sieht durch den "geschlossenen" Vorhang hindurch. */
+    display: flex;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 62vw;
+    height: 30vh;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    background: transparent;
+    box-shadow: 0 0 0 100vmax var(--ox-kino-saal);
+    animation-name: ox-kino-breit, ox-kino-hoch;
+    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .34),
+                        calc(var(--ox-vorhang-dauer, 1800ms) * .30);
+    animation-delay: calc(var(--ox-vorhang-dauer, 1800ms) * .14),
+                     calc(var(--ox-vorhang-dauer, 1800ms) * .45);
+    animation-timing-function: var(--ox-ease-out), var(--ox-ease-out);
+    animation-fill-mode: forwards, forwards;
+}
+@keyframes ox-kino-breit { to { width: 100vw; } }
+@keyframes ox-kino-hoch  { to { height: 100vh; } }
+
+/* Stoff und Falten wie beim Buehnenvorhang - hier nur die Bewegung und das
+   Anstrahl-Licht. Die Haelften sitzen in der Leinwand und wachsen mit ihr. */
+.ox-vorhang--kino .ox-vorhang__feld--links,
+.ox-vorhang--kino .ox-vorhang__feld--rechts {
+    background-color: var(--ox-vorhang-farbe, var(--ox-accent));
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='4'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.38'/%3E%3Cstop offset='.16' stop-color='%23fff' stop-opacity='.22'/%3E%3Cstop offset='.38' stop-color='%23000' stop-opacity='.12'/%3E%3Cstop offset='.6' stop-color='%23fff' stop-opacity='.3'/%3E%3Cstop offset='.82' stop-color='%23000' stop-opacity='.16'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='4' fill='url(%23f)'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
+    background-repeat: repeat-x, no-repeat;
+    background-size: 26px 100%, 100% 100%;
+    filter: brightness(175%);
+}
+.ox-vorhang--kino .ox-vorhang__feld--links { transform-origin: top right; }
+.ox-vorhang--kino .ox-vorhang__feld--rechts { transform-origin: top left; }
+
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--links,
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--rechts {
+    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .5),
+                        calc(var(--ox-vorhang-dauer, 1800ms) * .4);
+    animation-timing-function: var(--ox-ease-out), linear;
+    animation-fill-mode: forwards, forwards;
+}
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--links {
+    animation-name: ox-vorhang-schwenk-links, ox-kino-abblenden;
+}
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--rechts {
+    animation-name: ox-vorhang-schwenk-rechts, ox-kino-abblenden;
+}
+@keyframes ox-kino-abblenden {
+    to { filter: brightness(100%); }
+}
+
+/* Buehnenlicht. Die Vorlage nimmt dafuer einen 10000px grossen Kreis mit
+   box-shadow: 0 0 100px 100px white - auf einem Handy ist das ein sehr
+   teurer Schatten. Derselbe Eindruck als Verlauf, und bewegt wird nur
+   transform/opacity: das kostet praktisch nichts. */
+.ox-vorhang--kino .ox-vorhang__licht {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 190%;
+    aspect-ratio: 2 / 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+                rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 68%);
+    transform: translate(-50%, 55%);
+    opacity: 0;
+}
+.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__licht {
+    animation: ox-kino-licht calc(var(--ox-vorhang-dauer, 1800ms) * .75)
+               calc(var(--ox-vorhang-dauer, 1800ms) * .2) var(--ox-ease-out) forwards;
+}
+@keyframes ox-kino-licht {
+    0%   { transform: translate(-50%, 55%); opacity: 0; }
+    40%  { opacity: .85; }
+    100% { transform: translate(-50%, 18%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ox-vorhang--kino .ox-vorhang__leinwand,
+    .ox-vorhang--kino .ox-vorhang__licht {
+        animation: none;
     }
 }

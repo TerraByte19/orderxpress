@@ -1,0 +1,237 @@
+/* Struktur-Achsen der Gaeste-Speisekarte: Karten-Aufbau (data-layout),
+   Kopf (data-hero) und Kategorien-Navigation (data-kategorie).
+
+   Hier steht nur das ABWEICHENDE - die Standardwerte LISTE, BAND und REITER
+   setzen kein Attribut (theme.ts) und behalten damit die Regeln aus
+   guest.css. Die seitenweiten Achsen (Textur, Knopf-Optik, Bewegung) liegen
+   in styles/laden-stile.css.
+
+   Keine festen Farb-/Abstandswerte - alles aus var(--ox-...). */
+
+/* ============ Karten-Aufbau: KACHELN ============
+   Zwei Spalten, das Foto traegt die Karte. Fuer Laeden, deren Gerichte ueber
+   das Bild verkauft werden (Pizza, Burger, Bowls). Dieselbe Karte wie sonst,
+   nur von der Zeile in die Spalte gedreht - kein eigenes Markup. */
+:root[data-layout="kacheln"] .ox-grid {
+    /* 150px statt der 240px aus components.css: erst dadurch stehen am Handy
+       wirklich zwei Kacheln nebeneinander. */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+:root[data-layout="kacheln"] .ox-gericht__oeffnen {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+}
+/* Festes Seitenverhaeltnis statt fester Hoehe: die Kachelbreite haengt von
+   der Bildschirmbreite ab, das Bild soll trotzdem nie springen. */
+:root[data-layout="kacheln"] .ox-gericht__bild {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+}
+:root[data-layout="kacheln"] .ox-gericht__inhalt {
+    padding: var(--ox-space-3) var(--ox-space-3) 0;
+}
+/* Kachel ohne Foto: menu.ts baut hier gar kein Bildelement (siehe dort) -
+   in der Zeile ist der leere Teller 84x84 gross und eine ruhige Andeutung,
+   als 4:3-Flaeche ueber die halbe Kachelbreite waere er nur eine Luecke.
+   Die Kachel wird dann eine Textkachel und braucht oben etwas mehr Luft. */
+:root[data-layout="kacheln"] .ox-gericht__oeffnen > .ox-gericht__inhalt:first-child {
+    padding-top: var(--ox-space-4);
+}
+:root[data-layout="kacheln"] .ox-gericht__fuss {
+    padding: var(--ox-space-2) var(--ox-space-3) var(--ox-space-3);
+}
+
+/* ============ Karten-Aufbau: TAFEL ============
+   Gedruckte Karte: keine Fotos, keine Kartenflaechen, nur Schrift und
+   Haarlinien. Fuer Bars, Baeckereien, Weinkarten - alles, wo es kein
+   Bildmaterial gibt und der leere Foto-Platzhalter bisher wie ein Fehler
+   aussah. menu.ts baut in diesem Modus GAR KEIN Bildelement (spart auch die
+   Uebertragung) und haengt stattdessen die Punktlinie ein. */
+:root[data-layout="tafel"] .ox-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+:root[data-layout="tafel"] .ox-gericht {
+    /* Zwei Spalten: links Name + Punktlinie + Beschreibung, rechts Preis.
+       minmax(0, 1fr) statt 1fr, damit lange Namen umbrechen statt die
+       Preisspalte aus dem Bild zu schieben. */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--ox-border);
+    border-radius: 0;
+    margin: 0;
+    overflow: visible;
+}
+:root[data-layout="tafel"] .ox-gericht:last-child {
+    border-bottom: none;
+}
+:root[data-layout="tafel"] .ox-gericht__oeffnen,
+:root[data-layout="tafel"] .ox-gericht__fuss {
+    padding: var(--ox-space-3) 0;
+}
+:root[data-layout="tafel"] .ox-gericht__fuss {
+    align-items: baseline;
+    gap: var(--ox-space-3);
+    padding-left: var(--ox-space-3);
+}
+/* Der Abstandhalter zwischen Preis und "+" wuerde die Preisspalte unnoetig
+   breit machen - in dieser Ansicht stehen beide direkt beieinander. */
+:root[data-layout="tafel"] .ox-gericht__fuss .ox-spacer {
+    display: none;
+}
+/* Ausverkauft-Marke kann hier nicht ueber dem (nicht vorhandenen) Foto
+   schweben - sie reiht sich unter der Zeile ein. */
+:root[data-layout="tafel"] .ox-badge {
+    position: static;
+    justify-self: start;
+    margin-bottom: var(--ox-space-2);
+}
+
+/* Punktlinie zwischen Gerichtname und Preis - die Signatur einer gedruckten
+   Speisekarte. menu.ts baut dafuer .ox-gericht__titelzeile (Name + Linie);
+   die Linie ist ein leeres Element, dessen Unterkante bei align-items:
+   baseline genau auf der Schriftlinie des Namens sitzt. */
+.ox-gericht__titelzeile {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ox-space-2);
+}
+.ox-gericht__leader {
+    flex: 1;
+    min-width: var(--ox-space-5);
+    height: .72em;
+    /* Nicht --ox-border: der Rahmenton ist fuer Flaechen auf --ox-surface
+       gedacht und verschwindet auf dem (oft texturierten) Seitengrund fast
+       vollstaendig. Aus der Textfarbe gemischt bleibt die Linie auf hellem
+       wie dunklem Grund gleich gut lesbar und bleibt trotzdem zurueckhaltend. */
+    border-bottom: 1.5px dotted color-mix(in srgb, var(--ox-text) 38%, transparent);
+}
+
+/* ============ Kopf: VOLL ============
+   Bildschirmfuellender Auftakt statt Foto-Streifen. Randlos - die seitliche
+   Polsterung von main wird per negativem Aussenabstand zurueckgenommen. */
+:root[data-hero="voll"] .ox-hero {
+    min-height: 62vh;
+    min-height: 62svh; /* Handy-Leisten mitgerechnet, wo unterstuetzt */
+    margin-inline: calc(-1 * var(--ox-space-4));
+    margin-top: calc(-1 * var(--ox-space-4));
+    border-radius: 0;
+    padding: var(--ox-space-5) var(--ox-space-4);
+}
+@media (max-width: 600px) {
+    :root[data-hero="voll"] .ox-hero {
+        margin-inline: calc(-1 * var(--ox-space-3));
+        margin-top: calc(-1 * var(--ox-space-3));
+        padding: var(--ox-space-5) var(--ox-space-3);
+    }
+}
+:root[data-hero="voll"] .ox-hero__name {
+    font-size: var(--ox-text-3xl);
+    line-height: 1.05;
+}
+:root[data-hero="voll"] .ox-hero__logo {
+    width: 72px;
+    height: 72px;
+}
+
+/* Ohne Foto ist VOLL eine reine Farbflaeche - ueber einen halben Bildschirm
+   davon sieht nicht gross aus, sondern unfertig. Hat der Laden (noch) kein
+   Hintergrundbild hinterlegt, bleibt der Auftakt deshalb deutlich flacher
+   und lebt vom Namen. Bewusst weiterhin eine flache Flaeche und kein
+   Verlauf: der Verlauf waere Dekoration, die Groesse war das Problem. */
+:root[data-hero="voll"] .ox-hero:not(.ox-hero--bild) {
+    min-height: 34vh;
+    min-height: 34svh;
+}
+
+/* Der EINE inszenierte Moment der Seite: das Foto steht beim Oeffnen leicht
+   zu gross und setzt sich in seine Lage. Bewusst nur hier und nur einmal -
+   nicht als Effekt auf jedem Abschnitt.
+
+   background-image: inherit holt das Foto vom Elternelement, das
+   laden-design.ts (und im Vorschau-Modus vorschau.ts) dort als Inline-Stil
+   setzt - so bleibt diese Schnittstelle unveraendert und es genuegt, das
+   Pseudo-Element zu skalieren statt den ganzen Kopf. Der Abdunkler
+   (.ox-hero--bild::after) wird spaeter gezeichnet und liegt daher darueber,
+   Logo/Name tragen z-index 1 und liegen ueber beidem. */
+:root[data-hero="voll"] .ox-hero--bild::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.08);
+    animation: ox-hero-setzen 1400ms var(--ox-ease-out) forwards;
+}
+@keyframes ox-hero-setzen {
+    to { transform: scale(1); }
+}
+
+/* ============ Kopf: SCHLICHT ============
+   Kein Foto, keine Akzentflaeche - der Ladenname selbst ist der Kopf.
+   laden-design.ts laedt in diesem Modus erst gar kein Hintergrundbild. */
+:root[data-hero="schlicht"] .ox-hero {
+    min-height: 0;
+    background-color: transparent;
+    color: var(--ox-text);
+    border-radius: 0;
+    border-bottom: 1px solid var(--ox-border);
+    padding: var(--ox-space-5) 0 var(--ox-space-4);
+}
+:root[data-hero="schlicht"] .ox-hero__name {
+    font-size: var(--ox-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -.015em;
+}
+:root[data-hero="schlicht"] .ox-hero__logo {
+    width: 44px;
+    height: 44px;
+    box-shadow: none;
+}
+
+/* ============ Kategorien: KAPITEL ============
+   Keine Reiter, keine Klappliste - die Kategorienamen selbst bleiben beim
+   Scrollen stehen, wie die Kapitel einer gedruckten Karte. menu.ts baut in
+   diesem Modus keine Leiste (der Kopfzeilen-Container bleibt leer).
+
+   --ox-kopf-hoehe misst ansichten.ts an der echten Kopfzeile und schreibt
+   sie auf <html>; der Rueckfallwert greift nur, bevor das erste Mal gemessen
+   wurde (und in Tests ohne Layout). */
+:root[data-kategorie="kapitel"] .ox-kategorie-abschnitt > h2 {
+    position: sticky;
+    top: var(--ox-kopf-hoehe, 57px);
+    z-index: 4;
+    margin-inline: calc(-1 * var(--ox-space-4));
+    padding: var(--ox-space-3) var(--ox-space-4);
+    background: var(--ox-bg);
+    border-bottom: 1px solid var(--ox-border);
+    font-size: var(--ox-text-xl);
+}
+@media (max-width: 600px) {
+    :root[data-kategorie="kapitel"] .ox-kategorie-abschnitt > h2 {
+        margin-inline: calc(-1 * var(--ox-space-3));
+        padding: var(--ox-space-3);
+    }
+}
+
+/* Sprungziel-Puffer fuer ALLE Kategorie-Modi: bisher fest 64px geschaetzt,
+   jetzt die gemessene Kopfhoehe (guest.css setzt den alten Wert, diese
+   Regel steht spaeter und gewinnt bei gleicher Spezifitaet). */
+.ox-kategorie-abschnitt {
+    scroll-margin-top: calc(var(--ox-kopf-hoehe, 57px) + var(--ox-space-2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-hero="voll"] .ox-hero--bild::before {
+        animation: none;
+        transform: none;
+    }
+}

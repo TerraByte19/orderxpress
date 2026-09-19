@@ -54,6 +54,49 @@ export function statusKlasse(status: BestellStatus): string {
     return STATUS_KLASSE[status];
 }
 
+/* ---------- Fortschritts-Schiene ----------
+   Der Chip sagt, WO die Bestellung steht. Die Schiene zeigt, WIE WEIT sie
+   ist - die haeufigste Frage am Tisch ("wie lange noch?") beantwortet keine
+   Statusbezeichnung, sondern der zurueckgelegte Weg. Drei Abschnitte:
+   angenommen, in der Kueche, fertig.
+
+   Bewusst ohne eigene Beschriftung und aria-hidden: den lesbaren Status
+   traegt bereits der Chip daneben: zwei Ansagen fuer denselben Sachverhalt
+   waeren fuer Screenreader nur Laerm. Stornierte Bestellungen bekommen gar
+   keine Schiene - sie haben keinen Weg mehr vor sich. */
+
+const ABSCHNITTE = 3;
+
+/** Wie viele der drei Abschnitte erreicht sind. CANCELLED liefert 0 und
+ *  bekommt (siehe baueFortschritt) gar keine Schiene. */
+function erreichteAbschnitte(status: BestellStatus): number {
+    switch (status) {
+        case "NEW": return 1;
+        case "IN_PREPARATION": return 2;
+        case "READY":
+        case "SERVED": return ABSCHNITTE;
+        default: return 0;
+    }
+}
+
+function baueFortschritt(status: BestellStatus): HTMLElement | null {
+    if (status === "CANCELLED") return null;
+    const schiene = el("div", "ox-fortschritt");
+    schiene.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < ABSCHNITTE; i++) schiene.appendChild(el("span", "ox-fortschritt__abschnitt"));
+    setzeFortschritt(schiene, status);
+    return schiene;
+}
+
+/** Schaltet die Abschnitte um, ohne sie neu zu bauen - nur so kann der
+ *  CSS-Uebergang auf .ox-fortschritt__abschnitt den Farbwechsel zeigen
+ *  (gleiche Ueberlegung wie beim Chip, siehe aktualisiereBestellKarte). */
+function setzeFortschritt(schiene: HTMLElement, status: BestellStatus): void {
+    const erreicht = erreichteAbschnitte(status);
+    schiene.querySelectorAll<HTMLElement>(".ox-fortschritt__abschnitt")
+        .forEach((abschnitt, index) => abschnitt.classList.toggle("is-voll", index < erreicht));
+}
+
 /** Zeichnet alle Bestellungen in `ziel`. Sortiert IMMER selbst neueste
  *  zuerst - verlaesst sich nicht auf die Reihenfolge des Aufrufers oder des
  *  Backends. Stornierte Bestellungen werden einzeln angezeigt (mit
@@ -135,6 +178,8 @@ function baueBestellKarte(bestellung: Bestellung): HTMLElement {
         el("strong", "ox-preis", preis(bestellung.totalAmount))
     );
     karte.appendChild(kopf);
+    const schiene = baueFortschritt(bestellung.status);
+    if (schiene) karte.appendChild(schiene);
     karte.appendChild(bauePositionen(bestellung));
 
     return karte;
@@ -147,6 +192,19 @@ function baueBestellKarte(bestellung: Bestellung): HTMLElement {
 function aktualisiereBestellKarte(karte: HTMLElement, bestellung: Bestellung): void {
     const chip = karte.querySelector<HTMLElement>(".ox-chip");
     if (chip) fuelleChip(chip, bestellung.status);
+
+    // Schiene: vorhandene umschalten (Farbuebergang), bei einem Storno
+    // entfernen - eine stornierte Bestellung hat keinen Weg mehr vor sich.
+    const schiene = karte.querySelector<HTMLElement>(".ox-fortschritt");
+    if (bestellung.status === "CANCELLED") {
+        schiene?.remove();
+    } else if (schiene) {
+        setzeFortschritt(schiene, bestellung.status);
+    } else {
+        const neueSchiene = baueFortschritt(bestellung.status);
+        // Zwischen Kopfzeile und Positionsliste, wie beim Neubau.
+        if (neueSchiene) karte.querySelector(".ox-list")?.before(neueSchiene);
+    }
 
     const alteListe = karte.querySelector(".ox-list");
     if (alteListe) alteListe.replaceWith(bauePositionen(bestellung));

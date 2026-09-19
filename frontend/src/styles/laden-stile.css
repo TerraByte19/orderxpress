@@ -1,0 +1,139 @@
+/* Struktur-Achsen eines Ladens, soweit sie ALLE Seiten betreffen:
+   Hintergrund-Textur (data-textur), Knopf-Optik (data-control) und
+   Bewegungsstaerke (data-motion). theme.ts setzt die Attribute auf <html>;
+   fehlt eins, gilt der Standard aus tokens.css/components.css - deshalb
+   steht hier ausschliesslich das ABWEICHENDE.
+
+   Die Achsen, die nur die Gaeste-Speisekarte betreffen (data-layout,
+   data-hero, data-kategorie), liegen bei der Gaeste-Seite selbst
+   (pages/guest/laden-layout.css).
+
+   Wie ueberall: keine festen Farben, alles ueber var(--ox-...). */
+
+/* ---------- Bewegungsstaerke (data-motion) ----------
+   EIN Regler fuer das ganze Bewegungssystem: alle Effekte der App lesen ihre
+   Dauer aus diesen drei Variablen, also genuegt es, sie hier zu skalieren.
+   DEZENT nimmt zusaetzlich das Ueberschwingen heraus, indem es die
+   Feder-Kurve auf die ruhige Kurve legt - das trifft jede Stelle, die
+   var(--ox-ease-spring) benutzt, ohne dass eine davon etwas wissen muss.
+   prefers-reduced-motion in base.css schlaegt das weiterhin immer. */
+:root[data-motion="dezent"] {
+    --ox-dur-fast: 90ms;
+    --ox-dur: 150ms;
+    --ox-dur-slow: 240ms;
+    --ox-ease-spring: var(--ox-ease-out);
+}
+:root[data-motion="verspielt"] {
+    --ox-dur-fast: 160ms;
+    --ox-dur: 320ms;
+    --ox-dur-slow: 560ms;
+    --ox-ease-spring: cubic-bezier(.34, 1.8, .64, 1);
+}
+
+/* ---------- Hintergrund-Textur (data-textur) ----------
+   Liegt als Material auf dem Seitengrund, NICHT auf den Karten: die Karten
+   behalten ihre ruhige Flaeche (--ox-surface), die Textur zeigt sich in den
+   Zwischenraeumen - wie eine Tischdecke unter dem Geschirr.
+
+   --ox-textur-farbe setzt theme.ts aus der gerechneten Textfarbe (siehe
+   dort); die beiden Werte hier sind nur der Rueckfall, solange kein
+   Laden-Design geladen ist. Knapp unter 6% Deckkraft: als Material
+   spuerbar, nie als Muster ueber dem Text.
+
+   Jede Textur setzt background-image komplett neu und haengt
+   var(--ox-bg-image) (den optionalen Laden-Verlauf, Standard "none") als
+   unterste Lage an - sonst wuerde die Textur den Verlauf verdecken. */
+:root {
+    --ox-textur-farbe: rgba(0, 0, 0, .055);
+}
+:root[data-theme="dark"] {
+    --ox-textur-farbe: rgba(255, 255, 255, .06);
+}
+
+/* Feines Korn. Ein GEKACHELTER Punkt (background-size) statt eines
+   durchlaufenden Streifenmusters: ein repeating-linear-gradient wird ueber
+   die volle Hoehe des Seitenkoerpers berechnet, und bei Linienbreiten unter
+   einem Pixel summieren sich die Rundungsfehler zu sichtbaren Keilen im
+   Verlauf (gesehen und verworfen). Eine 4px-Kachel wiederholt sich dagegen
+   exakt und sieht auf jeder Seitenlaenge gleich aus. */
+:root[data-textur="papier"] body {
+    background-image:
+        radial-gradient(circle at 1px 1px, var(--ox-textur-farbe) 1px, transparent 0),
+        var(--ox-bg-image);
+    background-size: 4px 4px, auto;
+    background-repeat: repeat, no-repeat;
+}
+
+/* Schraffur wie auf einer gestempelten Karte. Auch hier gekachelt (siehe
+   Begruendung bei PAPIER), nur mit voller Pixelbreite und groesserem Raster. */
+:root[data-textur="linien"] body {
+    background-image:
+        repeating-linear-gradient(135deg, var(--ox-textur-farbe) 0 1px, transparent 1px 9px),
+        var(--ox-bg-image);
+    background-size: 128px 128px, auto;
+    background-repeat: repeat, no-repeat;
+}
+
+/* Gesprenkelter Steinboden - vier verschieden grosse Punkte auf einer
+   120px-Kachel, absichtlich unregelmaessig verteilt, damit das Raster nicht
+   ins Auge faellt. */
+:root[data-textur="terrazzo"] body {
+    background-image:
+        radial-gradient(circle at 14% 21%, var(--ox-textur-farbe) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 63% 39%, var(--ox-textur-farbe) 0 3px, transparent 3.5px),
+        radial-gradient(circle at 31% 74%, var(--ox-textur-farbe) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 87% 86%, var(--ox-textur-farbe) 0 2.5px, transparent 3px),
+        var(--ox-bg-image);
+    background-size: 120px 120px, 120px 120px, 120px 120px, 120px 120px, auto;
+    background-repeat: repeat, repeat, repeat, repeat, no-repeat;
+}
+
+/* ---------- Knopf-Optik (data-control) ----------
+   Standard ist FLACH (components.css, gefuellte Flaeche in der Akzentfarbe).
+
+   RAHMEN: Kontur statt Flaeche. Die Beschriftung bleibt bewusst
+   var(--ox-text) und wird NICHT auf die Akzentfarbe gelegt - ein Laden darf
+   einen blassen Akzent waehlen (gelb, hellbeige), als Schriftfarbe waere der
+   dann unlesbar. --ox-text ist gegen den Laden-Hintergrund ausgerechnet
+   (theme.ts) und damit immer lesbar; die Akzentfarbe traegt den Rand, wo
+   geringer Kontrast nur dekorativ ist. */
+:root[data-control="rahmen"] .ox-btn {
+    background: transparent;
+    color: var(--ox-text);
+    border-width: 2px;
+    border-color: var(--ox-accent);
+}
+:root[data-control="rahmen"] .ox-btn--gut { border-color: var(--ox-success); }
+:root[data-control="rahmen"] .ox-btn--gefahr { border-color: var(--ox-danger); }
+/* Der leise Knopf bleibt leise: duenne neutrale Linie, kein Akzent. */
+:root[data-control="rahmen"] .ox-btn--geist {
+    border-width: 1px;
+    border-color: var(--ox-border);
+}
+/* brightness() hat auf einer durchsichtigen Flaeche keine Wirkung - hier
+   traegt die Fuellung die Rueckmeldung. */
+:root[data-control="rahmen"] .ox-btn:hover:not(:disabled) {
+    filter: none;
+    background: color-mix(in srgb, var(--ox-accent) 12%, transparent);
+}
+
+/* ERHOBEN: der Knopf steht auf einer Kante und laesst sich sichtbar
+   eindruecken. Die Kante ist die eigene Akzentfarbe nach Schwarz gemischt,
+   damit sie zu jeder Ladenfarbe passt, ohne eine zweite Farbe zu erfinden. */
+:root[data-control="erhoben"] .ox-btn {
+    box-shadow: 0 3px 0 0 color-mix(in srgb, var(--ox-accent) 55%, #000);
+    transition: transform var(--ox-dur-fast) var(--ox-ease-out),
+                box-shadow var(--ox-dur-fast) var(--ox-ease-out);
+}
+:root[data-control="erhoben"] .ox-btn--gut { box-shadow: 0 3px 0 0 color-mix(in srgb, var(--ox-success) 55%, #000); }
+:root[data-control="erhoben"] .ox-btn--gefahr { box-shadow: 0 3px 0 0 color-mix(in srgb, var(--ox-danger) 55%, #000); }
+:root[data-control="erhoben"] .ox-btn--geist { box-shadow: 0 3px 0 0 var(--ox-border); }
+:root[data-control="erhoben"] .ox-btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 0 transparent;
+}
+:root[data-control="erhoben"] .ox-btn:disabled { box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-control="erhoben"] .ox-btn:active:not(:disabled) { transform: none; }
+}

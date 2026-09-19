@@ -64,6 +64,24 @@ export interface LadenTheme {
     openingHours: string | null;
     address: string | null;
     phone: string | null;
+    /* Struktur-Achsen: aendern Aufbau und Rhythmus der Seite, nicht nur
+       Farbe/Schrift. Backend liefert immer einen Wert (nie null), weil die
+       Getter in Restaurant.java auf den Standard zurueckfallen. */
+    menuLayout: string;      // LISTE | KACHELN | TAFEL
+    heroStyle: string;       // BAND | VOLL | SCHLICHT
+    textureStyle: string;    // KEIN | PAPIER | LINIEN | TERRAZZO
+    controlStyle: string;    // FLACH | RAHMEN | ERHOBEN
+    categoryStyle: string;   // REITER | HAMBURGER | KAPITEL
+    motionLevel: string;     // DEZENT | NORMAL | VERSPIELT
+    /* Vorhang-Feinheiten. introColor ist als EINZIGES Feld hier nullable:
+       leer heisst "keine eigene Farbe, nimm den Akzent" (siehe Restaurant). */
+    introColor: string | null;
+    introLogo: string;       // OHNE | KLEIN | GROSS
+    introHold: string;       // OHNE | KURZ | NORMAL | LANG
+    introRepeat: string;     // IMMER | EINMAL
+    /** Vorhang-Bild; null, wenn der Laden keins hochgeladen hat. */
+    introImageUrl: string | null;
+    introImageStyle: string; // AUFGELEGT | FLAECHE
 }
 
 /** OrderResponse.OrderLineDto */

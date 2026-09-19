@@ -48,19 +48,21 @@ import {
     setzeName,
     starteStatusAbfrage
 } from "./session";
-import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte } from "./menu";
-import { fliegeZu, mitAnsichtsWechsel, staffelEin } from "./animation";
+import { ladeSpeisekarte, oeffneDetail, setzeBestellenErlaubt, zeichneSpeisekarte, zeigeSkelett } from "./menu";
+import { fliegeZu, mitAnsichtsWechsel, staffelEin, zaehleHoch } from "./animation";
 import { bestaetigeBestellung, fliegeBonWeg, schmueckeBon, setzeBonZurueck } from "./bon";
 import { Warenkorb, bestelle } from "./cart";
 import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
-import { ladeTheme, leseModi, wendeThemeAn, zeigeGalerie } from "./laden-design";
+import { ladeTheme, leseModi, leseStruktur, wendeThemeAn, zeigeGalerie } from "./laden-design";
 import { istVorschau, starteVorschau } from "./vorschau";
 import { zeigeVorhang } from "./vorhang";
+import type { VorhangTheme } from "./vorhang";
 import {
     aktualisiereFreigabeKnoepfe,
+    beobachteKopfhoehe,
     aktualisiereNameAnzeige,
     aktualisiereTischmarke,
     fuelleFehlerAnsicht,
@@ -88,6 +90,15 @@ let aktuelleAnsicht: Ansicht = "view-wait";
  * ist; danach aus leseModi() gesetzt (siehe ladeThemeUndSpeisekarte). */
 let flyModus: "PLUS" | "PHOTO" = "PLUS";
 let confirmModus: "STAMP" | "CHECK" = "CHECK";
+
+/* Struktur-Achsen, die beim Zeichnen gebraucht werden (Karten-Aufbau und
+ * Kategorien-Navigation). Die uebrigen Achsen wirken rein ueber CSS und
+ * stehen nach wendeThemeAn() als data-Attribute auf <html>. */
+let struktur = { layout: "LISTE", kategorieStil: "REITER" };
+
+/* Letzte angezeigte Warenkorb-Summe - Ausgangswert fuer das Hochzaehlen in
+ * der Warenkorb-Leiste (siehe aktualisiereWarenkorbLeiste). */
+let letzteKorbSumme = 0;
 
 const warenkorb = new Warenkorb();
 let aktuelleAuswahl: Auswahl | null = null;
@@ -141,7 +152,12 @@ async function start(): Promise<void> {
             ladeTheme,
             ladeSpeisekarte,
             zeigeGalerie,
-            wendeThemeAn: (theme) => wendeThemeAn(theme as LadenTheme),
+            wendeThemeAn: (theme) => {
+                wendeThemeAn(theme as LadenTheme);
+                // Die Vorschau soll den Aufbau des Ladens zeigen, nicht den
+                // Standard - zeichneSpeisekarte laeuft direkt danach.
+                struktur = leseStruktur(theme as LadenTheme);
+            },
             zeichneSpeisekarte: (gerichte, hamburger) => {
                 kategorien = Array.isArray(gerichte) ? (gerichte as Kategorie[]) : [];
                 const ziel = document.getElementById("menu-container");
@@ -151,11 +167,20 @@ async function start(): Promise<void> {
                 // CSS (:root[data-vorschau]) ohnehin verborgen. Hamburger-Modus
                 // kommt aus dem Theme (vorschau.ts), damit die Vorschau die
                 // echte Kategorien-Nav zeigt.
-                zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, false, hamburger);
+                zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, false, hamburger,
+                    undefined, false, struktur);
                 staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
             },
             setzeBestellenErlaubt,
-            zeigeAnsichtInhalt: (id) => zeigeAnsichtInhalt(id as Ansicht, restaurantName)
+            zeigeAnsichtInhalt: (id) => zeigeAnsichtInhalt(id as Ansicht, restaurantName),
+            // Nur fuer den "Vorhang zeigen"-Knopf der Design-Karte: im
+            // normalen Vorschau-Ablauf spielt der Vorhang bewusst NICHT mit
+            // (der Inhaber schaut auf die Karte, nicht auf den Auftakt).
+            // Doppelte Umwandlung mit Absicht: die Vorschau reicht einen
+            // ZUSAMMENGESETZTEN Entwurf herein (geladenes Theme + noch nicht
+            // gespeicherte Formularwerte), der kein vollstaendiges LadenTheme
+            // sein muss. VorhangTheme verlangt ohnehin nur introStyle.
+            zeigeVorhang: (theme) => zeigeVorhang(theme as unknown as VorhangTheme)
         });
         return;
     }
@@ -285,6 +310,12 @@ function beendeMitFehler(titel: string, text: string): void {
  *  (fehlt es, bleibt die Standard-Optik aus tokens.css). allSettled() statt
  *  all(), damit ein Fehlschlag des einen den anderen nicht mit reisst. */
 async function ladeThemeUndSpeisekarte(): Promise<void> {
+    // Platzhalter, solange beides unterwegs ist: der Gast sieht sofort die
+    // Form seiner Karte statt einer leeren Flaeche. Das Theme ist noch nicht
+    // da, also im Standard-Aufbau - beim Eintreffen wird ohnehin neu gezeichnet.
+    const skelettZiel = document.getElementById("menu-container");
+    if (skelettZiel) zeigeSkelett(skelettZiel);
+
     const [themeErgebnis, menuErgebnis] = await Promise.allSettled([
         ladeTheme(restaurantId),
         ladeSpeisekarte(restaurantId)
@@ -295,10 +326,10 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         // Rueckfall wie zuvor in wendeThemeAn: nur uebernehmen, wenn die
         // Statusabfrage noch keinen restaurantName geliefert hat (siehe laden-design.ts, Dateikopf).
         if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;
-        // Spielt nur einmal pro Gast (localStorage-Flag in vorhang.ts) - bei
-        // spaeteren Aufrufen von ladeThemeUndSpeisekarte (gibt es hier nicht,
-        // aber zur Sicherheit) waere das ein no-op.
-        zeigeVorhang(themeErgebnis.value, guestToken);
+        // Spielt bei jedem Seitenaufruf (siehe vorhang.ts, Dateikopf).
+        // Diese Funktion laeuft genau einmal pro Laden der Seite - die
+        // spaeteren Ansichtswechsel gehen ohne Seitenwechsel.
+        zeigeVorhang(themeErgebnis.value);
     }
     void zeigeGalerie(restaurantId);
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;
@@ -307,11 +338,13 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         flyModus = modi.fly;
         confirmModus = modi.confirm;
     }
+    if (themeErgebnis.status === "fulfilled") struktur = leseStruktur(themeErgebnis.value);
 
     kategorien = menuErgebnis.status === "fulfilled" ? menuErgebnis.value : [];
     const ziel = document.getElementById("menu-container");
     if (ziel) {
-        zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, genehmigt, hamburgerModus);
+        zeichneSpeisekarte(kategorien, ziel, beiGerichtAusgewaehlt, beiSchnellHinzufuegen, genehmigt, hamburgerModus,
+            undefined, false, struktur);
         staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
     }
     if (menuErgebnis.status === "rejected") {
@@ -326,8 +359,10 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
  *  werden dort gewaehlt. menu.ts ruft diesen Rueckruf NUR vom .oeffnen-Knopf
  *  auf, NICHT vom "+"-Knopf (der hat einen eigenen Rueckruf, siehe
  *  beiSchnellHinzufuegen direkt darunter). */
-function beiGerichtAusgewaehlt(gericht: Gericht): void {
-    oeffneDetail(gericht, beiHinzufuegen, genehmigt);
+function beiGerichtAusgewaehlt(gericht: Gericht, quelle?: HTMLElement): void {
+    // quelle ist das Foto der angetippten Karte: das Detail-Blatt laesst es
+    // in seine grosse Fassung wachsen (menu.ts -> animation.ts wachseFoto).
+    oeffneDetail(gericht, beiHinzufuegen, genehmigt, { layout: struktur.layout, quelle });
 }
 
 /** "+"-Knopf in der Preiszeile der Karte: EIN Tipp statt drei - legt sofort
@@ -414,7 +449,18 @@ function aktualisiereWarenkorbLeiste(): void {
     if (!leiste) return;
     const anzahl = warenkorb.anzahl();
     const sichtbar = anzahl > 0 && aktuelleAnsicht === "view-menu";
+    // Die Leiste federt nur herein, wenn sie vorher WEG war - nicht bei
+    // jeder Mengenaenderung. Der Uebergang muss also vor dem Setzen von
+    // hidden gelesen werden.
+    const kommtHerein = sichtbar && leiste.hidden;
     leiste.hidden = !sichtbar;
+    if (kommtHerein) {
+        // Klasse entfernen, Reflow erzwingen, neu setzen - sonst laeuft die
+        // Animation beim zweiten Mal nicht (gleiches Muster wie ox-anim-pop).
+        leiste.classList.remove("ox-leiste-rein");
+        void leiste.offsetWidth;
+        leiste.classList.add("ox-leiste-rein");
+    }
     if (sichtbar) {
         const info = document.getElementById("cartbar-info");
         if (info) {
@@ -423,12 +469,19 @@ function aktualisiereWarenkorbLeiste(): void {
             // Preis wie ueberall ueber .ox-preis. fliegeZu() liest weiterhin
             // nur die Position DIESES Containers (#cartbar-info bleibt das
             // Flugziel), Kindelemente aendern daran nichts.
+            const summe = warenkorb.summe();
+            const preisFeld = el("strong", "ox-preis", preis(summe));
             info.textContent = "";
             info.append(
                 el("strong", "ox-num", String(anzahl)),
                 document.createTextNode(" Artikel · "),
-                el("strong", "ox-preis", preis(warenkorb.summe()))
+                preisFeld
             );
+            // Die Summe laeuft auf ihren neuen Wert, statt zu springen - sie
+            // ist die Zahl, auf die der Gast achtet. Bei Stufe "dezent" oder
+            // reduzierter Bewegung schreibt zaehleHoch sofort den Endwert.
+            zaehleHoch(letzteKorbSumme, summe, (wert) => { preisFeld.textContent = preis(wert); });
+            letzteKorbSumme = summe;
             // Kurzer "Pop" bei jeder Aenderung - Klasse entfernen, Reflow
             // erzwingen, neu setzen (sonst startet die Animation nicht neu).
             info.classList.remove("ox-anim-pop");
@@ -625,4 +678,5 @@ function verdraheStatischeEreignisse(): void {
    sollen die App nicht installieren (siehe guest.html, pwa.ts). ---------- */
 
 verdraheStatischeEreignisse();
+beobachteKopfhoehe();
 void start();

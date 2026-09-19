@@ -51,6 +51,10 @@ public class RestaurantAdminService {
     /** Logos werden kleiner gehalten als Hintergrundbilder. */
     private static final int LOGO_MAX = 600;
     private static final int BACKGROUND_MAX = 1600;
+    /** Vorhang-Bild: fuellt im Modus FLAECHE einen ganzen Handy-Bildschirm,
+     *  im Modus AUFGELEGT hoechstens dessen halbe Hoehe. 1400px reichen fuer
+     *  beides auch auf einem Bildschirm mit doppelter Pixeldichte. */
+    private static final int INTRO_MAX = 1400;
     /** Ambiente-Fotos sind wie das Hintergrundbild verkleinert (Stimmungsbilder, keine Detailaufnahmen). */
     private static final int GALLERY_MAX = 1600;
     private static final int MAX_GALLERY_IMAGES = 8;
@@ -95,7 +99,13 @@ public class RestaurantAdminService {
         Restaurant restaurant = findRestaurant(CurrentUser.restaurantId());
         restaurant.setAccentColor(request.accentColor());
         restaurant.setBackgroundColor(request.backgroundColor());
-        restaurant.setCategoriesAsHamburger(request.hamburgerOrDefault());
+        // Die Achse categoryStyle fuehrt, der aeltere Schalter wird
+        // mitgezogen - beide bleiben dadurch immer konsistent. Alte Clients
+        // ohne die Achse landen ueber categoryStyleOrDefault() wieder auf
+        // ihrem eigenen Schalter (siehe DesignRequest).
+        String categoryStyle = request.categoryStyleOrDefault();
+        restaurant.setCategoryStyle(categoryStyle);
+        restaurant.setCategoriesAsHamburger("HAMBURGER".equals(categoryStyle));
         restaurant.setKitchenDisplayEnabled(request.kitchenEnabledOrDefault());
         restaurant.setStyleShape(request.styleShapeOrDefault());
         restaurant.setDisplayFont(request.displayFontOrDefault());
@@ -112,6 +122,18 @@ public class RestaurantAdminService {
         restaurant.setOpeningHours(request.openingHours());
         restaurant.setAddress(request.address());
         restaurant.setPhone(request.phone());
+        restaurant.setMenuLayout(request.menuLayoutOrDefault());
+        restaurant.setHeroStyle(request.heroStyleOrDefault());
+        restaurant.setTextureStyle(request.textureStyleOrDefault());
+        restaurant.setControlStyle(request.controlStyleOrDefault());
+        restaurant.setMotionLevel(request.motionLevelOrDefault());
+        // introColor bewusst OHNE Standardwert: leer heisst "keine eigene
+        // Farbe", der Vorhang nimmt dann den Akzent (siehe Restaurant).
+        restaurant.setIntroColor(request.introColor());
+        restaurant.setIntroLogo(request.introLogoOrDefault());
+        restaurant.setIntroHold(request.introHoldOrDefault());
+        restaurant.setIntroRepeat(request.introRepeatOrDefault());
+        restaurant.setIntroImageStyle(request.introImageStyleOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -122,7 +144,11 @@ public class RestaurantAdminService {
         Long rid = CurrentUser.restaurantId();
         validateUpload(file);
         boolean png = "image/png".equalsIgnoreCase(file.getContentType());
-        int max = kind == AssetKind.LOGO ? LOGO_MAX : BACKGROUND_MAX;
+        int max = switch (kind) {
+            case LOGO -> LOGO_MAX;
+            case INTRO -> INTRO_MAX;
+            case BACKGROUND -> BACKGROUND_MAX;
+        };
         byte[] encoded;
         try {
             encoded = resizeAndReencode(file.getBytes(), png, max);
@@ -280,7 +306,19 @@ public class RestaurantAdminService {
                 restaurant.getIntroSpeed(),
                 restaurant.getOpeningHours(),
                 restaurant.getAddress(),
-                restaurant.getPhone());
+                restaurant.getPhone(),
+                restaurant.getMenuLayout(),
+                restaurant.getHeroStyle(),
+                restaurant.getTextureStyle(),
+                restaurant.getControlStyle(),
+                restaurant.getCategoryStyle(),
+                restaurant.getMotionLevel(),
+                restaurant.getIntroColor(),
+                restaurant.getIntroLogo(),
+                restaurant.getIntroHold(),
+                restaurant.getIntroRepeat(),
+                kinds.contains(AssetKind.INTRO) ? base + "/intro" : null,
+                restaurant.getIntroImageStyle());
     }
 
     private void validateUpload(MultipartFile file) {

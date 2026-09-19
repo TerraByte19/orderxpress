@@ -16,6 +16,19 @@ spring:
       # auf "validate" umstellen und Migrationen (z.B. Flyway) verwenden.
       ddl-auto: update
     open-in-view: false
+    properties:
+      hibernate:
+        type:
+          # Java-Enums als schlichte Zeichenkette speichern, NICHT als
+          # nativen Enum-Typ der Datenbank. Hibernate 7 wuerde sonst in H2
+          # eine Spalte ENUM('A','B') anlegen - mit genau den Werten, die es
+          # beim ersten Erzeugen gab. Ein spaeter hinzugefuegter Enum-Wert
+          # ist dann eine Schema-Aenderung, und "ddl-auto: update" aendert
+          # bestehende Spaltentypen nicht. Genau daran ist AssetKind.INTRO
+          # am 19.09.2026 gescheitert (siehe EnumSpaltenMigration).
+          # Betrifft alle Enums: UserRole, OrderStatus, GuestStatus,
+          # SessionStatus, CallStatus, MenuItemBadge.
+          preferred_enum_jdbc_type: VARCHAR
 
   servlet:
     multipart:

@@ -101,6 +101,75 @@ describe("setzeLadenDesign", () => {
         expect(document.documentElement.style.getPropertyValue("--ox-accent")).toBe("");
     });
 
+    /* ---------- Struktur-Achsen ----------
+       Jede Achse landet als data-Attribut auf <html>; das Stylesheet haengt
+       daran. Wichtig sind drei Faelle: der gewaehlte Wert landet als Attribut,
+       der STANDARD setzt gar kein Attribut (sonst muesste jede Grundregel in
+       tokens.css/components.css doppelt geschrieben werden), und ein
+       unbekannter Wert (neueres Backend, aelteres Frontend) faellt still auf
+       den Standard zurueck statt ein Attribut zu setzen, fuer das es keine
+       Regel gibt. */
+    describe("Struktur-Achsen als data-Attribute", () => {
+        beforeEach(() => {
+            for (const attribut of ["data-layout", "data-hero", "data-textur", "data-control", "data-kategorie", "data-motion"]) {
+                document.documentElement.removeAttribute(attribut);
+            }
+        });
+
+        it("schreibt die gewaehlten Werte auf <html>", () => {
+            setzeLadenDesign({
+                layout: "TAFEL", hero: "SCHLICHT", textur: "LINIEN",
+                control: "RAHMEN", kategorie: "KAPITEL", bewegung: "VERSPIELT"
+            });
+            const wurzel = document.documentElement;
+            expect(wurzel.getAttribute("data-layout")).toBe("tafel");
+            expect(wurzel.getAttribute("data-hero")).toBe("schlicht");
+            expect(wurzel.getAttribute("data-textur")).toBe("linien");
+            expect(wurzel.getAttribute("data-control")).toBe("rahmen");
+            expect(wurzel.getAttribute("data-kategorie")).toBe("kapitel");
+            expect(wurzel.getAttribute("data-motion")).toBe("verspielt");
+        });
+
+        it("setzt fuer die Standardwerte KEIN Attribut", () => {
+            setzeLadenDesign({
+                layout: "LISTE", hero: "BAND", textur: "KEIN",
+                control: "FLACH", kategorie: "REITER", bewegung: "NORMAL"
+            });
+            const wurzel = document.documentElement;
+            expect(wurzel.hasAttribute("data-layout")).toBe(false);
+            expect(wurzel.hasAttribute("data-hero")).toBe(false);
+            expect(wurzel.hasAttribute("data-textur")).toBe(false);
+            expect(wurzel.hasAttribute("data-control")).toBe(false);
+            expect(wurzel.hasAttribute("data-kategorie")).toBe(false);
+            expect(wurzel.hasAttribute("data-motion")).toBe(false);
+        });
+
+        it("entfernt ein vorher gesetztes Attribut beim Wechsel auf den Standard", () => {
+            setzeLadenDesign({ layout: "KACHELN" });
+            expect(document.documentElement.getAttribute("data-layout")).toBe("kacheln");
+            setzeLadenDesign({ layout: "LISTE" });
+            expect(document.documentElement.hasAttribute("data-layout")).toBe(false);
+        });
+
+        it("ignoriert einen unbekannten Wert, statt ein totes Attribut zu setzen", () => {
+            setzeLadenDesign({ layout: "GALERIE", bewegung: "WILD" });
+            expect(document.documentElement.hasAttribute("data-layout")).toBe(false);
+            expect(document.documentElement.hasAttribute("data-motion")).toBe(false);
+        });
+    });
+
+    /* Die Textur-Toenung folgt der GERECHNETEN Textfarbe, nicht der hellen
+       oder dunklen Haut: ein Laden darf einen dunklen Hintergrund-Hex ohne
+       darkMode waehlen - dann muss die Textur heller als der Grund sein,
+       sonst ist sie unsichtbar. */
+    it("faerbt die Textur nach der gerechneten Textfarbe", () => {
+        setzeLadenDesign({ backgroundColor: "#ffffff" });
+        expect(document.documentElement.style.getPropertyValue("--ox-textur-farbe")).toBe("rgba(0, 0, 0, .055)");
+
+        setzeLadenDesign({ backgroundColor: "#141210" });
+        expect(document.documentElement.style.getPropertyValue("--ox-textur-farbe")).toBe("rgba(255, 255, 255, .06)");
+    });
+
     describe("Textfarbe bei gesetztem Laden-Hintergrund", () => {
         // Abschnitt 12 im Design-Dokument: Inline-Stile schlagen jede
         // Stylesheet-Regel, auch die der dunklen Haut. Jeder Laden hat einen

@@ -1,6 +1,8 @@
 @import "./guest-motion.css";
 @import "./vorhang.css";
 @import "./kontakt.css";
+@import "./laden-layout.css";
+@import "./guest-bausteine.css";
 
 /* Gaeste-Seite: nur was components.css/base.css NICHT abdecken.
    Detail-Overlay, Preis, Mengen-Stepper, Hinweisfeld etc. brauchen keine
@@ -230,6 +232,11 @@
     display: flex;
     gap: var(--ox-space-2);
     overflow-x: auto;
+    /* Der Rollbalken unter den Reitern ist auf dem Handy unsichtbar, auf dem
+       Tisch-Rechner aber ein grauer Balken quer durch die Kopfzeile. Die
+       Leiste bleibt mit Finger, Rad und Tastatur rollbar - nur der Balken
+       selbst verschwindet. */
+    scrollbar-width: none;
     padding: var(--ox-space-3) 0 var(--ox-space-4);
     margin-bottom: var(--ox-space-2);
     position: sticky;
@@ -239,6 +246,9 @@
 }
 /* Sprung per Reiter/Panel landet nicht UNTER der sticky Leiste - Puffer in
    Hoehe der Leiste selbst (grosszuegig geschaetzt, kein exaktes Ausmessen noetig). */
+.ox-kategorie-leiste::-webkit-scrollbar {
+    display: none;
+}
 .ox-kategorie-abschnitt {
     scroll-margin-top: 64px;
 }

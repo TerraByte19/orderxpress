@@ -92,6 +92,35 @@ export function aktualisiereNameAnzeige(meinName: string): void {
     if (feld) feld.textContent = meinName;
 }
 
+/** Misst die echte Hoehe der Kopfzeile und schreibt sie als
+ *  --ox-kopf-hoehe auf <html>. Zwei Stellen brauchen sie: die klebenden
+ *  Kapitel-Ueberschriften (Kategorien-Stil KAPITEL) muessen UNTER der
+ *  Kopfzeile stehenbleiben, und ein Sprung auf eine Kategorie darf nicht
+ *  dahinter landen (scroll-margin-top). Beides stand vorher auf einem fest
+ *  geschaetzten Wert - die Kopfzeile ist aber mal ein-, mal zweizeilig
+ *  (Kategorien-Leiste) und am Handy anders hoch als am Tisch.
+ *
+ *  ResizeObserver fehlt in jsdom; dort (und in aelteren Browsern) genuegt
+ *  das Messen beim Start plus bei Groessenaenderung des Fensters. */
+export function beobachteKopfhoehe(): void {
+    const kopf = document.querySelector<HTMLElement>(".ox-topbar");
+    if (!kopf) return;
+
+    const messe = (): void => {
+        const hoehe = Math.round(kopf.getBoundingClientRect().height);
+        // 0 kommt vor, solange nichts gerendert ist (und immer in Tests) -
+        // dann bleibt der Rueckfallwert aus dem Stylesheet stehen.
+        if (hoehe > 0) document.documentElement.style.setProperty("--ox-kopf-hoehe", `${hoehe}px`);
+    };
+
+    messe();
+    if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(messe).observe(kopf);
+    } else {
+        window.addEventListener("resize", messe);
+    }
+}
+
 let wartehinweisElement: HTMLParagraphElement | null = null;
 
 /** Persistenter Hinweis oben in view-menu, solange nicht genehmigt. Wird

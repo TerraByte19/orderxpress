@@ -101,6 +101,31 @@ class DesignThemeIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void vorhangBildHochladenAbrufenUndLoeschen() throws Exception {
+        Owner o = createRestaurant("vorhangbild");
+
+        mvc.perform(multipart("/api/admin/design/intro").with(as(o))
+                        .file(new MockMultipartFile("file", "vorhang.png", "image/png", testPng())))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/guest/theme/" + o.restaurantId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.introImageUrl").value("/api/guest/restaurants/" + o.restaurantId() + "/intro"));
+
+        // Oeffentlich abrufbar wie Logo und Hintergrund - der Gast hat kein Login.
+        mvc.perform(get("/api/guest/restaurants/" + o.restaurantId() + "/intro"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG));
+
+        mvc.perform(delete("/api/admin/design/intro").with(as(o)))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/guest/restaurants/" + o.restaurantId() + "/intro"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/guest/theme/" + o.restaurantId()))
+                .andExpect(jsonPath("$.introImageUrl").doesNotExist());
+    }
+
     private static byte[] testPng() throws Exception {
         BufferedImage img = new BufferedImage(300, 120, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();

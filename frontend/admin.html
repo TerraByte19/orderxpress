@@ -66,6 +66,7 @@
         <div class="card">
             <h2>Design deiner G&auml;ste-Seite</h2>
             <p class="muted">Passe Farben, Logo und Hintergrund an - so sieht deine Seite einzigartig aus.</p>
+            <div class="design-werkstatt">
             <div class="mini-form">
                 <div class="full">
                     <label style="margin-bottom:4px">Vorlage</label>
@@ -76,6 +77,9 @@
                         <button class="small" onclick="Admin.applyVorlage('nacht')">Nacht</button>
                         <button class="small" onclick="Admin.applyVorlage('frisch')">Frisch</button>
                         <button class="small" onclick="Admin.applyVorlage('klassik')">Klassik</button>
+                        <button class="small" onclick="Admin.applyVorlage('bar')">Bar</button>
+                        <button class="small" onclick="Admin.applyVorlage('imbiss')">Imbiss</button>
+                        <button class="small" onclick="Admin.applyVorlage('atelier')">Atelier</button>
                     </div>
                 </div>
                 <div class="full mini-form__abschnitt">Farben</div>
@@ -95,11 +99,57 @@
                     <label>Zweite Farbe (f&uuml;r den Verlauf)</label>
                     <input type="color" id="design-bg2" value="#f4f5f7">
                 </div>
-                <div class="full mini-form__abschnitt">Kategorien &amp; Ger&auml;te</div>
-                <div class="full check">
-                    <input type="checkbox" id="design-hamburger" class="switch">
-                    <label for="design-hamburger" style="margin:0">Kategorien als Hamburger-Men&uuml; anzeigen</label>
+                <div class="full mini-form__abschnitt">Aufbau der G&auml;ste-Seite</div>
+                <div>
+                    <label for="design-layout">Aufbau der Speisekarte</label>
+                    <select id="design-layout">
+                        <option value="LISTE">Liste &ndash; Zeile mit kleinem Foto</option>
+                        <option value="KACHELN">Kacheln &ndash; zwei Spalten, gro&szlig;es Foto</option>
+                        <option value="TAFEL">Tafel &ndash; nur Schrift, ohne Fotos</option>
+                    </select>
                 </div>
+                <div>
+                    <label for="design-hero">Kopf der Speisekarte</label>
+                    <select id="design-hero">
+                        <option value="BAND">Band &ndash; Foto-Streifen</option>
+                        <option value="VOLL">Voll &ndash; bildschirmhoher Auftakt</option>
+                        <option value="SCHLICHT">Schlicht &ndash; nur der Ladenname</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-kategorie">Kategorien finden</label>
+                    <select id="design-kategorie">
+                        <option value="REITER">Reiter oben</option>
+                        <option value="HAMBURGER">Klappmen&uuml;</option>
+                        <option value="KAPITEL">Kapitel beim Scrollen</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-textur">Textur des Hintergrunds</label>
+                    <select id="design-textur">
+                        <option value="KEIN">Glatt</option>
+                        <option value="PAPIER">Papier</option>
+                        <option value="LINIEN">Schraffur</option>
+                        <option value="TERRAZZO">Terrazzo</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-control">Kn&ouml;pfe</label>
+                    <select id="design-control">
+                        <option value="FLACH">Gef&uuml;llt</option>
+                        <option value="RAHMEN">Kontur</option>
+                        <option value="ERHOBEN">Erhoben</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-motion">Bewegung</label>
+                    <select id="design-motion">
+                        <option value="DEZENT">Dezent</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="VERSPIELT">Verspielt</option>
+                    </select>
+                </div>
+                <div class="full mini-form__abschnitt">Ger&auml;te &amp; Haut</div>
                 <div class="full check">
                     <input type="checkbox" id="design-kitchen" class="switch">
                     <label for="design-kitchen" style="margin:0">K&uuml;chen-Bildschirm verwenden
@@ -146,12 +196,13 @@
                 </div>
                 <div class="full mini-form__abschnitt">Vorhang-Intro</div>
                 <div>
-                    <label for="design-intro">Vorhang beim ersten &Ouml;ffnen der Speisekarte</label>
+                    <label for="design-intro">Vorhang beim &Ouml;ffnen</label>
                     <select id="design-intro">
                         <option value="HOCHKLAPPEN">Hochklappen</option>
                         <option value="FADE">Ausblenden</option>
                         <option value="MITTE">Von der Mitte</option>
                         <option value="VORHANG">B&uuml;hnenvorhang</option>
+                        <option value="KINO">Kinoleinwand</option>
                     </select>
                 </div>
                 <div>
@@ -163,8 +214,53 @@
                     </select>
                 </div>
                 <div class="full">
-                    <label for="design-intro-text">Willkommenstext auf dem Vorhang <span class="muted">(optional, h&auml;lt kurz an, wenn gesetzt)</span></label>
+                    <label for="design-intro-text">Willkommenstext auf dem Vorhang <span class="muted">(optional)</span></label>
                     <input type="text" id="design-intro-text" maxlength="80" placeholder="z.B. Willkommen bei Demo-Restaurant">
+                </div>
+                <div>
+                    <label for="design-intro-logo">Logo auf dem Vorhang</label>
+                    <select id="design-intro-logo">
+                        <option value="OHNE">Ohne</option>
+                        <option value="KLEIN">Klein</option>
+                        <option value="GROSS">Gro&szlig;</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-intro-hold">Halten, bevor er aufgeht</label>
+                    <select id="design-intro-hold">
+                        <option value="OHNE">Gar nicht</option>
+                        <option value="KURZ">Kurz (0,8 s)</option>
+                        <option value="NORMAL">Normal (2 s)</option>
+                        <option value="LANG">Lang (3,5 s)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-intro-repeat">Wie oft</label>
+                    <select id="design-intro-repeat">
+                        <option value="IMMER">Bei jedem Aufruf</option>
+                        <option value="EINMAL">Nur beim ersten Mal</option>
+                    </select>
+                </div>
+                <div class="full check">
+                    <input type="checkbox" id="design-intro-eigene-farbe" class="switch">
+                    <label for="design-intro-eigene-farbe" style="margin:0">Eigene Vorhangfarbe
+                        <span class="muted">(aus = Akzentfarbe)</span></label>
+                </div>
+                <div>
+                    <label for="design-intro-color">Vorhangfarbe</label>
+                    <input type="color" id="design-intro-color" value="#7a1f2b">
+                </div>
+                <div class="full">
+                    <label for="design-intro-image-style">Vorhang-Bild verwenden als
+                        <span class="muted">(Bild unten hochladen)</span></label>
+                    <select id="design-intro-image-style">
+                        <option value="AUFGELEGT">Plakat &ndash; liegt mittig auf dem Vorhang</option>
+                        <option value="FLAECHE">Fl&auml;che &ndash; das Bild IST der Vorhang</option>
+                    </select>
+                </div>
+                <div class="full">
+                    <button class="small" onclick="Admin.vorschauVorhang()">Vorhang zeigen</button>
+                    <span class="muted">spielt ihn rechts in der Vorschau ab</span>
                 </div>
                 <div class="full mini-form__abschnitt">Kontakt &amp; Social</div>
                 <div>
@@ -192,8 +288,22 @@
                     <input type="text" id="design-phone" maxlength="40" placeholder="+49 30 1234567">
                 </div>
                 <div class="full">
-                    <button class="green small" onclick="Admin.saveDesign()">Farben &amp; Men&uuml; speichern</button>
+                    <button class="green small" onclick="Admin.saveDesign()">Design speichern</button>
                 </div>
+            </div>
+            <aside class="design-vorschau">
+                <div class="row design-vorschau__kopf">
+                    <strong>So sieht es dein Gast</strong>
+                    <span style="flex:1"></span>
+                    <button class="small" onclick="Admin.vorschauNeuLaden()">Neu laden</button>
+                </div>
+                <div class="design-vorschau__rahmen">
+                    <iframe id="design-vorschau-frame" title="Vorschau der G&auml;ste-Seite"></iframe>
+                </div>
+                <p class="muted" id="design-vorschau-hinweis" style="margin-top:6px">
+                    &Auml;nderungen erscheinen hier sofort. Gespeichert wird erst mit &bdquo;Design speichern&ldquo;.
+                </p>
+            </aside>
             </div>
             <div class="row" style="margin-top:6px;align-items:stretch">
                 <div class="upload-card">
@@ -216,6 +326,17 @@
                     <div class="row">
                         <button class="small" onclick="Admin.uploadAsset('background')">Hochladen</button>
                         <button class="small red" onclick="Admin.deleteAsset('background')">Entfernen</button>
+                    </div>
+                </div>
+                <div class="upload-card">
+                    <span class="muted">Vorhang-Bild (JPG/PNG)</span>
+                    <div class="upload-card__preview">
+                        <img id="intro-preview" class="thumb" alt="" style="display:none">
+                    </div>
+                    <input type="file" id="intro-file" accept="image/png,image/jpeg">
+                    <div class="row">
+                        <button class="small" onclick="Admin.uploadAsset('intro')">Hochladen</button>
+                        <button class="small red" onclick="Admin.deleteAsset('intro')">Entfernen</button>
                     </div>
                 </div>
             </div>

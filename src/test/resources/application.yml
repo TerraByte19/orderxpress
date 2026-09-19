@@ -13,6 +13,15 @@ spring:
     hibernate:
       ddl-auto: create-drop
     open-in-view: false
+    properties:
+      hibernate:
+        type:
+          # MUSS zur application.yml des Betriebs passen. Stand hier lange
+          # nicht - und genau deshalb blieben die Tests gruen, waehrend das
+          # Hochladen auf der echten Datenbank an einer nativen Enum-Spalte
+          # scheiterte (siehe EnumSpaltenMigration). Eine Testdatenbank, die
+          # anders abbildet als der Betrieb, prueft die falsche Sache.
+          preferred_enum_jdbc_type: VARCHAR
 
 # SQL-Abfragen samt Parametern im Test-Log anzeigen (Fehlersuche)
 logging:
