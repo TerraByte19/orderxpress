@@ -267,86 +267,14 @@
     }
 }
 
-/* ---------- Kinoleinwand (introStyle = KINO) ----------
-   Vorlage: docs/referenz/kinoleinwand-codepen.md. Uebernommen ist die Idee,
-   NICHT der fremde Bild-Link der Vorlage - die Falten sind dieselbe eigene
-   SVG-Textur wie beim Buehnenvorhang.
+/* ---------- Kino (introStyle = KINO) ----------
+   Derselbe Schwenk wie beim Buehnenvorhang, nur langsamer und weiter
+   ausgeholt: 1500 ms statt 750 ms.
 
-   Vier Bewegungen nacheinander, alle als Bruchteil von --ox-vorhang-dauer
-   (1800 ms, siehe vorhang.ts): so skaliert das Tempo des Ladens (introSpeed)
-   weiterhin die ganze Abfolge gemeinsam statt jeden Teil einzeln.
-
-     0 .. 50 %   Vorhang schwenkt auf (dieselben Keyframes wie VORHANG)
-    35 .. 90 %   Bildfenster dahinter waechst - Breite und Hoehe zusammen
-
-   Das Original laesst die Leinwand ueber 4 s wachsen und braucht insgesamt
-   rund 6 s. Am Tisch will jemand bestellen, nicht warten - deshalb
-   zusammengezogen. */
-
-.ox-vorhang--kino {
-    /* Der Saal um die Leinwand. Reines Schwarz, kein getoenter Fast-Schwarz-
-       Ton: hier ist es ein dunkler Raum und keine Design-Flaeche. */
-    --ox-kino-saal: #000;
-}
-
-/* Das Fenster, das sich ausdehnt. Der Aussenschatten dunkelt ALLES ausserhalb
-   ab - billiger und genauer als vier Balken, und er verschwindet von selbst,
-   sobald das Fenster den Bildschirm fuellt. background bleibt durchsichtig,
-   damit die Speisekarte durch das Fenster zu sehen ist. */
-/* Das Bildfenster liegt HINTER dem Vorhang (z-index 0 gegen 1). Solange der
-   Vorhang zu ist, sieht man davon nichts - er fuellt den Bildschirm wie bei
-   jedem anderen Stil. Erst beim Aufgehen kommt das kleine Fenster mit dem
-   dunklen Saal ringsum zum Vorschein und dehnt sich aus.
-
-   Der Aussenschatten dunkelt alles ausserhalb ab - billiger und genauer als
-   vier Balken, und er verschwindet von selbst, sobald das Fenster den
-   Bildschirm fuellt. Der Hintergrund bleibt durchsichtig, damit die
-   Speisekarte durch das Fenster zu sehen ist. */
-.ox-vorhang--kino .ox-vorhang__leinwand {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 0;
-    width: 62vw;
-    height: 30vh;
-    transform: translate(-50%, -50%);
-    background: transparent;
-    box-shadow: 0 0 0 100vmax var(--ox-kino-saal);
-}
-
-/* Der Vorhang gehoert ueber das Fenster, die Stange ueber beides. */
-.ox-vorhang--kino .ox-vorhang__feld {
-    position: relative;
-    z-index: 1;
-}
-.ox-vorhang--kino .ox-vorhang__stange {
-    z-index: 2;
-}
-
-/* Die Ausdehnung haengt an .ox-vorhang--los, NICHT am blossen Vorhandensein
-   des Vorhangs. Stand sie am Grundzustand, dehnte sich die Leinwand schon
-   waehrend der Haltezeit aus (introHold, bis 3,5 s) - der Vorhang war dann
-   noch zu, das Bildfenster aber laengst bildschirmfuellend, und der ganze
-   Kino-Moment fiel weg. In den Aufnahmen fiel das nicht auf, weil dort
-   sofort --los gesetzt wurde. */
-.ox-vorhang--kino.ox-vorhang--los .ox-vorhang__leinwand {
-    animation: ox-kino-oeffnen
-               calc(var(--ox-vorhang-dauer, 1800ms) * .55)
-               calc(var(--ox-vorhang-dauer, 1800ms) * .35)
-               var(--ox-ease-out) forwards;
-}
-
-/* Breite UND Hoehe zusammen, in EINER Bewegung. Die Vorlage macht das in
-   zwei Stufen (erst breit, dann hoch) - dann steht die Leinwand aber eine
-   Weile breit und flach da, und ueber und unter der Karte liegen schwarze
-   Balken wie ein Rahmen. Gemeinsam gewachsen bleibt der Saal bis zuletzt
-   auf allen vier Seiten und es entsteht nie ein Balken. */
-@keyframes ox-kino-oeffnen {
-    to { width: 100vw; height: 100vh; }
-}
-
-/* Stoff und Falten wie beim Buehnenvorhang - hier nur die Bewegung und das
-   Anstrahl-Licht. Die Haelften sitzen in der Leinwand und wachsen mit ihr. */
+   Vorlage war docs/referenz/kinoleinwand-codepen.md. Der dunkle Saal und die
+   sich ausdehnende Leinwand daraus sind auf Wunsch wieder entfallen - in
+   einem hochkant gehaltenen Handy engten sie den Vorhang ein, statt ihn zu
+   rahmen, und beim Aufgehen blieb ein schwarzer Rand um die Karte stehen. */
 .ox-vorhang--kino .ox-vorhang__feld--links,
 .ox-vorhang--kino .ox-vorhang__feld--rechts {
     background-color: var(--ox-vorhang-farbe, var(--ox-accent));
@@ -355,18 +283,20 @@
         linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
     background-repeat: repeat-x, no-repeat;
     background-size: 26px 100%, 100% 100%;
-    /* KEIN filter: brightness() hier. Die Vorlage strahlt den Vorhang an und
-       nimmt das Licht beim Oeffnen zurueck - dabei stimmt die gezeigte Farbe
-       aber nicht mehr mit der ueberein, die der Laden eingestellt hat
-       (#7a1f2b wirkte aufgehellt rosa). Die eingestellte Farbe schlaegt den
-       Effekt. */
+    /* KEIN filter: brightness() - das verfaelschte die Farbe, die der Laden
+       eingestellt hat. Die eingestellte Farbe schlaegt den Effekt. */
 }
-.ox-vorhang--kino .ox-vorhang__feld--links { transform-origin: top right; }
-.ox-vorhang--kino .ox-vorhang__feld--rechts { transform-origin: top left; }
-
+.ox-vorhang--kino .ox-vorhang__feld--links {
+    transform-origin: top right;
+    box-shadow: 10px 0 28px rgba(0, 0, 0, .35);
+}
+.ox-vorhang--kino .ox-vorhang__feld--rechts {
+    transform-origin: top left;
+    box-shadow: -10px 0 28px rgba(0, 0, 0, .35);
+}
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--links,
 .ox-vorhang--kino.ox-vorhang--los .ox-vorhang__feld--rechts {
-    animation-duration: calc(var(--ox-vorhang-dauer, 1800ms) * .5);
+    animation-duration: var(--ox-vorhang-dauer, 1500ms);
     animation-timing-function: var(--ox-ease-out);
     animation-fill-mode: forwards;
 }
@@ -378,5 +308,4 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ox-vorhang--kino .ox-vorhang__leinwand { animation: none; }
 }

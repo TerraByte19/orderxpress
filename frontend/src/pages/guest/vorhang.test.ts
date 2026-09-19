@@ -242,42 +242,40 @@ describe("zeigeVorhang", () => {
         expect(v.classList.contains("ox-vorhang--los")).toBe(true);
     });
 
-    /* ---------- Kinoleinwand ----------
-       Anders als die vier aelteren Stile baut KINO zusaetzliche Elemente:
-       die Leinwand umschliesst den Vorhang (sie dehnt sich aus, der Vorhang
-       waechst mit) und traegt das Buehnenlicht. Wer das spaeter umbaut,
-       merkt an diesen Tests, wenn die Schachtelung kippt. */
-    it("baut Leinwand, Stange und Licht - und der Vorhang liegt IN der Leinwand", () => {
+    /* ---------- Kino ----------
+       Nach mehreren Runden Rueckmeldung ist KINO der langsame, weit
+       ausgeholte Schwenk - ohne dunklen Saal, ohne sich ausdehnende
+       Leinwand, ohne Licht. Alles drei engte den Vorhang ein oder
+       verfaelschte seine Farbe. Die Tests halten fest, dass davon nichts
+       zurueckkommt, ohne dass es jemand merkt. */
+    it("baut nur Vorhang und Stange - keine Leinwand, kein Licht", () => {
         zeigeVorhang(theme({ introStyle: "KINO" }));
         const v = document.querySelector(".ox-vorhang")!;
         expect(v.classList.contains("ox-vorhang--kino")).toBe(true);
-
-        const leinwand = v.querySelector(".ox-vorhang__leinwand")!;
-        expect(leinwand).not.toBeNull();
-        // Kein Buehnenlicht mehr: auf Wunsch entfernt, zusammen mit dem
-        // Anstrahl-Licht auf dem Stoff - das verfaelschte die eingestellte
-        // Vorhangfarbe (siehe vorhang.css).
-        expect(v.querySelector(".ox-vorhang__licht")).toBeNull();
-
-        // Vorhang und Stange sind GESCHWISTER der Leinwand, keine Kinder.
-        // Gesehen und behoben: lagen sie darin, hing der Vorhang als kleines
-        // Rechteck mitten im schwarzen Saal, statt den Bildschirm zu fuellen.
         expect(v.querySelectorAll(":scope > .ox-vorhang__feld").length).toBe(2);
         expect(v.querySelector(":scope > .ox-vorhang__stange")).not.toBeNull();
-        expect(leinwand.querySelector(".ox-vorhang__feld")).toBeNull();
+        expect(v.querySelector(".ox-vorhang__leinwand")).toBeNull();
+        expect(v.querySelector(".ox-vorhang__licht")).toBeNull();
     });
 
-    it("gibt dem Buehnenvorhang KEINE Leinwand", () => {
+    it("laeuft langsamer als der Buehnenvorhang", () => {
         zeigeVorhang(theme({ introStyle: "VORHANG" }));
-        expect(document.querySelector(".ox-vorhang__leinwand")).toBeNull();
-        expect(document.querySelector(".ox-vorhang__stange")).not.toBeNull();
+        const schnell = document.querySelector<HTMLElement>(".ox-vorhang")!
+            .style.getPropertyValue("--ox-vorhang-dauer");
+        document.body.textContent = "";
+
+        zeigeVorhang(theme({ introStyle: "KINO" }));
+        const langsam = document.querySelector<HTMLElement>(".ox-vorhang")!
+            .style.getPropertyValue("--ox-vorhang-dauer");
+
+        expect(schnell).toBe("750ms");
+        expect(langsam).toBe("1500ms");
     });
 
-    it("rechnet die Gesamtdauer aus 1800 ms und dem Tempo des Ladens", () => {
+    it("folgt dem Tempo des Ladens", () => {
         zeigeVorhang(theme({ introStyle: "KINO", introSpeed: "SCHNELL" }));
         const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
-        // 1800 * 0.6 = 1080; die Einzelteile rechnen sich in der CSS daraus.
-        expect(v.style.getPropertyValue("--ox-vorhang-dauer")).toBe("1080ms");
+        expect(v.style.getPropertyValue("--ox-vorhang-dauer")).toBe("900ms"); // 1500 * 0.6
     });
 
     it("nimmt die eigene Vorhangfarbe auch im Kino an", () => {
@@ -286,12 +284,7 @@ describe("zeigeVorhang", () => {
         expect(v.style.getPropertyValue("--ox-vorhang-farbe")).toBe("#141210");
     });
 
-    it("dehnt die Leinwand NICHT schon waehrend der Haltezeit aus", () => {
-        // Gesehen und behoben: die Ausdehnung hing am blossen Vorhandensein
-        // des Vorhangs statt an .ox-vorhang--los. Bei introHold NORMAL (2 s)
-        // war das Bildfenster dadurch bildschirmfuellend, bevor der Vorhang
-        // ueberhaupt aufging - der Kino-Moment fiel weg. jsdom wertet die
-        // CSS nicht aus, geprueft wird darum die Klasse, an der es haengt.
+    it("geht erst NACH der Haltezeit auf", () => {
         vi.useFakeTimers();
         zeigeVorhang(theme({ introStyle: "KINO", introText: "Willkommen", introHold: "NORMAL" }));
         const v = document.querySelector(".ox-vorhang")!;

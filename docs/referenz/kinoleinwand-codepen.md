@@ -19,7 +19,24 @@ OrderXpress fuehrt sie schneller und flacher aus (750 ms, 12 Grad, scale .35/1.3
 gegen 4 s, 20 Grad, scale 0/2), weil ein Gast am Tisch bestellen will und nicht
 auf eine Show wartet.
 
-## Was davon NICHT umgesetzt ist
+## Nachtrag 19.09.2026 — der Saal ist wieder raus
+
+Leinwand-Ausdehnung, dunkler Saal und Buehnenlicht waren kurzzeitig als
+Stil `KINO` gebaut und sind nach Rueckmeldung wieder entfallen:
+
+- Der dunkle Saal **engte den Vorhang ein**, statt ihn zu rahmen. Auf einem
+  hochkant gehaltenen Handy blieb vom Vorhang ein kleines Rechteck mitten im
+  Schwarz. Umdrehen (Fenster hinter den Vorhang) half nur teilweise — beim
+  Aufgehen stand dann ein schwarzer Rand um die Karte.
+- Das **Anstrahl-Licht** (`filter: brightness(175%)`) verfaelschte die Farbe,
+  die der Laden eingestellt hatte: `#380000` kam als helleres Rot heraus.
+- Das **Buehnenlicht** war ohne den Saal gegenstandslos.
+
+`KINO` ist seitdem der langsame, weit ausgeholte Schwenk: dieselbe Bewegung
+wie `VORHANG`, nur 1500 ms statt 750 ms. Die Abschnitte unten beschreiben
+weiterhin die Vorlage, nicht den heutigen Code.
+
+## Was von der Vorlage NICHT umgesetzt ist
 
 Genau der Teil, der die Vorlage zur *Kinoleinwand* macht:
 

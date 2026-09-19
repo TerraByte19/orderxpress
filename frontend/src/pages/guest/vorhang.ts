@@ -68,13 +68,11 @@ const BASIS_DAUER_MS: Record<string, number> = {
     FADE: 550,
     MITTE: 650,
     VORHANG: 750,
-    // KINO hat mehrere Bewegungen nacheinander (Vorhang, Leinwand breit,
-    // Leinwand hoch, Licht). Diese Zahl ist die GESAMTdauer; die einzelnen
-    // Teile rechnen sich in vorhang.css als Bruchteil davon aus, damit das
-    // Tempo des Ladens (introSpeed) weiterhin alles gemeinsam skaliert.
-    // Die Vorlage braucht rund 6 s - fuer jemanden, der am Tisch bestellen
-    // will, ist das zu lang, deshalb auf 1,8 s zusammengezogen.
-    KINO: 1800
+    // KINO ist der langsame, grosse Schwenk: gleiche Bewegung wie VORHANG,
+    // nur weiter ausgeholt. Der dunkle Saal und die sich ausdehnende
+    // Leinwand sind auf Wunsch wieder entfallen - sie engten den Vorhang
+    // ein, statt ihn zu rahmen (siehe docs/referenz/kinoleinwand-codepen.md).
+    KINO: 1500
 };
 
 const GUELTIGE_GESCHWINDIGKEITEN = new Set(["LANGSAM", "NORMAL", "SCHNELL"]);
@@ -192,18 +190,6 @@ export function zeigeVorhang(theme: VorhangTheme): void {
         const stange = MIT_STANGE.has(stilSicher) ? document.createElement("div") : null;
         if (stange) stange.className = "ox-vorhang__stange";
 
-        if (stilSicher === "KINO") {
-            // Die Leinwand liegt HINTER dem Vorhang, nicht um ihn herum.
-            // Erster Versuch war andersherum (Vorhang als Kind der Leinwand)
-            // - dann hing der Vorhang als kleines Rechteck mitten im
-            // schwarzen Saal, statt den Bildschirm zu fuellen. Jetzt:
-            // Vorhang zu = ganzer Bildschirm, wie bei jedem anderen Stil.
-            // Erst beim Aufgehen kommt dahinter das kleine, dunkel gerahmte
-            // Bildfenster zum Vorschein und dehnt sich aus.
-            const leinwand = document.createElement("div");
-            leinwand.className = "ox-vorhang__leinwand";
-            vorhang.appendChild(leinwand);
-        }
         vorhang.append(links, rechts);
         if (stange) vorhang.appendChild(stange);
     } else {
