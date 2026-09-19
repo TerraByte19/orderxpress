@@ -82,4 +82,112 @@ describe("zeigeVorhang", () => {
         // 750 ms Grunddauer * 0.6 = 450 ms
         expect(vorhang.style.getPropertyValue("--ox-vorhang-dauer")).toBe("450ms");
     });
+
+    /* ---------- Eigene Vorhangfarbe ----------
+       Der Akzent ist eine Knopf-Farbe; bildschirmfuellend ist derselbe Ton
+       oft zu hart. Wichtig dabei: die Schriftfarbe wird gegen die VORHANG-
+       farbe gerechnet, nicht gegen den Akzent geerbt - sonst stuende auf
+       einem dunklen Vorhang der schwarze Kontrastwert einer hellen
+       Akzentfarbe. */
+    it("setzt eigene Vorhangfarbe samt passend gerechneter Schriftfarbe", () => {
+        zeigeVorhang(theme({ introColor: "#141210" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.style.getPropertyValue("--ox-vorhang-farbe")).toBe("#141210");
+        expect(v.style.getPropertyValue("--ox-vorhang-text")).toBe("#ffffff");
+    });
+
+    it("rechnet auf heller Vorhangfarbe schwarze Schrift", () => {
+        zeigeVorhang(theme({ introColor: "#ffe08a" }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.style.getPropertyValue("--ox-vorhang-text")).toBe("#000000");
+    });
+
+    it("laesst ohne eigene Farbe beide Variablen weg - dann greift der Akzent aus dem Stylesheet", () => {
+        zeigeVorhang(theme({ introColor: null }));
+        const v = document.querySelector<HTMLElement>(".ox-vorhang")!;
+        expect(v.style.getPropertyValue("--ox-vorhang-farbe")).toBe("");
+    });
+
+    it("bricht bei kaputter Farbe aus der Datenbank nicht ab, sondern spielt ohne sie", () => {
+        // textfarbeAuf() wirft bei ungueltigem Hex - ein Datenfehler darf den
+        // Auftakt nicht mit einer Ausnahme beenden.
+        expect(() => zeigeVorhang(theme({ introColor: "dunkelrot" }))).not.toThrow();
+        expect(vorhaenge().length).toBe(1);
+    });
+
+    /* ---------- Logo ---------- */
+    it("zeigt das Logo klein (bisheriges Verhalten), wenn nichts anderes gewaehlt ist", () => {
+        zeigeVorhang(theme({ logoUrl: "/logo.png" }));
+        const logo = document.querySelector(".ox-vorhang__marke-logo")!;
+        expect(logo.classList.contains("ox-vorhang__marke-logo--klein")).toBe(true);
+    });
+
+    it("zeigt das Logo gross, wenn der Laden es so will", () => {
+        zeigeVorhang(theme({ logoUrl: "/logo.png", introLogo: "GROSS" }));
+        const logo = document.querySelector(".ox-vorhang__marke-logo")!;
+        expect(logo.classList.contains("ox-vorhang__marke-logo--gross")).toBe(true);
+    });
+
+    it("laesst das Logo bei OHNE weg, obwohl eins hinterlegt ist", () => {
+        zeigeVorhang(theme({ logoUrl: "/logo.png", introLogo: "OHNE" }));
+        expect(document.querySelector(".ox-vorhang__marke-logo")).toBeNull();
+    });
+
+    it("haelt bei OHNE-Logo und ohne Text gar nicht an - es gibt nichts zu lesen", () => {
+        vi.useFakeTimers();
+        zeigeVorhang(theme({ introStyle: "HOCHKLAPPEN", logoUrl: "/logo.png", introLogo: "OHNE", introText: null }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(10);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(true);
+    });
+
+    /* ---------- Haltezeit ---------- */
+    it("haelt gar nicht an, wenn der Laden OHNE gewaehlt hat", () => {
+        vi.useFakeTimers();
+        zeigeVorhang(theme({ introStyle: "HOCHKLAPPEN", introText: "Willkommen", introHold: "OHNE" }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(10);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(true);
+    });
+
+    it("haelt bei KURZ deutlich kuerzer als bei NORMAL", () => {
+        vi.useFakeTimers();
+        zeigeVorhang(theme({ introStyle: "HOCHKLAPPEN", introText: "Willkommen", introHold: "KURZ" }));
+        const v = document.querySelector(".ox-vorhang")!;
+        vi.advanceTimersByTime(500);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(false);
+        vi.advanceTimersByTime(400);
+        expect(v.classList.contains("ox-vorhang--los")).toBe(true);
+    });
+
+    /* ---------- Wiederholung ----------
+       Standard bleibt IMMER; EINMAL ist die Wahl des Ladens, nicht der
+       Rueckfall. Gemerkt wird pro LADEN, nicht pro Gast: wer neu scannt,
+       bekommt einen neuen guestToken und saehe den Vorhang sonst trotz
+       EINMAL wieder. */
+    it("spielt bei EINMAL nur beim ersten Mal", () => {
+        zeigeVorhang(theme({ introRepeat: "EINMAL", id: 7 }));
+        expect(vorhaenge().length).toBe(1);
+        zeigeVorhang(theme({ introRepeat: "EINMAL", id: 7 }));
+        expect(vorhaenge().length).toBe(1);
+    });
+
+    it("merkt sich EINMAL je Laden - ein anderer Laden spielt trotzdem", () => {
+        zeigeVorhang(theme({ introRepeat: "EINMAL", id: 7 }));
+        zeigeVorhang(theme({ introRepeat: "EINMAL", id: 8 }));
+        expect(vorhaenge().length).toBe(2);
+    });
+
+    it("spielt bei EINMAL ohne Laden-Id lieber jedes Mal, als nie", () => {
+        zeigeVorhang(theme({ introRepeat: "EINMAL" }));
+        zeigeVorhang(theme({ introRepeat: "EINMAL" }));
+        expect(vorhaenge().length).toBe(2);
+    });
+
+    it("merkt sich bei IMMER weiterhin nichts", () => {
+        zeigeVorhang(theme({ introRepeat: "IMMER", id: 7 }));
+        zeigeVorhang(theme({ introRepeat: "IMMER", id: 7 }));
+        expect(vorhaenge().length).toBe(2);
+        expect(localStorage.length).toBe(0);
+    });
 });

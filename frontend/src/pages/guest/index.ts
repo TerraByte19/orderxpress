@@ -59,6 +59,7 @@ import type { Auswahl } from "./bill";
 import { ladeTheme, leseModi, leseStruktur, wendeThemeAn, zeigeGalerie } from "./laden-design";
 import { istVorschau, starteVorschau } from "./vorschau";
 import { zeigeVorhang } from "./vorhang";
+import type { VorhangTheme } from "./vorhang";
 import {
     aktualisiereFreigabeKnoepfe,
     beobachteKopfhoehe,
@@ -171,7 +172,15 @@ async function start(): Promise<void> {
                 staffelEin(Array.from(ziel.querySelectorAll<HTMLElement>(".ox-gericht")));
             },
             setzeBestellenErlaubt,
-            zeigeAnsichtInhalt: (id) => zeigeAnsichtInhalt(id as Ansicht, restaurantName)
+            zeigeAnsichtInhalt: (id) => zeigeAnsichtInhalt(id as Ansicht, restaurantName),
+            // Nur fuer den "Vorhang zeigen"-Knopf der Design-Karte: im
+            // normalen Vorschau-Ablauf spielt der Vorhang bewusst NICHT mit
+            // (der Inhaber schaut auf die Karte, nicht auf den Auftakt).
+            // Doppelte Umwandlung mit Absicht: die Vorschau reicht einen
+            // ZUSAMMENGESETZTEN Entwurf herein (geladenes Theme + noch nicht
+            // gespeicherte Formularwerte), der kein vollstaendiges LadenTheme
+            // sein muss. VorhangTheme verlangt ohnehin nur introStyle.
+            zeigeVorhang: (theme) => zeigeVorhang(theme as unknown as VorhangTheme)
         });
         return;
     }

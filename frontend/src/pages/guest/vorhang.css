@@ -10,9 +10,18 @@
     display: flex;
 }
 
+/* Der Stoff nimmt die eigene Vorhangfarbe des Ladens, sonst den Akzent.
+   vorhang.ts setzt --ox-vorhang-farbe/--ox-vorhang-text als Inline-Stil auf
+   den Container, wenn eine eigene Farbe hinterlegt ist - der Rueckfall im
+   var() ist der Normalfall, nicht die Ausnahme.
+
+   Warum ueberhaupt eine eigene Farbe: der Akzent ist eine KNOPF-Farbe,
+   kleine Flaeche und hohe Saettigung. Bildschirmfuellend ist derselbe Ton
+   oft zu hart - ein dunkler Vorhang zu einem hellen Akzent ist eine ganz
+   normale Kombination. */
 .ox-vorhang__feld {
     flex: 1;
-    background-color: var(--ox-accent);
+    background-color: var(--ox-vorhang-farbe, var(--ox-accent));
 }
 
 /* ---------- Hochklappen: eine Flaeche faehrt nach oben weg ----------
@@ -65,7 +74,7 @@
    bleibt oben stehen und rahmt die Buehne. */
 .ox-vorhang--vorhang .ox-vorhang__feld--links,
 .ox-vorhang--vorhang .ox-vorhang__feld--rechts {
-    background-color: var(--ox-accent);
+    background-color: var(--ox-vorhang-farbe, var(--ox-accent));
     background-image:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='4'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.38'/%3E%3Cstop offset='.16' stop-color='%23fff' stop-opacity='.22'/%3E%3Cstop offset='.38' stop-color='%23000' stop-opacity='.12'/%3E%3Cstop offset='.6' stop-color='%23fff' stop-opacity='.3'/%3E%3Cstop offset='.82' stop-color='%23000' stop-opacity='.16'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='4' fill='url(%23f)'/%3E%3C/svg%3E"),
         linear-gradient(180deg, rgba(255, 255, 255, .08), transparent 30%, rgba(0, 0, 0, .2) 100%);
@@ -121,7 +130,9 @@
     gap: var(--ox-space-3);
     padding: 0 var(--ox-space-5);
     opacity: 0;
-    color: var(--ox-accent-text);
+    /* Kontrastfarbe zur VORHANGFARBE, nicht zur Akzentfarbe - bei eigener
+       Vorhangfarbe rechnet vorhang.ts sie neu (textfarbeAuf). */
+    color: var(--ox-vorhang-text, var(--ox-accent-text));
     transition: opacity 220ms var(--ox-ease-out);
     pointer-events: none;
 }
@@ -132,12 +143,25 @@
     opacity: 0;
     transition-duration: 160ms;
 }
+/* Groesse kommt aus der Achse introLogo (OHNE | KLEIN | GROSS); OHNE baut
+   vorhang.ts gar kein Bild. KLEIN ist der bisherige Wert, so gross wie das
+   Logo in der Kopfzeile. GROSS traegt einen ganzen Bildschirm allein -
+   gedacht fuer Laeden, die den Auftakt nur ueber ihr Zeichen machen und
+   keinen Willkommenstext setzen. */
 .ox-vorhang__marke-logo {
-    width: 64px;
-    height: 64px;
     border-radius: var(--ox-radius-pill);
     object-fit: cover;
     box-shadow: var(--ox-shadow-2);
+}
+.ox-vorhang__marke-logo--klein {
+    width: 64px;
+    height: 64px;
+}
+.ox-vorhang__marke-logo--gross {
+    /* Mitwachsend, aber gedeckelt: auf einem schmalen Handy sonst randlos,
+       auf einem Tisch-Bildschirm sonst absurd gross. */
+    width: min(48vw, 180px);
+    height: min(48vw, 180px);
 }
 .ox-vorhang__marke-text {
     font-family: var(--ox-font-display);

@@ -196,7 +196,7 @@
                 </div>
                 <div class="full mini-form__abschnitt">Vorhang-Intro</div>
                 <div>
-                    <label for="design-intro">Vorhang beim ersten &Ouml;ffnen der Speisekarte</label>
+                    <label for="design-intro">Vorhang beim &Ouml;ffnen</label>
                     <select id="design-intro">
                         <option value="HOCHKLAPPEN">Hochklappen</option>
                         <option value="FADE">Ausblenden</option>
@@ -213,8 +213,45 @@
                     </select>
                 </div>
                 <div class="full">
-                    <label for="design-intro-text">Willkommenstext auf dem Vorhang <span class="muted">(optional, h&auml;lt kurz an, wenn gesetzt)</span></label>
+                    <label for="design-intro-text">Willkommenstext auf dem Vorhang <span class="muted">(optional)</span></label>
                     <input type="text" id="design-intro-text" maxlength="80" placeholder="z.B. Willkommen bei Demo-Restaurant">
+                </div>
+                <div>
+                    <label for="design-intro-logo">Logo auf dem Vorhang</label>
+                    <select id="design-intro-logo">
+                        <option value="OHNE">Ohne</option>
+                        <option value="KLEIN">Klein</option>
+                        <option value="GROSS">Gro&szlig;</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-intro-hold">Halten, bevor er aufgeht</label>
+                    <select id="design-intro-hold">
+                        <option value="OHNE">Gar nicht</option>
+                        <option value="KURZ">Kurz (0,8 s)</option>
+                        <option value="NORMAL">Normal (2 s)</option>
+                        <option value="LANG">Lang (3,5 s)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="design-intro-repeat">Wie oft</label>
+                    <select id="design-intro-repeat">
+                        <option value="IMMER">Bei jedem Aufruf</option>
+                        <option value="EINMAL">Nur beim ersten Mal</option>
+                    </select>
+                </div>
+                <div class="full check">
+                    <input type="checkbox" id="design-intro-eigene-farbe" class="switch">
+                    <label for="design-intro-eigene-farbe" style="margin:0">Eigene Vorhangfarbe
+                        <span class="muted">(aus = Akzentfarbe)</span></label>
+                </div>
+                <div>
+                    <label for="design-intro-color">Vorhangfarbe</label>
+                    <input type="color" id="design-intro-color" value="#7a1f2b">
+                </div>
+                <div class="full">
+                    <button class="small" onclick="Admin.vorschauVorhang()">Vorhang zeigen</button>
+                    <span class="muted">spielt ihn rechts in der Vorschau ab</span>
                 </div>
                 <div class="full mini-form__abschnitt">Kontakt &amp; Social</div>
                 <div>

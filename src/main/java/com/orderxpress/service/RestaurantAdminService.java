@@ -123,6 +123,12 @@ public class RestaurantAdminService {
         restaurant.setTextureStyle(request.textureStyleOrDefault());
         restaurant.setControlStyle(request.controlStyleOrDefault());
         restaurant.setMotionLevel(request.motionLevelOrDefault());
+        // introColor bewusst OHNE Standardwert: leer heisst "keine eigene
+        // Farbe", der Vorhang nimmt dann den Akzent (siehe Restaurant).
+        restaurant.setIntroColor(request.introColor());
+        restaurant.setIntroLogo(request.introLogoOrDefault());
+        restaurant.setIntroHold(request.introHoldOrDefault());
+        restaurant.setIntroRepeat(request.introRepeatOrDefault());
         return buildTheme(restaurant);
     }
 
@@ -297,7 +303,11 @@ public class RestaurantAdminService {
                 restaurant.getTextureStyle(),
                 restaurant.getControlStyle(),
                 restaurant.getCategoryStyle(),
-                restaurant.getMotionLevel());
+                restaurant.getMotionLevel(),
+                restaurant.getIntroColor(),
+                restaurant.getIntroLogo(),
+                restaurant.getIntroHold(),
+                restaurant.getIntroRepeat());
     }
 
     private void validateUpload(MultipartFile file) {

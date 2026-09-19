@@ -50,6 +50,15 @@ export function verarbeiteVorschauDesign(design: Record<string, unknown>): void 
   laufendeDeps.setzeBestellenErlaubt(false);
 }
 
+/** Spielt den Vorhang mit dem AKTUELLEN (noch nicht gespeicherten) Stand.
+ *  introRepeat wird dabei bewusst ueberschrieben: "einmal pro Geraet" ist
+ *  eine Regel fuer den Gast - ein Vorschau-Knopf, der beim zweiten Druck
+ *  nichts mehr tut, waere schlicht kaputt. */
+export function spieleVorhangVor(): void {
+  if (!laufendeDeps?.zeigeVorhang) return;
+  laufendeDeps.zeigeVorhang({ ...laufendesTheme, introRepeat: "IMMER" });
+}
+
 export function verarbeiteVorschauNachricht(e: MessageEvent): void {
   if (e.origin !== window.location.origin) return;
   const d = e.data as VorschauNachricht | null;
@@ -59,6 +68,14 @@ export function verarbeiteVorschauNachricht(e: MessageEvent): void {
   if (d.typ === "ox-vorschau-design") {
     const design = (e.data as { design?: Record<string, unknown> }).design;
     if (design) verarbeiteVorschauDesign(design);
+    return;
+  }
+
+  // Vorhang auf Zuruf abspielen. Ohne das stellt der Inhaber Stil, Tempo,
+  // Farbe, Logo und Text ein, ohne das Ergebnis je zu sehen - der Vorhang
+  // laeuft sonst nur beim echten Gast, also erst nach Speichern und Scannen.
+  if (d.typ === "ox-vorschau-vorhang") {
+    spieleVorhangVor();
     return;
   }
 
@@ -152,6 +169,8 @@ export interface VorschauAbhaengigkeiten {
   zeichneSpeisekarte: (gerichte: unknown, hamburger: boolean) => void;
   setzeBestellenErlaubt: (erlaubt: boolean) => void;
   zeigeAnsichtInhalt: (id: string, name?: string) => void;
+  /** Optional - nur fuer den Vorhang-Knopf der Design-Karte. */
+  zeigeVorhang?: (theme: Record<string, unknown>) => void;
 }
 
 export async function starteVorschau(deps: VorschauAbhaengigkeiten): Promise<void> {

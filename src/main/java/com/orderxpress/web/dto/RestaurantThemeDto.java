@@ -32,5 +32,9 @@ public record RestaurantThemeDto(Long id,
                                  String textureStyle,
                                  String controlStyle,
                                  String categoryStyle,
-                                 String motionLevel) {
+                                 String motionLevel,
+                                 String introColor,
+                                 String introLogo,
+                                 String introHold,
+                                 String introRepeat) {
 }

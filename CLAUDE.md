@@ -195,6 +195,18 @@ Bezeichner Englisch, Kommentare/Fehlermeldungen Deutsch (ASCII-Umschreibung ue/o
 - **Neue `vorhang.test.ts` (6 Tests):** spielt bei jedem Aufruf, legt nichts im localStorage ab, räumt sich selbst ab, hält mit Willkommenstext, fällt bei unbekanntem Stil auf HOCHKLAPPEN zurück, setzt die Tempo-Variable. Der erste Test steht da bewusst gegen ein späteres „wir merken uns das doch besser". **Frontend 326 grün.**
 - **Altlast:** vorhandene `ox-intro-*`-Einträge bleiben in den Browsern der Gäste liegen. Werden von nichts mehr gelesen, daher kein Aufräum-Code.
 
+**Neu (19.09.2026, Teil 3): Vorhang wird eine eigene kleine Designfläche.**
+- **Die grösste Lücke war keine Einstellung:** die Live-Vorschau spielte den Vorhang GAR NICHT (`starteVorschau` ruft `zeigeVorhang` nie). Der Inhaber stellte Stil/Tempo/Text ein und sah das Ergebnis erst nach Speichern + QR-Scan. Neu: Knopf **„Vorhang zeigen"** in der Design-Karte spielt ihn mit dem NOCH NICHT gespeicherten Stand in der Vorschau ab (`ox-vorschau-vorhang`, derselbe postMessage-Kanal wie die Design-Werte; `vorschau.ts` bekam dafür `spieleVorhangVor()` und ein optionales `zeigeVorhang` in den Abhängigkeiten). `introRepeat` wird dabei bewusst auf IMMER überschrieben — ein Vorschau-Knopf, der beim zweiten Druck nichts tut, wäre kaputt.
+- **Vier neue nullable Spalten** an `restaurants` (kein DB-Reset, an der laufenden H2-Datei verifiziert):
+  - `intro_color` — eigene Vorhangfarbe, **null = Akzentfarbe** (wie `introText` KEIN `orDefault`, leer heisst „keine"). Der Akzent ist eine KNOPF-Farbe: kleine Fläche, hohe Sättigung; bildschirmfüllend oft zu hart. Die Falten sind ein halbdurchsichtiges SVG über der Grundfarbe und färben sich automatisch mit. **Wichtig:** die Schriftfarbe wird gegen die VORHANGfarbe neu gerechnet (`textfarbeAuf`), nicht von `--ox-accent-text` geerbt — sonst stünde auf einem dunklen Vorhang der schwarze Kontrastwert einer hellen Akzentfarbe. CSS: `--ox-vorhang-farbe`/`--ox-vorhang-text` mit `var(…, var(--ox-accent))` als Rückfall.
+  - `intro_logo` OHNE|KLEIN|GROSS — das Logo lag schon immer auf dem Vorhang, fest bei 64 px. KLEIN = bisheriges Verhalten, GROSS = `min(48vw, 180px)`.
+  - `intro_hold` OHNE|KURZ(800)|NORMAL(2000)|LANG(3500) — die Lesezeit war fest. Seit der Vorhang bei JEDEM Aufruf spielt, ist das spürbar (`.ox-vorhang` hat kein `pointer-events: none`, blockiert also Tipper).
+  - `intro_repeat` IMMER|EINMAL — **Standard IMMER**. Merker bei EINMAL pro **Laden** (`ox-intro-laden-<id>`), nicht pro Gast: wer neu scannt, bekommt einen neuen guestToken und sähe den Vorhang sonst trotz EINMAL wieder. Ohne Laden-Id spielt er lieber jedes Mal als nie.
+- **`vorhang.ts` hat einen eigenen `istHexFarbe`-Wächter**: `lib/theme.ts` hält seinen privat, und `textfarbeAuf()` wirft bei ungültiger Farbe — ein kaputter Wert aus der DB darf den Auftakt nicht mit einer Ausnahme abbrechen (Test dazu vorhanden).
+- **Alle 8 Vorlagen** füllen jetzt auch `introLogo`/`introHold` (z.B. Kasse: ohne Logo, kein Halt; Bar: grosses Logo, langer Halt).
+- **Tests: Backend 139 grün, Frontend 340 grün** (`vorhang.test.ts` jetzt 20 Tests: Farbe + gerechnete Schriftfarbe, kaputte Farbe bricht nicht ab, Logo-Grössen, Haltezeiten, EINMAL pro Laden).
+- **Offen, bewusst nicht geraten:** eigenes Vorhang-BILD (Upload) — bräuchte neue `AssetKind`, Upload, Zuschnitt, Löschen, Cache-Busting.
+
 **Offen / nächste Schritte:**
 1. Vor echtem Einsatz: Passwörter ändern, H2-Konsole + Swagger sperren, HTTPS, `public-base-url` setzen.
 2. Später: PostgreSQL + Flyway (statt `ddl-auto: update`), echten Bondrucker testen (`printer.mode: network` + IP), evtl. Bezahlung.

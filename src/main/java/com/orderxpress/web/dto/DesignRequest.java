@@ -53,7 +53,15 @@ public record DesignRequest(
         @Pattern(regexp = "REITER|HAMBURGER|KAPITEL",
                 message = "Kategorien-Navigation muss REITER, HAMBURGER oder KAPITEL sein.") String categoryStyle,
         @Pattern(regexp = "DEZENT|NORMAL|VERSPIELT",
-                message = "Bewegungsstaerke muss DEZENT, NORMAL oder VERSPIELT sein.") String motionLevel) {
+                message = "Bewegungsstaerke muss DEZENT, NORMAL oder VERSPIELT sein.") String motionLevel,
+        @Pattern(regexp = "#[0-9a-fA-F]{6}",
+                message = "Vorhang-Farbe muss ein Hex-Wert wie #7a1f2b sein.") String introColor,
+        @Pattern(regexp = "OHNE|KLEIN|GROSS",
+                message = "Logo auf dem Vorhang muss OHNE, KLEIN oder GROSS sein.") String introLogo,
+        @Pattern(regexp = "OHNE|KURZ|NORMAL|LANG",
+                message = "Haltezeit muss OHNE, KURZ, NORMAL oder LANG sein.") String introHold,
+        @Pattern(regexp = "IMMER|EINMAL",
+                message = "Wiederholung muss IMMER oder EINMAL sein.") String introRepeat) {
 
     public boolean hamburgerOrDefault() {
         return categoriesAsHamburger != null && categoriesAsHamburger;
@@ -129,5 +137,17 @@ public record DesignRequest(
 
     public String motionLevelOrDefault() {
         return orDefault(motionLevel, "NORMAL");
+    }
+
+    public String introLogoOrDefault() {
+        return orDefault(introLogo, "KLEIN");
+    }
+
+    public String introHoldOrDefault() {
+        return orDefault(introHold, "NORMAL");
+    }
+
+    public String introRepeatOrDefault() {
+        return orDefault(introRepeat, "IMMER");
     }
 }

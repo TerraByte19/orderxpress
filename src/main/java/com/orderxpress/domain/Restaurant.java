@@ -162,6 +162,32 @@ public class Restaurant {
     @Column(name = "category_style", length = 20)
     private String categoryStyle;
 
+    /** Eigene Farbe des Vorhangs als Hex. null/leer = die Akzentfarbe des
+     *  Ladens (bisheriges Verhalten). Eigenes Feld, weil der Akzent eine
+     *  KNOPF-Farbe ist: kleine Flaeche, hohe Saettigung. Bildschirmfuellend
+     *  ist derselbe Ton oft zu hart - ein dunkelroter Vorhang zu orangen
+     *  Knoepfen ist eine ganz normale Kombination. */
+    @Column(name = "intro_color", length = 20)
+    private String introColor;
+
+    /** Logo auf dem Vorhang: OHNE | KLEIN | GROSS. Gemeint ist immer das
+     *  bestehende Design-Logo, kein zweiter Upload-Platz. null/leer = KLEIN
+     *  (bisheriges Verhalten: Logo erscheint, wenn eins hinterlegt ist). */
+    @Column(name = "intro_logo", length = 20)
+    private String introLogo;
+
+    /** Wie lange der Vorhang mit Logo/Text anhaelt, bevor er aufgeht:
+     *  OHNE | KURZ | NORMAL | LANG. null/leer = NORMAL (2 s, bisheriges
+     *  Verhalten). Ohne Logo UND ohne Text gibt es nichts zu lesen, dann
+     *  laeuft der Vorhang unabhaengig davon durch. */
+    @Column(name = "intro_hold", length = 20)
+    private String introHold;
+
+    /** IMMER = bei jedem Seitenaufruf, EINMAL = nur beim ersten Mal auf
+     *  diesem Geraet. null/leer = IMMER (Entscheidung vom 19.09.2026). */
+    @Column(name = "intro_repeat", length = 20)
+    private String introRepeat;
+
     /** Staerke aller Bewegungen: DEZENT | NORMAL | VERSPIELT. Skaliert im
      *  Frontend die Dauern und schaltet die verspielten Zugaben zu.
      *  prefers-reduced-motion schlaegt das weiterhin immer. null/leer = NORMAL. */
@@ -451,5 +477,41 @@ public class Restaurant {
 
     public void setMotionLevel(String v) {
         this.motionLevel = v;
+    }
+
+    // ---------- Vorhang: Feinheiten ----------
+
+    /** null statt "" - leer bedeutet hier "keine eigene Farbe, nimm den
+     *  Akzent", nicht "Standardwert" (gleiche Regel wie bei introText). */
+    public String getIntroColor() {
+        return (introColor == null || introColor.isBlank()) ? null : introColor;
+    }
+
+    public void setIntroColor(String v) {
+        this.introColor = v;
+    }
+
+    public String getIntroLogo() {
+        return orDefault(introLogo, "KLEIN");
+    }
+
+    public void setIntroLogo(String v) {
+        this.introLogo = v;
+    }
+
+    public String getIntroHold() {
+        return orDefault(introHold, "NORMAL");
+    }
+
+    public void setIntroHold(String v) {
+        this.introHold = v;
+    }
+
+    public String getIntroRepeat() {
+        return orDefault(introRepeat, "IMMER");
+    }
+
+    public void setIntroRepeat(String v) {
+        this.introRepeat = v;
     }
 }

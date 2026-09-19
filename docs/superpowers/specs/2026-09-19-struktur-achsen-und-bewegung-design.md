@@ -119,3 +119,55 @@ Sechs nullable Spalten an `restaurants`. **Kein Reset nötig** – geprüft: die
 laufende H2-Datei wurde von `ddl-auto: update` ohne Fehler erweitert, und ein
 Laden ohne gespeicherte Achsen liefert über die Getter weiterhin genau seine
 bisherige Optik.
+
+---
+
+## Nachtrag: der Vorhang als eigene kleine Designfläche
+
+Zwei Wünsche nacheinander: erst „der Vorhang soll bei jedem Laden passieren"
+(→ bei jedem Seitenaufruf, Merker raus), dann „Logo drauf, Farbe bestimmen,
+mehr bearbeiten können".
+
+### Die grösste Lücke war keine Einstellung
+
+Die Live-Vorschau spielte den Vorhang **gar nicht** (`starteVorschau` ruft
+`zeigeVorhang` nie). Der Inhaber stellte Stil, Tempo und Text ein und sah das
+Ergebnis erst nach Speichern und Scannen eines QR-Codes. Jede weitere
+Einstellung hätte dieses Problem vergrössert. Deshalb zuerst ein Knopf
+„Vorhang zeigen", der ihn mit dem **noch nicht gespeicherten** Stand in der
+Vorschau abspielt (`ox-vorschau-vorhang` über denselben postMessage-Kanal wie
+die Design-Werte). `introRepeat` wird dabei bewusst auf IMMER überschrieben —
+ein Vorschau-Knopf, der beim zweiten Druck nichts mehr tut, wäre kaputt.
+
+### Vier Einstellungen, und warum genau diese
+
+- **`introColor`** — eigene Vorhangfarbe, leer = Akzent. Der Akzent ist eine
+  **Knopf**farbe: kleine Fläche, hohe Sättigung. Bildschirmfüllend ist
+  derselbe Ton oft zu hart; dunkelroter Vorhang zu orangen Knöpfen ist eine
+  normale Kombination und war vorher unmöglich. Die Falten sind ein
+  halbdurchsichtiges SVG über der Grundfarbe und färben sich automatisch mit.
+  Die Schriftfarbe wird gegen die **Vorhang**farbe neu gerechnet
+  (`textfarbeAuf`), nicht von `--ox-accent-text` geerbt — sonst stünde auf
+  einem dunklen Vorhang der schwarze Kontrastwert einer hellen Akzentfarbe.
+- **`introLogo`** OHNE|KLEIN|GROSS — das Logo lag schon immer auf dem Vorhang,
+  fest bei 64 px. Ohne Text wirkt das auf einem ganzen Bildschirm verloren;
+  mit Text will man es vielleicht gar nicht. KLEIN = bisheriges Verhalten.
+- **`introHold`** OHNE|KURZ|NORMAL|LANG — die Lesezeit war fest 2 s. Seit der
+  Vorhang bei **jedem** Aufruf spielt, ist das spürbar: `.ox-vorhang` hat kein
+  `pointer-events: none`, blockiert also Tipper. Jetzt eine Entscheidung des
+  Ladens statt einer Zahl im Code.
+- **`introRepeat`** IMMER|EINMAL — löst die Spannung ehrlich auf. Standard
+  bleibt IMMER. Gemerkt wird pro **Laden**, nicht pro Gast: wer neu scannt,
+  bekommt einen neuen guestToken und sähe den Vorhang sonst trotz EINMAL
+  wieder. Ohne Laden-Id spielt er lieber jedes Mal als nie.
+
+### Bewusst nicht gebaut
+
+- **Verlauf auf dem Vorhang** — die Falten geben schon Tiefe, ein Verlauf
+  darüber wäre Dekoration auf Dekoration.
+- **Eigene Schrift/Grösse für den Vorhangtext** — folgt bereits der
+  Ladenschrift, und das ist richtig so.
+- **Mehr Vorhang-Stile** — vier reichen; es fehlte die Farbe, nicht die Form.
+- **Eigenes Vorhang-Bild (Upload)** — braucht neue `AssetKind`, Upload,
+  Zuschnitt, Löschen und Cache-Busting, und konkurriert gestalterisch mit
+  Falten und Farbe. Offen, bewusst nicht geraten.

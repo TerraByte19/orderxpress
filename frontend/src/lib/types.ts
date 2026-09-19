@@ -73,6 +73,12 @@ export interface LadenTheme {
     controlStyle: string;    // FLACH | RAHMEN | ERHOBEN
     categoryStyle: string;   // REITER | HAMBURGER | KAPITEL
     motionLevel: string;     // DEZENT | NORMAL | VERSPIELT
+    /* Vorhang-Feinheiten. introColor ist als EINZIGES Feld hier nullable:
+       leer heisst "keine eigene Farbe, nimm den Akzent" (siehe Restaurant). */
+    introColor: string | null;
+    introLogo: string;       // OHNE | KLEIN | GROSS
+    introHold: string;       // OHNE | KURZ | NORMAL | LANG
+    introRepeat: string;     // IMMER | EINMAL
 }
 
 /** OrderResponse.OrderLineDto */

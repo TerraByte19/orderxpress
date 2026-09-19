@@ -114,6 +114,64 @@ class StructureAxesIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.categoriesAsHamburger").value(true));
     }
 
+    /* ---------- Vorhang: Farbe, Logo, Haltezeit, Wiederholung ---------- */
+
+    @Test
+    void vorhangFeinheitenHabenStandardwerteUndLassenSichSetzen() throws Exception {
+        Owner o = createRestaurant("vorhang-achsen");
+
+        mvc.perform(get("/api/guest/theme/" + o.restaurantId()))
+                .andExpect(status().isOk())
+                // introColor hat bewusst KEINEN Standardwert - leer heisst
+                // "keine eigene Farbe, nimm den Akzent" (wie introText).
+                .andExpect(jsonPath("$.introColor").doesNotExist())
+                .andExpect(jsonPath("$.introLogo").value("KLEIN"))
+                .andExpect(jsonPath("$.introHold").value("NORMAL"))
+                .andExpect(jsonPath("$.introRepeat").value("IMMER"));
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introColor\":\"#7a1f2b\",\"introLogo\":\"GROSS\","
+                                + "\"introHold\":\"LANG\",\"introRepeat\":\"EINMAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.introColor").value("#7a1f2b"))
+                .andExpect(jsonPath("$.introLogo").value("GROSS"))
+                .andExpect(jsonPath("$.introHold").value("LANG"))
+                .andExpect(jsonPath("$.introRepeat").value("EINMAL"));
+    }
+
+    @Test
+    void eigeneVorhangfarbeLaesstSichWiederEntfernen() throws Exception {
+        Owner o = createRestaurant("vorhang-farbe-weg");
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introColor\":\"#7a1f2b\"}"))
+                .andExpect(jsonPath("$.introColor").value("#7a1f2b"));
+
+        // Schalter im Admin wieder aus -> null, nicht Leerstring.
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.introColor").doesNotExist());
+    }
+
+    @Test
+    void ungueltigeVorhangwerteWerdenAbgelehnt() throws Exception {
+        Owner o = createRestaurant("vorhang-ungueltig");
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introColor\":\"dunkelrot\"}"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(put("/api/admin/design").with(as(o))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + FARBEN + ",\"introHold\":\"EWIG\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void alterClientOhneAchsenSetztDieUebrigenAufIhrenStandard() throws Exception {
         Owner o = createRestaurant("achsen-alterclient2");

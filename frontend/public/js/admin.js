@@ -569,32 +569,40 @@ const Admin = {
     VORLAGEN: {
         bistro:  { accentColor: "#b3502e", backgroundColor: "#f7f4ef", darkMode: false,
                    styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "VORHANG",
-                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL" },
+                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL",
+                   introLogo: "KLEIN", introHold: "NORMAL" },
         kasse:   { accentColor: "#1f3d34", backgroundColor: "#f6f6f4", darkMode: false,
                    styleShape: "SQUARE", displayFont: "BRICOLAGE",     cartFlyStyle: "PLUS",  orderConfirmStyle: "STAMP", introStyle: "HOCHKLAPPEN",
-                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "FLACH",   motionLevel: "DEZENT" },
+                   menuLayout: "LISTE",   heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "FLACH",   motionLevel: "DEZENT",
+                   introLogo: "OHNE",  introHold: "OHNE" },
         nacht:   { accentColor: "#c9a227", backgroundColor: "#15181a", darkMode: true,
                    styleShape: "SQUARE", displayFont: "SPACE_GROTESK", cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "FADE",
-                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "RAHMEN",  motionLevel: "NORMAL" },
+                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "RAHMEN",  motionLevel: "NORMAL",
+                   introLogo: "KLEIN", introHold: "NORMAL" },
         frisch:  { accentColor: "#0f9d8f", backgroundColor: "#ffffff", darkMode: false,
                    styleShape: "SOFT",   displayFont: "MANROPE",       cartFlyStyle: "PHOTO", orderConfirmStyle: "CHECK", introStyle: "MITTE",
-                   menuLayout: "KACHELN", heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "ERHOBEN", motionLevel: "VERSPIELT" },
+                   menuLayout: "KACHELN", heroStyle: "BAND",     categoryStyle: "REITER",  textureStyle: "KEIN",     controlStyle: "ERHOBEN", motionLevel: "VERSPIELT",
+                   introLogo: "KLEIN", introHold: "KURZ" },
         klassik: { accentColor: "#1a1a1a", backgroundColor: "#faf9f6", darkMode: false,
                    styleShape: "SQUARE", displayFont: "DM_SERIF",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN",
-                   menuLayout: "LISTE",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "RAHMEN",  motionLevel: "DEZENT" },
+                   menuLayout: "LISTE",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "RAHMEN",  motionLevel: "DEZENT",
+                   introLogo: "KLEIN", introHold: "NORMAL" },
         /* Bar: Getraenkekarte ohne Bildmaterial - genau der Fall, fuer den
            TAFEL gedacht ist. Dunkel, ruhig, die Schrift traegt alles. */
         bar:     { accentColor: "#c0873c", backgroundColor: "#141210", darkMode: true,
                    styleShape: "SQUARE", displayFont: "INSTRUMENT_SERIF", cartFlyStyle: "PLUS", orderConfirmStyle: "CHECK", introStyle: "FADE",
-                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "LINIEN",   controlStyle: "RAHMEN",  motionLevel: "DEZENT" },
+                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "LINIEN",   controlStyle: "RAHMEN",  motionLevel: "DEZENT",
+                   introLogo: "GROSS", introHold: "LANG" },
         /* Imbiss: das Foto verkauft, und es darf sich etwas bewegen. */
         imbiss:  { accentColor: "#e2571f", backgroundColor: "#fffaf3", darkMode: false,
                    styleShape: "SOFT",   displayFont: "SORA",          cartFlyStyle: "PHOTO", orderConfirmStyle: "STAMP", introStyle: "MITTE",
-                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "TERRAZZO", controlStyle: "ERHOBEN", motionLevel: "VERSPIELT" },
+                   menuLayout: "KACHELN", heroStyle: "VOLL",     categoryStyle: "REITER",  textureStyle: "TERRAZZO", controlStyle: "ERHOBEN", motionLevel: "VERSPIELT",
+                   introLogo: "OHNE",  introHold: "KURZ" },
         /* Atelier: Cafe oder Baeckerei - hell, viel Luft, Schrift vorn. */
         atelier: { accentColor: "#5a6650", backgroundColor: "#f2f0eb", darkMode: false,
                    styleShape: "SOFT",   displayFont: "FRAUNCES",      cartFlyStyle: "PLUS",  orderConfirmStyle: "CHECK", introStyle: "HOCHKLAPPEN",
-                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL" }
+                   menuLayout: "TAFEL",   heroStyle: "SCHLICHT", categoryStyle: "KAPITEL", textureStyle: "PAPIER",   controlStyle: "FLACH",   motionLevel: "NORMAL",
+                   introLogo: "GROSS", introHold: "NORMAL" }
     },
 
     applyVorlage(name) {
@@ -619,6 +627,14 @@ const Admin = {
         // vorher von Hand gesetzten Verlauf stehen zu lassen.
         document.getElementById("design-bg-gradient").checked = false;
         document.getElementById("design-intro-speed").value = "NORMAL";
+        // Der Vorhang gehoert zum Gesamtbild einer Vorlage. Keine Vorlage
+        // bringt bisher eine eigene Vorhangfarbe mit - also zuruecksetzen,
+        // statt eine von Hand gesetzte stehen zu lassen (gleiche Regel wie
+        // beim Hintergrund-Verlauf darueber).
+        document.getElementById("design-intro-logo").value = v.introLogo || "KLEIN";
+        document.getElementById("design-intro-hold").value = v.introHold || "NORMAL";
+        document.getElementById("design-intro-repeat").value = "IMMER";
+        document.getElementById("design-intro-eigene-farbe").checked = false;
         this.sendeVorschau();
         OX.toast("Vorlage '" + name + "' uebernommen - jetzt speichern");
     },
@@ -648,6 +664,14 @@ const Admin = {
             document.getElementById("design-intro").value = t.introStyle || "HOCHKLAPPEN";
             document.getElementById("design-intro-speed").value = t.introSpeed || "NORMAL";
             document.getElementById("design-intro-text").value = t.introText || "";
+            document.getElementById("design-intro-logo").value = t.introLogo || "KLEIN";
+            document.getElementById("design-intro-hold").value = t.introHold || "NORMAL";
+            document.getElementById("design-intro-repeat").value = t.introRepeat || "IMMER";
+            // Leer heisst "keine eigene Farbe" - der Waehler zeigt dann die
+            // Akzentfarbe als Ausgangspunkt, bleibt aber abgeschaltet.
+            document.getElementById("design-intro-eigene-farbe").checked = !!t.introColor;
+            document.getElementById("design-intro-color").value =
+                t.introColor || t.accentColor || "#7a1f2b";
             document.getElementById("design-instagram").value = t.instagramUrl || "";
             document.getElementById("design-facebook").value = t.facebookUrl || "";
             document.getElementById("design-website").value = t.websiteUrl || "";
@@ -749,6 +773,21 @@ const Admin = {
         } catch (e) { /* iframe noch nicht bereit */ }
     },
 
+    /* Spielt den Vorhang in der Vorschau ab - mit dem aktuellen, noch NICHT
+       gespeicherten Stand. Erst den Formularstand hinueberschieben, dann das
+       Abspielen anstossen: beide Nachrichten gehen in dieser Reihenfolge an
+       dasselbe Fenster, die Vorschau hat den neuen Stand also sicher, bevor
+       sie zeichnet. */
+    vorschauVorhang() {
+        if (!this.vorschauBereit) { OX.toast("Vorschau ist noch nicht bereit", true); return; }
+        const frame = document.getElementById("design-vorschau-frame");
+        if (!frame || !frame.contentWindow) return;
+        this.sendeVorschau();
+        try {
+            frame.contentWindow.postMessage({ typ: "ox-vorschau-vorhang" }, window.location.origin);
+        } catch (e) { /* iframe noch nicht bereit */ }
+    },
+
     vorschauNeuLaden() {
         const frame = document.getElementById("design-vorschau-frame");
         if (!frame || !frame.src) return;
@@ -780,6 +819,10 @@ const Admin = {
             introStyle: wert("design-intro"),
             introText: text("design-intro-text"),
             introSpeed: wert("design-intro-speed"),
+            introLogo: wert("design-intro-logo"),
+            introHold: wert("design-intro-hold"),
+            introRepeat: wert("design-intro-repeat"),
+            introColor: an("design-intro-eigene-farbe") ? wert("design-intro-color") : null,
             instagramUrl: text("design-instagram"),
             facebookUrl: text("design-facebook"),
             websiteUrl: text("design-website"),
