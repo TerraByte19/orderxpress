@@ -187,6 +187,14 @@ Bezeichner Englisch, Kommentare/Fehlermeldungen Deutsch (ASCII-Umschreibung ue/o
 - **Am Gerät geprüft** (Chromium, 420 px): alle drei Karten-Aufbauten, alle drei Köpfe, alle vier Texturen, hell und dunkel, Detail-Blatt, Warenkorb-Leiste, Fortschritts-Schiene, Platzhalter, Admin-Werkstatt.
 - **Begründungen, Verworfenes und die Fallen:** `docs/superpowers/specs/2026-09-19-struktur-achsen-und-bewegung-design.md`.
 
+**Neu (19.09.2026, Teil 2): Vorhang spielt bei JEDEM Seitenaufruf.**
+- **Verhaltensänderung auf Wunsch.** Vorher lief der Vorhang nur EINMAL pro Gast; `vorhang.ts` merkte sich das über `localStorage["ox-intro-<guestToken>"]` (gleiches Muster wie `ox-named-…`). Wer die Seite am Tisch neu lud, bekam den Auftakt nie wieder zu sehen – genau das sollte er aber.
+- **Merker ersatzlos entfernt**, damit auch der `guestToken`-Parameter von `zeigeVorhang(theme)`. Aufruf in `index.ts` angepasst.
+- **Wie oft ist „jeder Seitenaufruf" wirklich?** Die Gäste-Seite wechselt ihre Ansichten OHNE Seitenwechsel (`zeigeAnsicht` blendet nur um). Speisekarte → Warenkorb → Bestellungen löst also KEINEN Vorhang aus; nur ein echtes Neuladen im Browser tut es. `ladeThemeUndSpeisekarte()` (der einzige Aufrufer) läuft genau einmal pro Laden.
+- **Achtung bei gesetztem `introText`/Logo:** dann hält der Vorhang zusätzlich `HALT_MIT_MARKE_MS` = 2000 ms an, und das jetzt bei jedem Neuladen. `.ox-vorhang` hat kein `pointer-events: none`, blockiert in dieser Zeit also Tipper. Bewusst so gelassen (der Halt war nicht Teil des Auftrags) – wenn es stört, ist die Stelle `haltMs` in `vorhang.ts`.
+- **Neue `vorhang.test.ts` (6 Tests):** spielt bei jedem Aufruf, legt nichts im localStorage ab, räumt sich selbst ab, hält mit Willkommenstext, fällt bei unbekanntem Stil auf HOCHKLAPPEN zurück, setzt die Tempo-Variable. Der erste Test steht da bewusst gegen ein späteres „wir merken uns das doch besser". **Frontend 326 grün.**
+- **Altlast:** vorhandene `ox-intro-*`-Einträge bleiben in den Browsern der Gäste liegen. Werden von nichts mehr gelesen, daher kein Aufräum-Code.
+
 **Offen / nächste Schritte:**
 1. Vor echtem Einsatz: Passwörter ändern, H2-Konsole + Swagger sperren, HTTPS, `public-base-url` setzen.
 2. Später: PostgreSQL + Flyway (statt `ddl-auto: update`), echten Bondrucker testen (`printer.mode: network` + IP), evtl. Bezahlung.

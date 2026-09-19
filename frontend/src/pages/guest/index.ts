@@ -317,10 +317,10 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
         // Rueckfall wie zuvor in wendeThemeAn: nur uebernehmen, wenn die
         // Statusabfrage noch keinen restaurantName geliefert hat (siehe laden-design.ts, Dateikopf).
         if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;
-        // Spielt nur einmal pro Gast (localStorage-Flag in vorhang.ts) - bei
-        // spaeteren Aufrufen von ladeThemeUndSpeisekarte (gibt es hier nicht,
-        // aber zur Sicherheit) waere das ein no-op.
-        zeigeVorhang(themeErgebnis.value, guestToken);
+        // Spielt bei jedem Seitenaufruf (siehe vorhang.ts, Dateikopf).
+        // Diese Funktion laeuft genau einmal pro Laden der Seite - die
+        // spaeteren Ansichtswechsel gehen ohne Seitenwechsel.
+        zeigeVorhang(themeErgebnis.value);
     }
     void zeigeGalerie(restaurantId);
     const hamburgerModus = themeErgebnis.status === "fulfilled" && themeErgebnis.value.categoriesAsHamburger;

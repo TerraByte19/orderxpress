@@ -1,8 +1,18 @@
-/* Vorhang-Animation beim ersten Oeffnen der Speisekarte (Design-Achse
- * introStyle: HOCHKLAPPEN | FADE | MITTE | VORHANG, siehe Restaurant/
- * DesignRequest). Spielt nur EINMAL pro Gast - localStorage-Flag, gleiches
- * Muster wie ox-named-<guestToken> in session.ts - nicht bei jedem Neuladen
- * derselben Person. Respektiert bewegungAus() wie der Rest der Bewegungen.
+/* Vorhang-Animation beim Oeffnen der Speisekarte (Design-Achse introStyle:
+ * HOCHKLAPPEN | FADE | MITTE | VORHANG, siehe Restaurant/DesignRequest).
+ *
+ * Spielt bei JEDEM Seitenaufruf (Entscheidung vom 19.09.2026). Vorher lief er
+ * nur einmal pro Gast, gemerkt ueber ein localStorage-Flag - der Auftakt war
+ * damit fuer den Gast, der die Seite am Tisch noch einmal oeffnet, weg. Der
+ * Merker ist ersatzlos entfallen, deshalb braucht die Funktion auch keinen
+ * guestToken mehr.
+ *
+ * Wichtig fuer das Verstaendnis, wie oft das wirklich ist: die Gaeste-Seite
+ * wechselt ihre Ansichten OHNE Seitenwechsel (zeigeAnsicht in index.ts blendet
+ * nur um). Der Weg Speisekarte -> Warenkorb -> Bestellungen loest also keinen
+ * Vorhang aus; nur ein echtes Neuladen im Browser tut es.
+ *
+ * Respektiert bewegungAus() wie der Rest der Bewegungen.
  *
  * Optional: Logo (theme.logoUrl, kein neuer Upload-Platz - das bestehende
  * Design-Logo wird wiederverwendet) + kurzer Text (theme.introText) blenden
@@ -17,7 +27,6 @@
 
 import { bewegungAus } from "./animation";
 
-const SCHLUESSEL_PREFIX = "ox-intro-";
 /** Lesezeit fuer Logo/Willkommenstext - bewusst FEST (nicht von introSpeed
  *  skaliert): Tempo betrifft nur die Vorhang-Bewegung, die Lesezeit eines
  *  Menschen ist keine Stiloption. 2s reichen fuer einen kurzen Satz. */
@@ -48,25 +57,9 @@ export interface VorhangTheme {
     introSpeed?: string | null;
 }
 
-function schonGezeigt(guestToken: string): boolean {
-    try {
-        return localStorage.getItem(SCHLUESSEL_PREFIX + guestToken) === "1";
-    } catch {
-        return true; // privater Modus o.ae. - lieber nicht jedes Mal zeigen
-    }
-}
-
-function merkeGezeigt(guestToken: string): void {
-    try {
-        localStorage.setItem(SCHLUESSEL_PREFIX + guestToken, "1");
-    } catch { /* privater Modus */ }
-}
-
 /** Baut den Vorhang, haengt ihn an document.body und entfernt ihn nach der
  *  Animation wieder selbst - der Aufrufer muss sich um nichts kuemmern. */
-export function zeigeVorhang(theme: VorhangTheme, guestToken: string): void {
-    if (!guestToken || schonGezeigt(guestToken)) return;
-    merkeGezeigt(guestToken);
+export function zeigeVorhang(theme: VorhangTheme): void {
     if (bewegungAus()) return;
 
     const stilSicher = GUELTIGE_STILE.has(theme.introStyle) ? theme.introStyle : "HOCHKLAPPEN";
