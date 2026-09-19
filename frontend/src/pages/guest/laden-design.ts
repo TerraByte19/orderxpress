@@ -22,6 +22,50 @@ export function ladeTheme(restaurantId: number): Promise<LadenTheme> {
     return api<LadenTheme>(`/api/guest/theme/${restaurantId}`);
 }
 
+/* ---------- Design des letzten Besuchs merken ----------
+ * Das Theme kommt erst nach zwei Runden uebers Netz (scannen -> restaurantId
+ * -> Theme). Bis dahin malte die Seite mit den Standardwerten aus tokens.css,
+ * also dunkelgruen - der Gast sah kurz eine fremde Farbe, bevor sein Laden
+ * erschien.
+ *
+ * Hier wird nach dem Anwenden der FERTIGE Zustand von <html> weggeschrieben
+ * (Inline-Variablen + data-Attribute). Ein winziges Skript im Kopf von
+ * guest.html liest ihn beim naechsten Besuch und setzt ihn, BEVOR der Browser
+ * das erste Mal malt - dieses Modul hier wird dafuer gar nicht erst geladen.
+ *
+ * Bewusst der fertige Zustand und nicht das Theme: sonst muesste das Skript
+ * im Kopf die Kontrast-Rechnung aus theme.ts ein zweites Mal enthalten, und
+ * zwei Fassungen davon laufen sofort auseinander.
+ *
+ * Aendert der Laden sein Design, sieht ein wiederkehrender Gast fuer den
+ * Bruchteil einer Sekunde das alte - danach ueberschreibt der echte Abruf es.
+ * Das ist die bessere Seite des Tauschs. */
+
+const DESIGN_SCHLUESSEL = "ox-design-";
+
+/** Dieselben Attribute, die setzeLadenDesign() auf <html> setzt. */
+const GEMERKTE_ATTRIBUTE = [
+    "data-theme", "data-shape", "data-font",
+    "data-layout", "data-hero", "data-textur", "data-control",
+    "data-kategorie", "data-motion"
+];
+
+export function merkeDesignStand(qrToken: string): void {
+    if (!qrToken) return;
+    const wurzel = document.documentElement;
+    const attribute: Record<string, string> = {};
+    for (const name of GEMERKTE_ATTRIBUTE) {
+        const wert = wurzel.getAttribute(name);
+        if (wert !== null) attribute[name] = wert;
+    }
+    try {
+        localStorage.setItem(DESIGN_SCHLUESSEL + qrToken, JSON.stringify({
+            stil: wurzel.getAttribute("style") || "",
+            attr: attribute
+        }));
+    } catch { /* privater Modus - dann eben ohne Gedaechtnis */ }
+}
+
 /** titelZusatz: menu-editor.ts nutzt dieselbe Funktion fuer die
  *  Hero-Pixelparitaet (siehe dessen index.ts), braucht als Editor-Werkzeug
  *  aber "Speisekarte" statt "Bestellen" im Tab-Titel - sonst klingt es wie

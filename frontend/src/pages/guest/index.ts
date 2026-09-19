@@ -56,7 +56,7 @@ import type { WarenkorbZeile } from "./cart";
 import { holeMeineBestellungen, zeichneBestellungen } from "./orders";
 import { holeRechnung, zeichneRechnung } from "./bill";
 import type { Auswahl } from "./bill";
-import { ladeTheme, leseModi, leseStruktur, wendeThemeAn, zeigeGalerie } from "./laden-design";
+import { ladeTheme, leseModi, leseStruktur, merkeDesignStand, wendeThemeAn, zeigeGalerie } from "./laden-design";
 import { istVorschau, starteVorschau } from "./vorschau";
 import { zeigeVorhang } from "./vorhang";
 import type { VorhangTheme } from "./vorhang";
@@ -323,6 +323,9 @@ async function ladeThemeUndSpeisekarte(): Promise<void> {
 
     if (themeErgebnis.status === "fulfilled") {
         wendeThemeAn(themeErgebnis.value);
+        // Fuer den naechsten Besuch wegschreiben - das Skript im Kopf von
+        // guest.html setzt es dann vor dem ersten Malen (siehe laden-design.ts).
+        merkeDesignStand(qrToken);
         // Rueckfall wie zuvor in wendeThemeAn: nur uebernehmen, wenn die
         // Statusabfrage noch keinen restaurantName geliefert hat (siehe laden-design.ts, Dateikopf).
         if (themeErgebnis.value.name && !restaurantName) restaurantName = themeErgebnis.value.name;

@@ -11,6 +11,46 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="OrderXpress">
+    <!-- Laden-Design aus dem letzten Besuch SOFORT setzen.
+         Bewusst ein blockierendes Skript im Kopf: es laeuft vor dem ersten
+         Malen. Das Modul der Seite (type="module") ist zurueckgestellt und
+         muss erst geladen werden - bis dahin malte der Browser mit den
+         Standardwerten aus tokens.css, also dunkelgruen. Der Gast sah kurz
+         eine fremde Farbe, bevor sein Laden erschien.
+
+         Hier wird nur ein fertiger Zustand zurueckgespielt, den
+         laden-design.ts nach dem letzten erfolgreichen Abruf weggeschrieben
+         hat (merkeDesignStand) - hier steht bewusst KEINE Farb-Rechnung, die
+         sonst neben der aus theme.ts stuende und auseinanderliefe.
+
+         Beim allerersten Besuch gibt es nichts zu setzen; dort bleibt die
+         kurze Standard-Phase. Ganz weg bekaeme man sie nur, indem der Server
+         das Design in die Seite schreibt (siehe /t/{qrToken} im PageController). -->
+    <script>
+        (function () {
+            try {
+                var pfad = window.location.pathname;
+                var token = pfad.indexOf("/t/") === 0
+                    ? decodeURIComponent(pfad.split("/")[2] || "")
+                    : (new URLSearchParams(window.location.search).get("t") || "");
+                if (!token) return;
+                var roh = window.localStorage.getItem("ox-design-" + token);
+                if (!roh) return;
+                var stand = JSON.parse(roh);
+                var wurzel = document.documentElement;
+                if (stand.stil) wurzel.setAttribute("style", stand.stil);
+                for (var name in stand.attr) {
+                    if (Object.prototype.hasOwnProperty.call(stand.attr, name)) {
+                        wurzel.setAttribute(name, stand.attr[name]);
+                    }
+                }
+            } catch (e) {
+                /* Privater Modus, kaputter Eintrag: dann kommt das Design
+                   eben eine Spur spaeter - kein Grund, die Seite aufzuhalten. */
+            }
+        })();
+    </script>
+
     <!-- Bewusst OHNE <link rel="manifest">: Gaeste sollen die App nicht
          installieren, sie scannen den QR-Code und bestellen im Browser.
          Aus demselben Grund ruft diese Seite auch registriereServiceWorker()
