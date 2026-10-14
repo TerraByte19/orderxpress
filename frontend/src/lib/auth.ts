@@ -58,6 +58,9 @@ export function loescheAnmeldung(): void {
     try {
         localStorage.removeItem(SCHLUESSEL_AUTH);
         localStorage.removeItem(SCHLUESSEL_GERAET);
+        // Gemerktes Laden-Design der Personal-Ansichten (api.js/design-stand.js)
+        // gehoert zum abgemeldeten Laden.
+        localStorage.removeItem("ox-personal-design");
     } catch { /* privater Modus */ }
     meldeWechsel();
 }

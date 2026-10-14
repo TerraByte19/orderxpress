@@ -165,7 +165,13 @@ const OX = {
         try { return localStorage.getItem("ox-auth"); } catch (e) { return null; }
     },
     clearAuth() {
-        try { localStorage.removeItem("ox-auth"); localStorage.removeItem("ox-device"); } catch (e) { /* ignore */ }
+        try {
+            localStorage.removeItem("ox-auth");
+            localStorage.removeItem("ox-device");
+            // Design gehoert zum Laden des Abgemeldeten - der naechste Login
+            // kann ein anderer Laden sein.
+            localStorage.removeItem("ox-personal-design");
+        } catch (e) { /* ignore */ }
         this._me = null;
     },
     hasAuth() { return !!(this.basicAuth() || this.deviceToken()); },
@@ -262,6 +268,17 @@ const OX = {
         wurzel.style.setProperty("--font-display", '"' + this._fontFamilie[fontKey] + '", Georgia, serif');
         if (theme.darkMode) wurzel.setAttribute("data-theme", "dark");
         else wurzel.removeAttribute("data-theme");
+
+        // Fertigen Zustand fuer den naechsten Seitenaufruf merken - js/design-stand.js
+        // setzt ihn dort vor dem ersten Malen (sonst blitzt kurz app.css-Gruen auf).
+        const segment = this._fontGoogleSegment[fontKey];
+        try {
+            localStorage.setItem("ox-personal-design", JSON.stringify({
+                stil: wurzel.style.cssText,
+                dunkel: !!theme.darkMode,
+                fontHref: segment ? "https://fonts.googleapis.com/css2?family=" + segment + "&display=swap" : null
+            }));
+        } catch (e) { /* ignore */ }
     },
 
     /* Baut oben eine Leiste zum Umschalten zwischen den Ansichten.
