@@ -9,9 +9,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Einmalige Reparatur einer Alt-Spalte: {@code restaurant_assets.kind}.
+ * Einmalige Reparatur von Alt-Spalten: alle noch nativen ENUM-Spalten werden
+ * zu VARCHAR. Zuerst nur fuer {@code restaurant_assets.kind} gebaut; am
+ * 12.10.2026 zeigte sich, dass {@code staff_devices.role} dieselbe Falle hat
+ * ({@code ENUM('KITCHEN','OWNER','SERVICE')} ohne WAITER - Kellner-Geraete
+ * liessen sich auf der gewachsenen Datenbank nicht anlegen). Deshalb jetzt
+ * generisch ueber alle Spalten statt einer festen Liste.
  *
  * <h3>Was passiert ist</h3>
  * Hibernate 7 bildet Java-Enums auf den NATIVEN Enum-Typ der Datenbank ab,
@@ -28,8 +34,8 @@ import java.util.List;
  * erzeugte Datenbank, in der der Enum-Typ bereits alle drei Werte kennt.
  *
  * <h3>Was diese Klasse tut</h3>
- * Sie macht aus der Enum-Spalte eine schlichte Zeichenkette. Danach kostet
- * ein weiterer Bild-Typ wieder gar nichts. Neue Datenbanken bekommen von
+ * Sie macht aus jeder Enum-Spalte eine schlichte Zeichenkette. Danach kostet
+ * ein weiterer Enum-Wert wieder gar nichts. Neue Datenbanken bekommen von
  * vornherein {@code VARCHAR} (siehe {@code hibernate.type.preferred_enum_jdbc_type}
  * in der application.yml), diese Klasse ist also nur fuer bestehende Staende
  * da und laeuft dort genau einmal wirksam.
@@ -37,7 +43,7 @@ import java.util.List;
  * <h3>Warum von Hand und nicht mit Flyway</h3>
  * Das Projekt hat (noch) kein Migrationswerkzeug - der Wechsel auf
  * PostgreSQL + Flyway steht als eigener Punkt auf der Liste. Diese Klasse
- * ist bewusst ein STOPGAP fuer genau einen Fall und soll mit dem Umstieg auf
+ * ist bewusst ein STOPGAP fuer genau diesen Altbestand und soll mit dem Umstieg auf
  * Flyway ersatzlos verschwinden. Sie ist kein Vorbild fuer weitere
  * Migrationen: die naechste gehoert in ein Migrationswerkzeug.
  *
@@ -62,24 +68,25 @@ public class EnumSpaltenMigration implements CommandLineRunner {
             if (!istH2()) {
                 return;
             }
-            String typ = spaltenTyp();
-            if (typ == null) {
-                return; // Tabelle gibt es noch nicht - frischer Stand, nichts zu tun
+            for (Map<String, Object> spalte : enumSpalten()) {
+                String tabelle = (String) spalte.get("TABLE_NAME");
+                String name = (String) spalte.get("COLUMN_NAME");
+                try {
+                    jdbc.execute("ALTER TABLE " + tabelle + " ALTER COLUMN " + name
+                            + " SET DATA TYPE VARCHAR(50)");
+                    log.info("{}.{} von ENUM auf VARCHAR(50) umgestellt - neue Enum-Werte "
+                            + "brauchen dort jetzt keine Schema-Aenderung mehr.", tabelle, name);
+                } catch (Exception e) {
+                    // Kein Grund, den Start abzubrechen: ohne die Umstellung laeuft
+                    // alles Bisherige weiter, nur neue Enum-Werte in DIESER Spalte
+                    // nicht. Die Meldung muss aber laut genug sein, um sie im Log zu finden.
+                    log.warn("{}.{} konnte nicht auf VARCHAR umgestellt werden - Enum-Werte, "
+                            + "die beim Anlegen der Tabelle noch nicht existierten, werden dort scheitern.",
+                            tabelle, name, e);
+                }
             }
-            // H2 meldet Zeichenketten als "CHARACTER VARYING". Alles andere
-            // (also "ENUM") ist der Altbestand, den wir umstellen wollen.
-            if (typ.toUpperCase().startsWith("CHARACTER")) {
-                return;
-            }
-            jdbc.execute("ALTER TABLE restaurant_assets ALTER COLUMN kind SET DATA TYPE VARCHAR(20)");
-            log.info("restaurant_assets.kind von {} auf VARCHAR(20) umgestellt - neue Bild-Arten "
-                    + "brauchen jetzt keine Schema-Aenderung mehr.", typ);
         } catch (Exception e) {
-            // Kein Grund, den Start abzubrechen: ohne die Umstellung laeuft
-            // alles Bisherige weiter, nur das Vorhang-Bild nicht. Die Meldung
-            // muss aber laut genug sein, um sie im Log zu finden.
-            log.warn("restaurant_assets.kind konnte nicht auf VARCHAR umgestellt werden - "
-                    + "das Hochladen eines Vorhang-Bildes wird auf dieser Datenbank scheitern.", e);
+            log.warn("Pruefung auf alte ENUM-Spalten fehlgeschlagen.", e);
         }
     }
 
@@ -92,11 +99,12 @@ public class EnumSpaltenMigration implements CommandLineRunner {
         return produkt != null && produkt.toUpperCase().contains("H2");
     }
 
-    /** Datentyp der Spalte, oder null wenn es Tabelle/Spalte (noch) nicht gibt. */
-    private String spaltenTyp() {
-        List<String> typen = jdbc.queryForList(
-                "select data_type from information_schema.columns "
-                        + "where table_name = 'RESTAURANT_ASSETS' and column_name = 'KIND'", String.class);
-        return typen.isEmpty() ? null : typen.get(0);
+    /** ALLE noch nativen ENUM-Spalten - leer auf einer frischen Datenbank
+     *  (die bekommt dank preferred_enum_jdbc_type von vornherein VARCHAR)
+     *  und nach dem ersten wirksamen Lauf. */
+    private List<Map<String, Object>> enumSpalten() {
+        return jdbc.queryForList(
+                "select table_name, column_name from information_schema.columns "
+                        + "where table_schema = 'PUBLIC' and data_type = 'ENUM'");
     }
 }
