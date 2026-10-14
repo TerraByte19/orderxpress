@@ -14,6 +14,7 @@ import com.orderxpress.repository.RestaurantTableRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,12 @@ import java.util.List;
  *   Plattform-Admin: siehe application.yml (Standard admin / admin123)
  *   Inhaber:  inhaber / inhaber123
  *   Kueche:   kueche  / kueche123
+ *
+ * Abschaltbar mit {@code orderxpress.demo-data=false} (Profil "prod"): auf einem
+ * oeffentlichen Server waeren diese bekannten Passwoerter ein offener Zugang.
  */
 @Component
+@ConditionalOnProperty(prefix = "orderxpress", name = "demo-data", havingValue = "true", matchIfMissing = true)
 public class DataInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);

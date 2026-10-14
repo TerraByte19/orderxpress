@@ -1,0 +1,25 @@
+# Produktivbetrieb (SPRING_PROFILES_ACTIVE=prod, z.B. auf Render):
+# PostgreSQL statt H2, keine Entwicklungswerkzeuge, kein Demo-Laden.
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+
+  h2:
+    console:
+      enabled: false
+
+orderxpress:
+  # H2-Konsole und Swagger auf einem oeffentlichen Server gesperrt
+  dev-tools: false
+  # Kein Demo-Laden mit bekannten Passwoertern (inhaber/inhaber123 ...)
+  demo-data: false
+
+  security:
+    platform-admin:
+      # Pflicht: ohne gesetztes Passwort startet die App nicht (kein admin123 im Netz)
+      password: ${ORDERXPRESS_SECURITY_PLATFORMADMIN_PASSWORD}

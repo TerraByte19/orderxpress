@@ -1,28 +1,40 @@
-# Render-Bauplan (Blueprint) fuer OrderXpress.
-# Render -> "New +" -> "Blueprint" -> dein GitHub-Repo waehlen -> Apply.
+# Render-Bauplan (Blueprint) fuer OrderXpress - Produktivbetrieb.
+# Render -> "New" -> "Blueprint" -> GitHub-Repo orderxpress waehlen -> Apply.
 #
-# Startet einen Docker-Webdienst. Datenbank standardmaessig H2 im Container
-# (schnell, kostenlos) - Daten gehen bei jedem Neustart/Deploy verloren.
-# Fuer bleibende Daten die PostgreSQL-Schritte in RENDER-DEPLOY.md befolgen.
+# Legt an: Web-Dienst (Docker, immer wach) + PostgreSQL (Daten bleiben dauerhaft).
+# Region Frankfurt: kurze Wege fuer Gaeste in Deutschland, Daten in der EU.
+# Ablauf und Logins: siehe RENDER-DEPLOY.md.
 
 services:
   - type: web
     name: orderxpress
     runtime: docker
-    plan: free
+    plan: starter
+    region: frankfurt
     healthCheckPath: /
     autoDeploy: true
     envVars:
-      # Entwicklungswerkzeuge auf dem oeffentlichen Server zu lassen (wichtig!):
-      - key: ORDERXPRESS_DEV_TOOLS
-        value: "false"
-      - key: SPRING_H2_CONSOLE_ENABLED
-        value: "false"
-      # Plattform-Admin-Passwort NICHT im Code - beim Apply selbst eintragen:
+      # Profil "prod": PostgreSQL, keine H2-Konsole/Swagger, kein Demo-Laden
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Plattform-Admin-Passwort (legt Laeden an) - beim Apply selbst eintragen.
+      # Ohne Wert startet die App absichtlich nicht.
       - key: ORDERXPRESS_SECURITY_PLATFORMADMIN_PASSWORD
         sync: false
+      - key: DB_HOST
+        fromDatabase: { name: orderxpress-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: orderxpress-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: orderxpress-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: orderxpress-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: orderxpress-db, property: password }
 
-# --- Fuer bleibende Daten spaeter einkommentieren (siehe RENDER-DEPLOY.md) ---
-# databases:
-#   - name: orderxpress-db
-#     plan: free
+databases:
+  - name: orderxpress-db
+    plan: basic-256mb
+    region: frankfurt
+    databaseName: orderxpress
+    user: orderxpress
