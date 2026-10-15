@@ -92,6 +92,9 @@ class PostgresCompatibilityTest {
     class StatsAufPostgres extends StatsIntegrationTest {}
 
     @Nested
+    class TeilzahlungUndStornoAufPostgres extends TeilzahlungUndStornoIntegrationTest {}
+
+    @Nested
     class StructureAxesAufPostgres extends StructureAxesIntegrationTest {}
 
     @Nested

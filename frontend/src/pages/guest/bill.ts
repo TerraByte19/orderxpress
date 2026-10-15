@@ -161,13 +161,18 @@ function baueZeile(
     if (zeile.paid) {
         kaestchen.disabled = true;
     } else {
-        kaestchen.addEventListener("change", () => auswahl.umschalten(zeile.orderItemId, zeile.lineTotal));
+        // Teilweise bezahlt (z.B. 2 von 5 Cola): nur der offene Rest zaehlt.
+        const offen = zeile.lineTotal - (zeile.paidTotal ?? 0);
+        kaestchen.addEventListener("change", () => auswahl.umschalten(zeile.orderItemId, offen));
         kontrollkaestchen.set(zeile.orderItemId, kaestchen);
     }
     reihe.appendChild(kaestchen);
 
     reihe.appendChild(el("span", "ox-spacer", `${zeile.quantity}× ${zeile.name}`));
     if (zeile.paid) reihe.appendChild(el("span", "ox-chip ox-chip--gut", "bezahlt"));
+    else if (zeile.paidQuantity > 0) {
+        reihe.appendChild(el("span", "ox-chip ox-chip--gut", `${zeile.paidQuantity} bezahlt`));
+    }
     reihe.appendChild(el("span", "ox-preis", preis(zeile.lineTotal)));
 
     eintrag.appendChild(reihe);

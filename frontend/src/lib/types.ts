@@ -156,7 +156,13 @@ export interface RechnungsZeile {
     unitPrice: number;
     lineTotal: number;
     note: string | null;
+    /** true = komplett bezahlt */
     paid: boolean;
+    /** schon bezahlte Stueck (z.B. 2 von 5 Cola) */
+    paidQuantity: number;
+    paidTotal: number;
+    orderId: number;
+    orderStatus: BestellStatus;
 }
 
 /** BillDto.Participant */

@@ -6,7 +6,8 @@ const Service = {
     pollTimer: null,
     kasseTableId: null,
     kasseTableNumber: null,
-    kasseSelected: {},   // orderItemId -> lineTotal
+    kasseSelected: {},   // orderItemId -> { qty, unitPrice } (siehe OX.kasse)
+    kasseBill: null,     // zuletzt geladene Rechnung (fuer "Alles offene")
 
     init() {
         // Bei vorhandener Anmeldung sofort die App zeigen (kein Login-Flash),
@@ -206,6 +207,7 @@ const Service = {
         document.getElementById("kasse-title").textContent = "Kasse - Tisch " + this.kasseTableNumber;
         document.getElementById("kasse-open").textContent = "offen gesamt: " + OX.preis(bill.openTotal);
 
+        this.kasseBill = bill;
         const body = document.getElementById("kasse-body");
         body.innerHTML = "";
         if (!bill.participants.length) {
@@ -218,59 +220,31 @@ const Service = {
                 (p.isHost ? "<span class='badge blue'>Gastgeber</span>" : "") +
                 "<span class='spacer'></span><span class='muted'>offen: " + OX.preis(p.openTotal) + "</span></div>";
             for (const line of p.items) {
-                const row = document.createElement("label");
-                row.className = "row";
-                row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer";
-                const cb = document.createElement("input");
-                cb.type = "checkbox";
-                cb.style.width = "auto";
-                cb.disabled = line.paid;
-                cb.dataset.id = line.orderItemId;
-                cb.dataset.total = line.lineTotal;
-                cb.onchange = () => this.toggleKasse(line.orderItemId, line.lineTotal, cb.checked);
-                const text = document.createElement("span");
-                text.style.flex = "1";
-                text.innerHTML = line.quantity + "x " + this.esc(line.name) +
-                    (line.paid ? " <span class='badge green'>bezahlt</span>" : "");
-                const price = document.createElement("span");
-                price.textContent = OX.preis(line.lineTotal);
-                row.append(cb, text, price);
-                block.appendChild(row);
+                block.appendChild(OX.kasse.zeile(line, this.kasseSelected, () => this.updateKasseSum()));
             }
             body.appendChild(block);
         }
         this.updateKasseSum();
     },
 
-    toggleKasse(id, lineTotal, checked) {
-        if (checked) this.kasseSelected[id] = lineTotal;
-        else delete this.kasseSelected[id];
-        this.updateKasseSum();
-    },
-
     kasseSelectAll() {
+        if (!this.kasseBill) return;
         this.kasseSelected = {};
-        document.querySelectorAll("#kasse-body input[type=checkbox]").forEach(cb => {
-            if (!cb.disabled) {
-                cb.checked = true;
-                this.kasseSelected[cb.dataset.id] = Number(cb.dataset.total);
-            }
-        });
-        this.updateKasseSum();
+        OX.kasse.alleOffenen(this.kasseBill.participants, this.kasseSelected);
+        this.loadKasse();
     },
 
     updateKasseSum() {
-        const sum = Object.values(this.kasseSelected).reduce((s, v) => s + Number(v), 0);
-        document.getElementById("kasse-selected").textContent = "Ausgewählt: " + OX.preis(sum);
+        document.getElementById("kasse-selected").textContent =
+            "Ausgewählt: " + OX.preis(OX.kasse.summe(this.kasseSelected));
     },
 
     async kassePay() {
-        const ids = Object.keys(this.kasseSelected).map(Number);
-        if (!ids.length) { OX.toast("Bitte zuerst Positionen auswählen", true); return; }
-        const sum = Object.values(this.kasseSelected).reduce((s, v) => s + Number(v), 0);
+        if (!Object.keys(this.kasseSelected).length) { OX.toast("Bitte zuerst Positionen auswählen", true); return; }
+        const sum = OX.kasse.summe(this.kasseSelected);
         if (!confirm("Ausgewählte Positionen (" + OX.preis(sum) + ") als bezahlt markieren?")) return;
         try {
-            await OX.api("/api/service/settle", { method: "POST", body: JSON.stringify({ orderItemIds: ids }) });
+            await OX.api("/api/service/settle", { method: "POST", body: OX.kasse.anfrage(this.kasseSelected) });
             OX.toast("Als bezahlt markiert");
         } catch (e) { OX.toast(e.message, true); }
         this.kasseSelected = {};
@@ -280,6 +254,7 @@ const Service = {
     closeKasse() {
         this.kasseTableId = null;
         this.kasseSelected = {};
+        this.kasseBill = null;
         document.getElementById("kasse-card").style.display = "none";
     },
 

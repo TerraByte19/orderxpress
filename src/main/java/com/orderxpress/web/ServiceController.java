@@ -107,7 +107,7 @@ public class ServiceController {
     @PostMapping("/settle")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void settle(@Valid @RequestBody SettleRequest request) {
-        billingService.settle(request.orderItemIds());
+        billingService.settle(request.orderItemIds(), request.items());
     }
 
     // ---------- Kellner-QR-Codes (die Kasse legt sie an) ----------

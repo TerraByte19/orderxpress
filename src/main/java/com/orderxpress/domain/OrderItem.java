@@ -49,9 +49,17 @@ public class OrderItem {
     @Column(length = 200)
     private String note;
 
-    /** true = diese Position wurde an der Kasse bereits bezahlt. */
+    /** true = diese Position wurde an der Kasse bereits KOMPLETT bezahlt. */
     @Column(nullable = false)
     private boolean paid = false;
+
+    /**
+     * Wie viele Stueck schon bezahlt sind (z.B. 2 von 5 Cola). Nullable, damit
+     * die Spalte per ddl-auto auf bestehende Daten passt: null = 0 bzw. bei
+     * paid=true die ganze Menge (alte, komplett bezahlte Positionen).
+     */
+    @Column(name = "paid_quantity")
+    private Integer paidQuantity;
 
     @Column(name = "paid_at")
     private Instant paidAt;
@@ -76,8 +84,36 @@ public class OrderItem {
         return paid;
     }
 
-    public void markPaid() {
-        this.paid = true;
+    /** Bereits bezahlte Stueckzahl (0 bis quantity). */
+    public int getPaidQuantity() {
+        if (paid) {
+            return quantity;
+        }
+        return paidQuantity == null ? 0 : paidQuantity;
+    }
+
+    /** Noch offene Stueckzahl. */
+    public int getOpenQuantity() {
+        return quantity - getPaidQuantity();
+    }
+
+    /** Betrag der bereits bezahlten Stueck. */
+    public BigDecimal getPaidTotal() {
+        return unitPrice.multiply(BigDecimal.valueOf(getPaidQuantity()));
+    }
+
+    /**
+     * Teilmenge bezahlen, z.B. 1 von 5 Cola. Ist danach alles bezahlt, gilt die
+     * ganze Position als bezahlt.
+     */
+    public void pay(int count) {
+        if (count < 1 || count > getOpenQuantity()) {
+            throw new IllegalArgumentException("Ungueltige Stueckzahl: " + count);
+        }
+        this.paidQuantity = getPaidQuantity() + count;
+        if (paidQuantity == quantity) {
+            this.paid = true;
+        }
         this.paidAt = Instant.now();
     }
 

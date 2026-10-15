@@ -1,5 +1,5 @@
-/* Kellner-Ansicht: belegte Tische live (Positionen je Person) UND abrechnen
-   (Positionen als bezahlt markieren). Anmeldung nur per QR-Code (Geraetetoken). */
+/* Kellner-Ansicht: belegte Tische live (Positionen je Person), abrechnen
+   (auch Teilmengen, z.B. 1 von 5 Cola) und NEUE Bestellungen stornieren. Anmeldung nur per QR-Code (Geraetetoken). */
 const Waiter = {
 
     sse: null,
@@ -8,7 +8,7 @@ const Waiter = {
     tables: [],        // letzte Tischliste (fuer Neu-Rendern ohne erneuten Abruf)
     mode: "list",      // "list" | "kasse"
     kasseTable: null,  // BillDto des Tisches, der gerade abgerechnet wird
-    kasseSel: {},      // orderItemId -> lineTotal
+    kasseSel: {},      // orderItemId -> { qty, unitPrice } (siehe OX.kasse)
 
     async init() {
         if (!OX.deviceToken()) { this.showNoLogin(); return; }
@@ -109,17 +109,24 @@ const Waiter = {
                     block.style.cssText = "margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)";
                     block.innerHTML = "<strong>" + this.esc(p.name) + "</strong>" +
                         (p.isHost ? " <span class='badge blue'>Gastgeber</span>" : "");
-                    for (const line of p.items) {
+                    p.items.forEach((line, i) => {
                         const row = document.createElement("div");
                         row.className = "row";
                         row.style.cssText = "padding:4px 0";
                         row.innerHTML =
                             "<span style='flex:1'>" + line.quantity + "x " + this.esc(line.name) +
                             (line.note ? " <span class='muted'>(" + this.esc(line.note) + ")</span>" : "") +
-                            (line.paid ? " <span class='badge green'>bezahlt</span>" : "") + "</span>" +
+                            (line.paid ? " <span class='badge green'>bezahlt</span>"
+                                : line.paidQuantity > 0 ? " <span class='badge green'>" + line.paidQuantity + " bezahlt</span>" : "") +
+                            "</span>" +
                             "<span>" + OX.preis(line.lineTotal) + "</span>";
                         block.appendChild(row);
-                    }
+                        // Nach der letzten Zeile einer NEUEN Bestellung: Storno (Kueche hat noch nicht angefangen)
+                        const next = p.items[i + 1];
+                        if (line.orderStatus === "NEW" && (!next || next.orderId !== line.orderId)) {
+                            block.appendChild(this.stornoRow(p.items.filter(l => l.orderId === line.orderId)));
+                        }
+                    });
                     card.appendChild(block);
                 }
                 if (Number(t.openTotal) > 0) {
@@ -133,6 +140,34 @@ const Waiter = {
             }
             box.appendChild(card);
         }
+    },
+
+    /* ---------- Storno (nur solange die Bestellung NEU ist) ---------- */
+
+    stornoRow(lines) {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.cssText = "padding:2px 0 6px";
+        row.innerHTML = "<span class='badge blue'>neu</span>" +
+            "<span class='muted' style='flex:1'>noch nicht in der K&uuml;che</span>";
+        if (!lines.some(l => l.paidQuantity > 0)) {
+            const btn = document.createElement("button");
+            btn.className = "red small";
+            btn.textContent = "Stornieren";
+            btn.onclick = () => this.cancelOrder(lines);
+            row.appendChild(btn);
+        }
+        return row;
+    },
+
+    async cancelOrder(lines) {
+        const was = lines.map(l => l.quantity + "x " + l.name).join(", ");
+        if (!confirm("Bestellung stornieren?\n" + was)) return;
+        try {
+            await OX.api("/api/waiter/orders/" + lines[0].orderId + "/cancel", { method: "POST" });
+            OX.toast("Bestellung storniert");
+        } catch (e) { OX.toast(e.message, true); }
+        this.load();
     },
 
     /* ---------- Abrechnen ---------- */
@@ -166,22 +201,7 @@ const Waiter = {
                 (p.isHost ? " <span class='badge blue'>Gastgeber</span>" : "") +
                 "<span class='spacer'></span><span class='muted'>offen: " + OX.preis(p.openTotal) + "</span></div>";
             for (const line of p.items) {
-                const row = document.createElement("label");
-                row.className = "row";
-                row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer";
-                const cb = document.createElement("input");
-                cb.type = "checkbox";
-                cb.style.width = "auto";
-                cb.disabled = line.paid;
-                cb.onchange = () => this.toggleLine(line.orderItemId, line.lineTotal, cb.checked);
-                const text = document.createElement("span");
-                text.style.flex = "1";
-                text.innerHTML = line.quantity + "x " + this.esc(line.name) +
-                    (line.paid ? " <span class='badge green'>bezahlt</span>" : "");
-                const price = document.createElement("span");
-                price.textContent = OX.preis(line.lineTotal);
-                row.append(cb, text, price);
-                block.appendChild(row);
+                block.appendChild(OX.kasse.zeile(line, this.kasseSel, () => this.updateSum()));
             }
             card.appendChild(block);
         }
@@ -205,39 +225,23 @@ const Waiter = {
         this.updateSum();
     },
 
-    toggleLine(id, lineTotal, checked) {
-        if (checked) this.kasseSel[id] = lineTotal;
-        else delete this.kasseSel[id];
-        this.updateSum();
-    },
-
     selectAll() {
         this.kasseSel = {};
-        document.querySelectorAll("#view-kasse input[type=checkbox]").forEach(cb => {
-            if (!cb.disabled) { cb.checked = true; }
-        });
-        // Auswahl aus den Zeilen neu aufbauen
-        for (const p of this.kasseTable.participants) {
-            for (const line of p.items) {
-                if (!line.paid) this.kasseSel[line.orderItemId] = line.lineTotal;
-            }
-        }
-        this.updateSum();
+        OX.kasse.alleOffenen(this.kasseTable.participants, this.kasseSel);
+        this.renderKasse();
     },
 
     updateSum() {
-        const sum = Object.values(this.kasseSel).reduce((s, v) => s + Number(v), 0);
         const el = document.getElementById("kasse-sum");
-        if (el) el.textContent = "Ausgewählt: " + OX.preis(sum);
+        if (el) el.textContent = "Ausgewählt: " + OX.preis(OX.kasse.summe(this.kasseSel));
     },
 
     async settle() {
-        const ids = Object.keys(this.kasseSel).map(Number);
-        if (!ids.length) { OX.toast("Bitte zuerst Positionen auswählen", true); return; }
-        const sum = Object.values(this.kasseSel).reduce((s, v) => s + Number(v), 0);
+        if (!Object.keys(this.kasseSel).length) { OX.toast("Bitte zuerst Positionen auswählen", true); return; }
+        const sum = OX.kasse.summe(this.kasseSel);
         if (!confirm("Ausgewählte Positionen (" + OX.preis(sum) + ") als bezahlt markieren?")) return;
         try {
-            await OX.api("/api/waiter/settle", { method: "POST", body: JSON.stringify({ orderItemIds: ids }) });
+            await OX.api("/api/waiter/settle", { method: "POST", body: OX.kasse.anfrage(this.kasseSel) });
             OX.toast("Als bezahlt markiert");
         } catch (e) { OX.toast(e.message, true); return; }
         this.backToList();

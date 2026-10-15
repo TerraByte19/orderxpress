@@ -1,5 +1,7 @@
 package com.orderxpress.web.dto;
 
+import com.orderxpress.domain.OrderStatus;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -25,13 +27,22 @@ public record BillDto(int tableNumber,
                               BigDecimal openTotal) {
     }
 
-    /** Eine einzelne Position (Bestell-Position) auf der Rechnung. */
+    /**
+     * Eine einzelne Position (Bestell-Position) auf der Rechnung.
+     * paid = komplett bezahlt; paidQuantity/paidTotal = schon bezahlter Teil
+     * (z.B. 2 von 5 Cola). orderId/orderStatus: zu welcher Bestellung die
+     * Position gehoert (Kellner storniert Bestellungen im Status NEW).
+     */
     public record Line(Long orderItemId,
                        String name,
                        int quantity,
                        BigDecimal unitPrice,
                        BigDecimal lineTotal,
                        String note,
-                       boolean paid) {
+                       boolean paid,
+                       int paidQuantity,
+                       BigDecimal paidTotal,
+                       Long orderId,
+                       OrderStatus orderStatus) {
     }
 }

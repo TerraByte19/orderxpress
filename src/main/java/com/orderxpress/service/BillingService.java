@@ -14,6 +14,8 @@ import com.orderxpress.repository.OrderItemRepository;
 import com.orderxpress.repository.RestaurantTableRepository;
 import com.orderxpress.repository.TableSessionRepository;
 import com.orderxpress.web.dto.BillDto;
+import com.orderxpress.web.dto.SettleRequest;
+import com.orderxpress.web.error.ConflictException;
 import com.orderxpress.web.error.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,23 +88,54 @@ public class BillingService {
                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
     }
 
-    /** Kasse: ausgewaehlte Positionen als bezahlt markieren (nur eigener Laden). */
+    /**
+     * Kasse: ausgewaehlte Positionen als bezahlt markieren (nur eigener Laden).
+     * {@code orderItemIds} = ganze Position (alles Offene), {@code parts} = nur so
+     * viele Stueck (z.B. 1 von 5 Cola). Alles oder nichts: passt eine Teilzahlung
+     * nicht mehr (schon bezahlt, storniert), wird gar nichts gebucht.
+     */
     @Transactional
-    public void settle(List<Long> orderItemIds) {
+    public void settle(List<Long> orderItemIds, List<SettleRequest.Part> parts) {
         Long restaurantId = CurrentUser.restaurantId();
-        List<OrderItem> items = orderItemRepository.findByIdIn(orderItemIds);
+
+        // Stueckzahl je Position zusammenfassen; null = alles Offene.
+        Map<Long, Integer> wanted = new LinkedHashMap<>();
+        for (Long id : orderItemIds) {
+            wanted.put(id, null);
+        }
+        for (SettleRequest.Part part : parts) {
+            if (wanted.containsKey(part.orderItemId()) && wanted.get(part.orderItemId()) == null) {
+                continue; // ganze Position ist schon gewaehlt
+            }
+            wanted.merge(part.orderItemId(), part.quantity(), Integer::sum);
+        }
+
         int marked = 0;
-        for (OrderItem item : items) {
+        for (OrderItem item : orderItemRepository.findByIdIn(List.copyOf(wanted.keySet()))) {
             Long itemRestaurant = item.getOrder().getSession().getRestaurantTable().getRestaurant().getId();
             if (!itemRestaurant.equals(restaurantId)) {
                 continue; // fremde Positionen ignorieren (Mandanten-Schutz)
             }
-            if (!item.isPaid()) {
-                item.markPaid();
-                marked++;
+            Integer count = wanted.get(item.getId());
+            if (count == null) {
+                if (item.getOpenQuantity() > 0 && item.getOrder().getStatus() != OrderStatus.CANCELLED) {
+                    marked += item.getOpenQuantity();
+                    item.pay(item.getOpenQuantity());
+                }
+                continue;
             }
+            if (item.getOrder().getStatus() == OrderStatus.CANCELLED) {
+                throw new ConflictException("'%s' wurde storniert und kann nicht bezahlt werden."
+                        .formatted(item.getItemName()));
+            }
+            if (count > item.getOpenQuantity()) {
+                throw new ConflictException("Von '%s' sind nur noch %d offen. Bitte neu laden."
+                        .formatted(item.getItemName(), item.getOpenQuantity()));
+            }
+            item.pay(count);
+            marked += count;
         }
-        log.info("Kasse: {} Position(en) als bezahlt markiert (Laden {})", marked, restaurantId);
+        log.info("Kasse: {} Stueck als bezahlt markiert (Laden {})", marked, restaurantId);
     }
 
     // ---------- Aufbau der Rechnung ----------
@@ -130,7 +163,11 @@ public class BillingService {
                         item.getUnitPrice(),
                         item.getLineTotal(),
                         item.getNote(),
-                        item.isPaid()));
+                        item.isPaid(),
+                        item.getPaidQuantity(),
+                        item.getPaidTotal(),
+                        order.getId(),
+                        order.getStatus()));
             }
         }
 
@@ -146,9 +183,7 @@ public class BillingService {
             BigDecimal paid = BigDecimal.ZERO;
             for (BillDto.Line line : lines) {
                 total = total.add(line.lineTotal());
-                if (line.paid()) {
-                    paid = paid.add(line.lineTotal());
-                }
+                paid = paid.add(line.paidTotal());
             }
             participants.add(new BillDto.Participant(
                     g.getId(), g.getName(), g.isHost(), lines, total, paid, total.subtract(paid)));

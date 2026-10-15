@@ -12,6 +12,6 @@ public enum UserRole {
     SERVICE,
     /** Kueche: eingehende Bestellungen abarbeiten. */
     KITCHEN,
-    /** Kellner: meldet sich nur per QR-Code an und SIEHT die Bestellungen pro Tisch (nur lesen). */
+    /** Kellner: meldet sich nur per QR-Code an, sieht die Tische, kassiert (auch Teilmengen) und storniert NEUE Bestellungen. */
     WAITER
 }

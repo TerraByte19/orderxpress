@@ -374,6 +374,112 @@ const OX = {
         return body;
     },
 
+    /* ---------- Kasse (Kellner + Service): Positionen waehlen ----------
+       Bei mehreren Stueck waehlt man die Anzahl (z.B. 1 von 5 Cola) statt
+       immer die ganze Position. Auswahl: orderItemId -> { qty, unitPrice }. */
+
+    kasse: {
+        offen(line) { return line.quantity - (line.paidQuantity || 0); },
+
+        /* Eine Zeile: 1 offenes Stueck = Haken, mehrere = Minus/Plus-Zaehler */
+        zeile(line, sel, onChange) {
+            const offen = this.offen(line);
+            const row = document.createElement(offen === 1 ? "label" : "div");
+            row.className = "row";
+            row.style.cssText = "padding:8px 0;border-bottom:1px dashed var(--line)" +
+                (offen === 1 ? ";cursor:pointer" : "");
+
+            const text = document.createElement("span");
+            text.style.flex = "1";
+            text.textContent = line.quantity + "x " + line.name;
+            if (line.paid) text.appendChild(this.badge("bezahlt"));
+            else if (line.paidQuantity > 0) text.appendChild(this.badge(line.paidQuantity + " bezahlt"));
+
+            const price = document.createElement("span");
+            price.textContent = OX.preis(line.lineTotal);
+
+            if (offen === 0) {
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.style.width = "auto";
+                cb.disabled = true;
+                row.append(cb, text, price);
+            } else if (offen === 1) {
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.style.width = "auto";
+                cb.checked = !!sel[line.orderItemId];
+                cb.onchange = () => {
+                    if (cb.checked) sel[line.orderItemId] = { qty: 1, unitPrice: Number(line.unitPrice) };
+                    else delete sel[line.orderItemId];
+                    onChange();
+                };
+                row.append(cb, text, price);
+            } else {
+                row.append(text, this.zaehler(line, offen, sel, onChange), price);
+            }
+            return row;
+        },
+
+        zaehler(line, offen, sel, onChange) {
+            const box = document.createElement("span");
+            box.className = "qty";
+            const minus = document.createElement("button");
+            minus.className = "ghost small";
+            minus.textContent = "−";
+            const anzeige = document.createElement("span");
+            const plus = document.createElement("button");
+            plus.className = "ghost small";
+            plus.textContent = "+";
+            const anzahl = () => (sel[line.orderItemId] ? sel[line.orderItemId].qty : 0);
+            const zeigen = () => {
+                anzeige.textContent = anzahl() + " von " + offen;
+                minus.disabled = anzahl() === 0;
+                plus.disabled = anzahl() === offen;
+            };
+            const setzen = (n) => {
+                if (n <= 0) delete sel[line.orderItemId];
+                else sel[line.orderItemId] = { qty: Math.min(n, offen), unitPrice: Number(line.unitPrice) };
+                zeigen();
+                onChange();
+            };
+            minus.onclick = () => setzen(anzahl() - 1);
+            plus.onclick = () => setzen(anzahl() + 1);
+            zeigen();
+            box.append(minus, anzeige, plus);
+            return box;
+        },
+
+        badge(text) {
+            const b = document.createElement("span");
+            b.className = "badge green";
+            b.style.marginLeft = "6px";
+            b.textContent = text;
+            return b;
+        },
+
+        /* Alles Offene aller Personen auswaehlen */
+        alleOffenen(participants, sel) {
+            for (const p of participants) {
+                for (const line of p.items) {
+                    const offen = this.offen(line);
+                    if (offen > 0) sel[line.orderItemId] = { qty: offen, unitPrice: Number(line.unitPrice) };
+                }
+            }
+        },
+
+        summe(sel) {
+            return Object.values(sel).reduce((s, v) => s + v.qty * v.unitPrice, 0);
+        },
+
+        /* Rumpf fuer POST .../settle */
+        anfrage(sel) {
+            return JSON.stringify({
+                items: Object.entries(sel).map(([id, v]) => ({ orderItemId: Number(id), quantity: v.qty }))
+            });
+        }
+    },
+
     /* ---------- Kleine Einblend-Meldung ---------- */
 
     toast(msg, isError = false) {

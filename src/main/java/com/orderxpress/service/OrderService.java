@@ -163,6 +163,36 @@ public class OrderService {
                     "Statuswechsel von %s nach %s ist nicht moeglich.".formatted(order.getStatus(), newStatus));
         }
 
+        if (newStatus == OrderStatus.CANCELLED) {
+            ensureNothingPaid(order);
+        }
+        return changeStatus(order, newStatus);
+    }
+
+    /**
+     * Kellner storniert eine Bestellung - nur solange sie NEU ist, die Kueche
+     * also noch nicht angefangen hat. Danach entscheidet die Kueche.
+     */
+    @Transactional
+    public OrderResponse cancelByWaiter(Long orderId) {
+        CustomerOrder order = loadOwnedOrder(orderId);
+        if (order.getStatus() != OrderStatus.NEW) {
+            throw new ConflictException(
+                    "Nur neue Bestellungen kann der Kellner stornieren. Diese ist schon in der Kueche - bitte dort stornieren.");
+        }
+        ensureNothingPaid(order);
+        return changeStatus(order, OrderStatus.CANCELLED);
+    }
+
+    /** Bezahltes darf nicht verschwinden: sonst fehlt das Geld auf der Rechnung. */
+    private void ensureNothingPaid(CustomerOrder order) {
+        boolean anyPaid = order.getItems().stream().anyMatch(item -> item.getPaidQuantity() > 0);
+        if (anyPaid) {
+            throw new ConflictException("Bestellung ist schon (teilweise) bezahlt und kann nicht storniert werden.");
+        }
+    }
+
+    private OrderResponse changeStatus(CustomerOrder order, OrderStatus newStatus) {
         order.setStatus(newStatus);
         eventPublisher.publishEvent(new DomainEvents.OrderStatusChanged(
                 order.getSession().getRestaurantTable().getRestaurant().getId(),

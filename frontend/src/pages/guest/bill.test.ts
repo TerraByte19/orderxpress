@@ -50,6 +50,10 @@ function zeile(ueberschreibungen: Partial<RechnungsZeile> = {}): RechnungsZeile 
         lineTotal: 9.5,
         note: null,
         paid: false,
+        paidQuantity: 0,
+        paidTotal: 0,
+        orderId: 1,
+        orderStatus: "NEW",
         ...ueberschreibungen
     };
 }
@@ -440,5 +444,32 @@ describe("zeichneRechnung - Namen aus der Datenbank erzeugen kein Markup", () =>
         expect(ziel.querySelector("img")).toBeNull();
         const zeilenText = ziel.querySelector(".ox-list li")!.textContent!;
         expect(zeilenText).toContain(rohName);
+    });
+});
+
+describe("zeichneRechnung - teilweise bezahlte Position (z.B. 2 von 5 Cola)", () => {
+    const teilweise = () =>
+        rechnung({
+            participants: [
+                person({
+                    items: [zeile({ orderItemId: 9, name: "Cola", quantity: 5, unitPrice: 3, lineTotal: 15,
+                        paidQuantity: 2, paidTotal: 6 })]
+                })
+            ]
+        });
+
+    it("zeigt einen Chip mit der bezahlten Stueckzahl", () => {
+        const ziel = document.createElement("div");
+        zeichneRechnung(teilweise(), ziel, () => {});
+        expect(ziel.querySelector(".ox-chip--gut")?.textContent).toBe("2 bezahlt");
+    });
+
+    it("Auswahl zaehlt nur den offenen Rest", () => {
+        const ziel = document.createElement("div");
+        let letzte!: Auswahl;
+        document.body.appendChild(ziel); // .click() braucht ein an document haengendes Element
+        zeichneRechnung(teilweise(), ziel, (a) => { letzte = a; });
+        kaestchenVon(ziel, 9).click();
+        expect(letzte.summe()).toBe(9);
     });
 });
